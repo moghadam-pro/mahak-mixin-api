@@ -1,0 +1,26 @@
+{
+  "name": "moghadam-pro/mahak-mixin-api",
+  "description": "A safe, incremental synchronization bridge between Mahak API v3 and Mixin API v4.",
+  "type": "project",
+  "license": "proprietary",
+  "require": {
+    "php": ">=8.2",
+    "ext-curl": "*",
+    "ext-json": "*",
+    "ext-pdo": "*",
+    "ext-pdo_sqlite": "*"
+  },
+  "autoload": {
+    "psr-4": {
+      "MahakMixin\\": "src/"
+    }
+  },
+  "scripts": {
+    "test": "php tests/run.php",
+    "check": [
+      "@php -l public/index.php",
+      "@php -l bin/console",
+      "@test"
+    ]
+  }
+}
