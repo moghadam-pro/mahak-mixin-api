@@ -16,7 +16,9 @@ final class ProductMapper
     /** @param array<string,mixed> $product @param array<string,mixed> $detail @param array<string,mixed>|null $visitorProduct */
     public function toMixin(array $product, array $detail, ?array $visitorProduct = null): array
     {
-        $price = (float) ($this->read($visitorProduct ?? [], 'price') ?? $this->read($detail, 'price1', 0));
+        $visitorPrice = (float) $this->read($visitorProduct ?? [], 'price', 0);
+        $detailPrice = (float) $this->read($detail, 'price1', 0);
+        $price = $visitorPrice > 0 ? $visitorPrice : $detailPrice;
         $stock = max(0, (int) floor((float) $this->read($visitorProduct ?? [], 'count1', 0)));
         $deleted = (bool) $this->read($product, 'deleted', false)
             || (bool) $this->read($detail, 'deleted', false)
@@ -26,7 +28,7 @@ final class ProductMapper
         $productDetailId = $this->read($detail, 'productDetailId');
 
         return array_filter([
-            'name' => (string) $this->read($product, 'name', ''),
+            'name' => trim((string) $this->read($product, 'name', '')),
             'description' => $this->nullableString($this->read($product, 'description')),
             'price' => max(0, (int) round($price / $this->priceDivisor)),
             'barcode' => $this->nullableString($this->read($detail, 'barcode')),
