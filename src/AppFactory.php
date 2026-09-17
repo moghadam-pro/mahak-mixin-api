@@ -20,15 +20,14 @@ final class AppFactory
 
     public static function mahak(): MahakClient
     {
-        $package = getenv('MAHAK_PACKAGE_NO');
         return new MahakClient(
             self::http(),
             Config::string('MAHAK_BASE_URL', 'https://mahakacc.mahaksoft.com/API/v3'),
             Config::string('MAHAK_USERNAME'),
             Config::string('MAHAK_PASSWORD'),
-            Config::int('MAHAK_DATABASE_ID'),
-            $package === false ? null : trim($package),
             Config::string('MAHAK_LOGIN_PATH', '/Sync/Login'),
+            Config::string('MAHAK_GET_ALL_DATA_PATH', '/Sync/GetAllData'),
+            Config::string('MAHAK_SAVE_ALL_DATA_PATH', '/Sync/SaveAllData'),
         );
     }
 

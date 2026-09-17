@@ -25,7 +25,7 @@ ProductDetail.productDetailId = VisitorProduct.productDetailId
 VisitorProduct.visitorId = MAHAK_VISITOR_ID
 ```
 
-`currentVisitorId` نیز در `GetAllDataV2` ارسال می‌شود.
+`currentVisitorId` نیز در `GetAllData` ارسال می‌شود.
 
 ## مشتری و سفارش
 
@@ -41,4 +41,4 @@ VisitorProduct.visitorId = MAHAK_VISITOR_ID
 - تبدیل تاریخ و واحد پول
 - وضعیت پرداخت و ساخت Payment/Receipt
 
-این تصمیم‌ها باید پیش از فعال‌سازی `SaveAllDataV2` در محیط production ثبت و تست شوند.
+این تصمیم‌ها باید پیش از فعال‌سازی `SaveAllData` در محیط production ثبت و تست شوند.

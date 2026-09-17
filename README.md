@@ -6,7 +6,7 @@
 
 ## قابلیت‌ها
 
-- احراز هویت محک از طریق `/Sync/Login` اثبات‌شده در محیط واقعی؛ مسیر از env قابل تغییر است
+- استفاده از endpointهای بدون V2 (`Login`, `GetAllData`, `SaveAllData`) مطابق اعلام پشتیبانی محک
 - ارسال توکن محک با `Authorization: Bearer ...`
 - احراز هویت Mixin با `Authorization: Api-Key ...`
 - خواندن افزایشی کالا، جزئیات و موجودی واسط `VisitorProduct`
@@ -59,6 +59,8 @@ php bin/console sync:products
 | `MAHAK_USERNAME` | نام کاربری API محک |
 | `MAHAK_PASSWORD` | رمز API محک |
 | `MAHAK_LOGIN_PATH` | مسیر ورود؛ پیش‌فرض `/Sync/Login` |
+| `MAHAK_GET_ALL_DATA_PATH` | مسیر دریافت؛ پیش‌فرض `/Sync/GetAllData` |
+| `MAHAK_SAVE_ALL_DATA_PATH` | مسیر ثبت؛ پیش‌فرض `/Sync/SaveAllData` |
 | `MAHAK_DATABASE_ID` | شناسه دیتابیس محک |
 | `MAHAK_VISITOR_ID` | شناسه سایت/ویزیتور برگشتی از Login |
 | `MIXIN_BASE_URL` | دامنه فروشگاه، بدون `/api/v4` |

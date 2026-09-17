@@ -16,9 +16,9 @@ final class MahakClient
         private readonly string $baseUrl,
         private readonly string $username,
         private readonly string $password,
-        private readonly int $databaseId,
-        private readonly ?string $packageNo = null,
         private readonly string $loginPath = '/Sync/Login',
+        private readonly string $getAllDataPath = '/Sync/GetAllData',
+        private readonly string $saveAllDataPath = '/Sync/SaveAllData',
     ) {
     }
 
@@ -28,20 +28,6 @@ final class MahakClient
             'userName' => $this->username,
             'password' => $this->password,
         ];
-
-        // The production /Sync/Login endpoint accepts the simple payload used by
-        // Mahak's Swagger UI. LoginV2 needs the extended client metadata.
-        if (str_ends_with(strtolower($this->loginPath), 'loginv2')) {
-            $body += [
-                'databaseId' => $this->databaseId,
-                'language' => 'fa',
-                'description' => 'Mahak-Mixin synchronization bridge',
-                'clientVersion' => '1.0.0',
-            ];
-            if ($this->packageNo !== null && $this->packageNo !== '') {
-                $body['packageNo'] = $this->packageNo;
-            }
-        }
 
         $response = $this->http->request('POST', $this->url($this->loginPath), [], $body)['data'];
         if (!is_array($response)) {
@@ -64,13 +50,13 @@ final class MahakClient
     /** @param array<string, mixed> $request */
     public function getAllData(array $request): array
     {
-        return $this->authenticatedPost('/Sync/GetAllDataV2', $request);
+        return $this->authenticatedPost($this->getAllDataPath, $request);
     }
 
     /** @param array<string, mixed> $objects */
     public function saveAllData(array $objects): array
     {
-        return $this->authenticatedPost('/Sync/SaveAllDataV2', $objects);
+        return $this->authenticatedPost($this->saveAllDataPath, $objects);
     }
 
     private function authenticatedPost(string $path, array $body): array
