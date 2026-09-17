@@ -28,6 +28,7 @@ final class AppFactory
             Config::string('MAHAK_PASSWORD'),
             Config::int('MAHAK_DATABASE_ID'),
             $package === false ? null : trim($package),
+            Config::string('MAHAK_LOGIN_PATH', '/Sync/Login'),
         );
     }
 

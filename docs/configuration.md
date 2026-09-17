@@ -11,6 +11,7 @@ APP_TIMEZONE=Asia/Tehran
 BRIDGE_API_KEY=یک-رشته-تصادفی-بلند
 
 MAHAK_BASE_URL=https://mahakacc.mahaksoft.com/API/v3
+MAHAK_LOGIN_PATH=/Sync/Login
 MAHAK_USERNAME=...
 MAHAK_PASSWORD=...
 MAHAK_DATABASE_ID=YOUR_DATABASE_ID

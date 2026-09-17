@@ -18,6 +18,7 @@ final class MahakClient
         private readonly string $password,
         private readonly int $databaseId,
         private readonly ?string $packageNo = null,
+        private readonly string $loginPath = '/Sync/Login',
     ) {
     }
 
@@ -26,18 +27,28 @@ final class MahakClient
         $body = [
             'userName' => $this->username,
             'password' => $this->password,
-            'databaseId' => $this->databaseId,
-            'language' => 'fa',
-            'description' => 'Mahak-Mixin synchronization bridge',
-            'clientVersion' => '1.0.0',
         ];
-        if ($this->packageNo !== null && $this->packageNo !== '') {
-            $body['packageNo'] = $this->packageNo;
+
+        // The production /Sync/Login endpoint accepts the simple payload used by
+        // Mahak's Swagger UI. LoginV2 needs the extended client metadata.
+        if (str_ends_with(strtolower($this->loginPath), 'loginv2')) {
+            $body += [
+                'databaseId' => $this->databaseId,
+                'language' => 'fa',
+                'description' => 'Mahak-Mixin synchronization bridge',
+                'clientVersion' => '1.0.0',
+            ];
+            if ($this->packageNo !== null && $this->packageNo !== '') {
+                $body['packageNo'] = $this->packageNo;
+            }
         }
 
-        $response = $this->http->request('POST', $this->url('/Sync/LoginV2'), [], $body)['data'];
-        if (!is_array($response) || !$this->read($response, 'Result', false)) {
-            throw new RuntimeException('Mahak login failed');
+        $response = $this->http->request('POST', $this->url($this->loginPath), [], $body)['data'];
+        if (!is_array($response)) {
+            throw new RuntimeException('Mahak login returned a non-JSON response');
+        }
+        if (!$this->read($response, 'Result', false)) {
+            throw new RuntimeException($this->loginError($response));
         }
 
         $data = $this->read($response, 'Data', []);
@@ -93,5 +104,25 @@ final class MahakClient
         }
 
         return $default;
+    }
+
+    private function loginError(array $response): string
+    {
+        $parts = [];
+        $message = $this->read($response, 'Message');
+        $code = $this->read($response, 'Code');
+        $data = $this->read($response, 'Data', []);
+        if (is_array($data)) {
+            $message ??= $this->read($data, 'ErrorMessage');
+            $code ??= $this->read($data, 'ErrorCode');
+        }
+        if (is_scalar($code) && (string) $code !== '' && (string) $code !== '0') {
+            $parts[] = 'code=' . (string) $code;
+        }
+        if (is_string($message) && trim($message) !== '') {
+            $parts[] = trim($message);
+        }
+
+        return 'Mahak login failed' . ($parts === [] ? '' : ': ' . implode(' - ', $parts));
     }
 }

@@ -6,7 +6,7 @@ Bridge مرز بین قراردادهای متفاوت محک و Mixin است. �
 
 ```text
 Mahak API v3
-    │ LoginV2 + GetAllDataV2
+    │ Login + GetAllDataV2
     ▼
 MahakClient ──► ProductSyncService ──► ProductMapper ──► MixinClient
                          │                                  │
@@ -18,7 +18,7 @@ MahakClient ──► ProductSyncService ──► ProductMapper ──► Mixin
 ## اجزا
 
 - `HttpClient`: JSON over HTTPS، timeout، بررسی status code و TLS.
-- `MahakClient`: LoginV2، GetAllDataV2 و SaveAllDataV2.
+- `MahakClient`: Login، GetAllDataV2 و SaveAllDataV2. مسیر Login از تنظیمات محیطی قابل تغییر است.
 - `MixinClient`: health/info و عملیات اصلی کالا، سفارش و مشتری.
 - `ProductMapper`: تبدیل مدل‌های Product، ProductDetail و VisitorProduct محک به ProductCreate/Patch در Mixin.
 - `StateStore`: نگهداری `RowVersion` و نگاشت شناسه مبدأ/مقصد.
