@@ -22,6 +22,15 @@ $tests['maps Mahak product to Mixin and converts rial to toman'] = static functi
     assertSame('limited', $payload['stock_type']);
     assertSame(34, $payload['external_ids']['mahak_product_detail_id']);
 };
+$tests['falls back to detail price when visitor price is zero and trims name'] = static function (): void {
+    $payload = (new ProductMapper(10))->toMixin(
+        ['ProductId' => 12, 'Name' => '  کالای تست  '],
+        ['ProductDetailId' => 34, 'ProductId' => 12, 'Price1' => 461100],
+        ['ProductDetailId' => 34, 'Price' => 0, 'Count1' => 5],
+    );
+    assertSame('کالای تست', $payload['name']);
+    assertSame(46110, $payload['price']);
+};
 $tests['marks unavailable inventory'] = static function (): void {
     $payload = (new ProductMapper())->toMixin(
         ['productId' => 1, 'name' => 'test'],
