@@ -6,6 +6,7 @@ require dirname(__DIR__) . '/bootstrap.php';
 
 use MahakMixin\Mapper\ProductMapper;
 use MahakMixin\Persistence\StateStore;
+use MahakMixin\Sync\ProductSyncService;
 
 final class SkippedTest extends RuntimeException {}
 
@@ -40,6 +41,19 @@ $tests['accepts PascalCase Mahak responses'] = static function (): void {
     assertSame('Pascal', $payload['name']);
     assertSame(2500, $payload['price']);
     assertSame('10', $payload['product_identifier']);
+};
+$tests['normalizes numeric Mahak detail IDs as strings'] = static function (): void {
+    $service = (new ReflectionClass(ProductSyncService::class))->newInstanceWithoutConstructor();
+    $method = new ReflectionMethod(ProductSyncService::class, 'affectedDetailIds');
+    $method->setAccessible(true);
+    $ids = $method->invoke(
+        $service,
+        [['ProductId' => 9]],
+        [['ProductDetailId' => 10, 'ProductId' => 9]],
+        [],
+        ['10' => ['ProductDetailId' => 10, 'ProductId' => 9]],
+    );
+    assertSame(['10'], $ids);
 };
 $tests['persists checkpoints mappings and snapshots'] = static function (): void {
     if (!in_array('sqlite', PDO::getAvailableDrivers(), true)) {
