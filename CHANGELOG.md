@@ -3,6 +3,8 @@
 ## Unreleased
 
 - پنل مشتری، صف کارها، retry/backoff، circuit breaker و قفل worker در roadmap هستند.
+- snapshot کامل OpenAPI محک و Mixin به منابع پروژه اضافه شد.
+- وضعیت استقرار، تصمیم‌های قطعی و چک‌لیست ادامه پروژه مستند شد.
 
 ## 2026-09-17
 

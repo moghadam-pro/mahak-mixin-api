@@ -127,6 +127,8 @@ curl http://127.0.0.1:8080/connections \
 - [استقرار روی CloudPanel](docs/cloudpanel-deployment.md)
 - [آماده‌سازی بازارا و API محک](docs/mahak-setup.md)
 - [یافته‌های سازگاری APIها](docs/api-compatibility.md)
+- [نسخه کامل OpenAPI هر دو سرویس](docs/reference/README.md)
+- [وضعیت فعلی و ادامه پروژه](docs/project-status.md)
 - [جدول mapping](docs/mapping.md)
 - [Runbook عملیاتی](docs/operations.md)
 - [قرارداد API داخلی](docs/internal-api.md)

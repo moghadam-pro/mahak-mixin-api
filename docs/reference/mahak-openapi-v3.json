@@ -1,0 +1,5131 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "سرویس های ارتباطی نرم افزار حسابداری محک ",
+    "description": "<span style='font-family:tahoma !important;'>در این مستند منظور از کلاینت ، سایت ، اپلیکیشن یا هر نوع کلاینتی که در سمت مشتری پیاده سازی می شود تا با استفاده از سرویس ها به نرم افزار حسابداری محک متصل شود<br/>ویزیتور همان سایت یا اپلیکیشن که قرار است به محک متصل شود می باشد - معادل کلاینت<br/>شناسه پایگاه داده = DatabaseId<br/>برای دریافت شناسه پایگاه داده باید افزونه بازارا در نرم افزار حسابداری محک را باز نمایید<br/>و سپس اقدام به ثبت سایت جدید نمایید در قسمت بالای افزونه سمت راست شناسه پایگاه داده را کپی نمایید و در متد لاگین استفاده نمایید<br/>برای دریافت شماره بسته می توانید بعد از باز کردن نرم افزار حسابداری محک، در قسمت پایین نرم افزار شماره بسته خود را یادداشت نمایید<br/>نام کاربری و رمز عبور خود را می توانید از مرکز خدمات مشتریان دریافت نمایید<br/>برای وارد شدن به مرکز خدمات مشتریان می توانید به سایت محک مراجعه نمایید<br/>--------------------------------------------------------<br/>توضیح کلی در مورد موجودیت ها: ارتباط بین موجودیت ها بدین صورت هست که با توجه به اینکه هر نرم افزار محک می تواند با چند کلاینت در ارتباط باشد، در نتیجه زیرساخت بصورتی پیاده سازی شده که چندین کلاینت را پشتیبانی نماید. در نتیجه موجودیت های واسطی برای هر یک از کالا و اشخاص در نظر گرفته شده است<br/>بنابراین برای بدست آوردن لیست اشخاص و کالا حتما باید از موجودیت واسط استفاده نمایید. همچنین در خصوص حذف اطلاعات یا داده ها بصورت منطقی استفاده می شود. اگر کالایی از کلاینت حذف شود باید در موجودیت واسط بررسی نمایید. چون ممکن است کالا در کلاینت دیگری استفاده شده باشد.<br/> هر یک از موجودیت ها بصورت کلی در خود موجودیت توضیح داده شده است که با مطالعه آن می توانید هدف ایجاد و ارتباط با مابقی موجودیت ها را بررسی نمایید</span>",
+    "version": "V2"
+  },
+  "basePath": "/API/v3",
+  "paths": {
+    "/Lookup/GetProductInfo": {
+      "get": {
+        "tags": [
+          "Lookup"
+        ],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "productId",
+            "type": "integer",
+            "format": "int64"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      }
+    },
+    "/Lookup/GetPersonInfo": {
+      "get": {
+        "tags": [
+          "Lookup"
+        ],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "personId",
+            "type": "integer",
+            "format": "int64"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      }
+    },
+    "/Lookup/Get/{entityType}/{entityId}": {
+      "get": {
+        "tags": [
+          "Lookup"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "entityType",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "in": "path",
+            "name": "entityId",
+            "required": true,
+            "type": "integer",
+            "format": "int64"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      }
+    },
+    "/Sync/Login": {
+      "post": {
+        "tags": [
+          "Sync"
+        ],
+        "summary": "این متد برای احراز هویت کاربر و گرفتن توکن استفاده میشود",
+        "consumes": [
+          "application/json-patch+json",
+          "application/json",
+          "text/json",
+          "application/*+json"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/LoginModel"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      }
+    },
+    "/Sync/LoginV2": {
+      "post": {
+        "tags": [
+          "Sync"
+        ],
+        "summary": "این متد برای احراز هویت کاربر و گرفتن توکن استفاده میشود",
+        "consumes": [
+          "application/json-patch+json",
+          "application/json",
+          "text/json",
+          "application/*+json"
+        ],
+        "produces": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/LoginModel"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "$ref": "#/definitions/LoginResultModelLoginResultApi"
+            }
+          }
+        }
+      }
+    },
+    "/Sync/GetAllData": {
+      "post": {
+        "tags": [
+          "Sync"
+        ],
+        "summary": "این سرویس برای گرفتن تمامی اطلاعات استفاده می شود",
+        "description": "برای اینکه اطلاعات را دریافت نمایید  ابتدا باید توکن دریافتی از سرویس لاگین را در هدر ثبت نمایید\r\nاگر از postman استفاده میکنید، باید توکن را در bearer token ثبت نمایید\r\nاگر از swagger استفاده نمایید باید در authorize توکن را وارد نمایید\r\nمی توانید تمام اطلاعات را دریافت نکنید و فقط اطلاعات مورد نیاز را دریافت نمایید\r\nبرای گرفتن اطلاعات هر یک از موجودیت ها می توانید RowVersion را ارسال نمایید\r\nاگر تمام اطلاعات موجودیت را لازم دارید، می توانید مقدار 0 را ارسال نمایید\r\nاگر اطلاعات یک موجودیت را نیاز ندارید، RowVersion آن را ارسال نکنید\r\nدر غیر اینصورت هر سری بعد از دریافت اطلاعات آخرین RowVersion را ارسال نمایید تا موارد جدید را دریافت نمایید",
+        "consumes": [
+          "application/json-patch+json",
+          "application/json",
+          "text/json",
+          "application/*+json"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/RequestAllDataModel"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      }
+    },
+    "/Sync/GetAllDataV2": {
+      "post": {
+        "tags": [
+          "Sync"
+        ],
+        "summary": "این سرویس برای گرفتن تمامی اطلاعات استفاده می شود",
+        "description": "برای اینکه اطلاعات را دریافت نمایید  ابتدا باید توکن دریافتی از سرویس لاگین را در هدر ثبت نمایید\r\nاگر از postman استفاده میکنید، باید توکن را در bearer token ثبت نمایید\r\nاگر از swagger استفاده نمایید باید در authorize توکن را وارد نمایید\r\nمی توانید تمام اطلاعات را دریافت نکنید و فقط اطلاعات مورد نیاز را دریافت نمایید\r\nبرای گرفتن اطلاعات هر یک از موجودیت ها می توانید RowVersion را ارسال نمایید\r\nاگر تمام اطلاعات موجودیت را لازم دارید، می توانید مقدار 0 را ارسال نمایید\r\nاگر اطلاعات یک موجودیت را نیاز ندارید، RowVersion آن را ارسال نکنید\r\nدر غیر اینصورت هر سری بعد از دریافت اطلاعات آخرین RowVersion را ارسال نمایید تا موارد جدید را دریافت نمایید",
+        "consumes": [
+          "application/json-patch+json",
+          "application/json",
+          "text/json",
+          "application/*+json"
+        ],
+        "produces": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/RequestAllDataModel"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "$ref": "#/definitions/CommitDataModelApiResult"
+            }
+          }
+        }
+      }
+    },
+    "/Sync/SaveAllData": {
+      "post": {
+        "tags": [
+          "Sync"
+        ],
+        "summary": "این سرویس برای ثبت تمامی اطلاعات استفاده می شود",
+        "description": "برای اینکه اطلاعات را ثبت نمایید ابتدا باید توکن دریافتی از سرویس لاگین را در هدر ثبت نمایید\r\nاگر از postman استفاده میکنید، باید توکن را در bearer token ثبت نمایید\r\nاگر از swagger استفاده نمایید باید در authorize توکن را وارد نمایید\r\nدر خصوص ثبت اطلاعات بهتر است داده های خود را درصورتیکه حجم بالایی دارد در یک درخواست ارسال نمایید\r\nو همچنین بهتر است موجودیت های وابسته بهم را در یک درخواست ارسال نمایید بعنوان مثال سفارش و جزئیات سفارش",
+        "consumes": [
+          "application/json-patch+json",
+          "application/json",
+          "text/json",
+          "application/*+json"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/CommitDataModel"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      }
+    },
+    "/Sync/SaveAllDataV2": {
+      "post": {
+        "tags": [
+          "Sync"
+        ],
+        "summary": "این سرویس برای ثبت تمامی اطلاعات استفاده می شود",
+        "description": "برای اینکه اطلاعات را ثبت نمایید ابتدا باید توکن دریافتی از سرویس لاگین را در هدر ثبت نمایید\r\nاگر از postman استفاده میکنید، باید توکن را در bearer token ثبت نمایید\r\nاگر از swagger استفاده نمایید باید در authorize توکن را وارد نمایید\r\nدر خصوص ثبت اطلاعات بهتر است داده های خود را درصورتیکه حجم بالایی دارد در یک درخواست ارسال نمایید\r\nو همچنین بهتر است موجودیت های وابسته بهم را در یک درخواست ارسال نمایید بعنوان مثال سفارش و جزئیات سفارش",
+        "consumes": [
+          "application/json-patch+json",
+          "application/json",
+          "text/json",
+          "application/*+json"
+        ],
+        "produces": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/CommitDataModel"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "$ref": "#/definitions/SaveAllDataResultApiResult"
+            }
+          }
+        }
+      }
+    },
+    "/Sync/SolveOrderDispute": {
+      "post": {
+        "tags": [
+          "Sync"
+        ],
+        "consumes": [
+          "application/json-patch+json",
+          "application/json",
+          "text/json",
+          "application/*+json"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "schema": {
+              "$ref": "#/definitions/SolveOrderDisputeRequestModel"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      }
+    },
+    "/Sync/SolveDispute": {
+      "post": {
+        "tags": [
+          "Sync"
+        ],
+        "consumes": [
+          "application/json-patch+json",
+          "application/json",
+          "text/json",
+          "application/*+json"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "schema": {
+              "$ref": "#/definitions/SolveDisputeRequestModel"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      }
+    },
+    "/Sync/Upload": {
+      "post": {
+        "tags": [
+          "Sync"
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      }
+    }
+  },
+  "definitions": {
+    "BankGroupModel": {
+      "type": "object",
+      "properties": {
+        "bankGroupId": {
+          "format": "int32",
+          "description": "کد گروه بانک سمت سرور - توسط دیتابیس  سرور ایجاد می شود",
+          "type": "integer"
+        },
+        "bankGroupClientId": {
+          "format": "int64",
+          "description": "کد گروه بانک سمت کلاینت - اگر از طریق کلاینت اطلاعات ارسال می کنید باید حتما این فیلد مقدار دهی شود",
+          "type": "integer"
+        },
+        "bankGroupCode": {
+          "format": "int32",
+          "description": "کد گروه بانک سمت نرم افزار - اگر از طریق محک اطلاعات ارسال می کنید باید حتما این فیلد  مقدار دهی شود",
+          "type": "integer"
+        },
+        "name": {
+          "description": "نام",
+          "type": "string"
+        },
+        "comment": {
+          "description": "توضیحات",
+          "type": "string"
+        },
+        "deleted": {
+          "description": "در صورتی که می خواهید رکوردی را حذف کنید این فیلد را مقداردهی کنید حذف منطقی از بانک اطلاعاتی صورت می گیرد",
+          "type": "boolean"
+        },
+        "rowVersion": {
+          "format": "int64",
+          "description": "این فیلد توسط دیتابیس تولید می شود و در  اختیار شما قرار می گیرد  می توانید بزرگترین مقدار این  فیلد را برای هر موجودیت دیتابیس  سمت کلاینت یا نرم افزار محک ذخیره کرده و هنگام فراخوانی متد\r\nGetAllData()\r\nبرای افزایش سرعت رکوردهایی که فقط تغییر داشته اند را از سرور دریافت نمایید",
+          "type": "integer"
+        }
+      }
+    },
+    "BankModel": {
+      "type": "object",
+      "properties": {
+        "bankId": {
+          "format": "int32",
+          "description": "کد بانک سمت سرور - بصورت اتومات توسط سرور تکمیل می شود",
+          "type": "integer"
+        },
+        "bankClientId": {
+          "format": "int64",
+          "description": "کد بانک سمت کلاینت\r\nاگر از طریق کلاینت اطلاعات ارسال می کنید باید حتما این فیلد  مقدار دهی شود",
+          "type": "integer"
+        },
+        "bankGroupId": {
+          "format": "int32",
+          "description": "شناسه گروه بانک در  سرور \r\nاختیاری \r\n را در اختیار ندارید (BankGroupId) در صورتی که گروه درامد از قبل  به سرور ارسال نشده باشد و\r\n دو راه حل و جود دارد :\r\n راه حل اول و بهتر این است که گروه درامد  همزمان با بانک  ارسال شود \r\n  در مدل جاری پر شود (BankGroupClientId)  اگر از سمت سایت بانک ارسال می کنید باید فیلد\r\n  در مدل جاری پر شود (BankGroupClientCode)  اگر از سمت محک بانک ارسال می کنید باید فیلد\r\n  راه حل دوم :\r\n  ابتدا گروه بانک  به سرور ارسال شود و شناسه گروه بانک در سرور دریافت  و سپس بانک  ارسال شود\r\n  راه حل اول پرفرمنس بهتری دارد و از این روش می توانید برای تمام موجودیت های وابسته استفاده کنید",
+          "type": "integer"
+        },
+        "bankCode": {
+          "format": "int32",
+          "description": "کد بانک سمت نرم افزار محک\r\nاگر  از طریق نرم افزار محک اطلاعات ارسال می کنید باید حتما این فیلد  مقدار دهی شود",
+          "type": "integer"
+        },
+        "name": {
+          "description": "نام بانک",
+          "type": "string"
+        },
+        "bankName": {
+          "description": "نام کامل بانک شاملل نام و شعبه",
+          "type": "string"
+        },
+        "branch": {
+          "description": "عنوان شعبه",
+          "type": "string"
+        },
+        "accountNumber": {
+          "description": "شماره حساب",
+          "type": "string"
+        },
+        "cardNumber": {
+          "description": "شماره کارت بانکی متصل به حساب",
+          "type": "string"
+        },
+        "shaba": {
+          "description": "شماره شبا حساب",
+          "type": "string"
+        },
+        "description": {
+          "description": "توضیحات",
+          "type": "string"
+        },
+        "deleted": {
+          "description": "در صورتی که می خواهید رکوردی را حذف کنید این فیلد را مقداردهی کنید حذف منطقی از بانک صورت می گیرد",
+          "type": "boolean"
+        },
+        "rowVersion": {
+          "format": "int64",
+          "description": "این فیلد توسط دیتابیس تولید می شود و در  اختیار شما قرار می گیرد  می توانید بزرگترین مقدار این  فیلد را برای هر موجودیت دیتابیس  سمت کلاینت یا نرم افزار محک ذخیره کرده و هنگام فراخوانی متد\r\nGetAllData()\r\nبرای افزایش سرعت رکوردهایی که فقط تغییر داشته اند را از سرور دریافت نمایید",
+          "type": "integer"
+        },
+        "bankGroupClientId": {
+          "format": "int64",
+          "description": "کد بانک در کلاینت",
+          "type": "integer"
+        },
+        "bankGroupCode": {
+          "format": "int32",
+          "description": "کد بانک در محک",
+          "type": "integer"
+        }
+      }
+    },
+    "CashModel": {
+      "type": "object",
+      "properties": {
+        "cashId": {
+          "format": "int32",
+          "description": "کد صندوق سمت سرور- که توسط دیتابیس  سرور تکمیل می شود",
+          "type": "integer"
+        },
+        "cashClientId": {
+          "format": "int64",
+          "description": "کد صندوق سمت کلاینت، اگر از طریق سایت صندوق ارسال می کنید باید حتما این فیلد  مقدار دهی شود",
+          "type": "integer"
+        },
+        "cashCode": {
+          "format": "int32",
+          "description": "کد صندوق سمت نرم افزار محک ، اگر از طریق محک صندوق ارسال می کنید باید حتما این فیلد  مقدار دهی شود",
+          "type": "integer"
+        },
+        "name": {
+          "description": "نام صندوق",
+          "type": "string"
+        },
+        "mogodi": {
+          "format": "double",
+          "description": "موجودی صندوق",
+          "type": "number"
+        },
+        "avalDore": {
+          "format": "double",
+          "description": "اول دوره",
+          "type": "number"
+        },
+        "voucherCode": {
+          "format": "int32",
+          "description": "",
+          "type": "integer"
+        },
+        "detailUniqueCode": {
+          "format": "int32",
+          "description": "کد تفصیلی یکتا",
+          "type": "integer"
+        },
+        "currCode": {
+          "format": "int32",
+          "description": "کد ارز ضندوق",
+          "type": "integer"
+        },
+        "currRate": {
+          "format": "double",
+          "description": "نرخ ارز نسبت به واحد پولی مبنا",
+          "type": "number"
+        },
+        "description": {
+          "description": "توضیحات",
+          "type": "string"
+        },
+        "deleted": {
+          "description": "در صورتی که می خواهید رکوردی را حذف کنید این فیلد را مقداردهی کنید حذف منطقی از صندوق صورت می گیرد",
+          "type": "boolean"
+        },
+        "rowVersion": {
+          "format": "int64",
+          "description": "این فیلد توسط دیتابیس تولید می شود و در  اختیار شما قرار می گیرد  می توانید بزرگترین مقدار این  فیلد را برای هر موجودیت دیتابیس  سمت کلاینت یا نرم افزار محک ذخیره کرده و هنگام فراخوانی متد\r\nGetAllData()\r\nبرای افزایش سرعت رکوردهایی که فقط تغییر داشته اند را از سرور دریافت نمایید",
+          "type": "integer"
+        }
+      }
+    },
+    "ChecklistModel": {
+      "type": "object",
+      "properties": {
+        "checklistId": {
+          "format": "int32",
+          "description": "کد چک لیست سرور",
+          "type": "integer"
+        },
+        "checklistClientId": {
+          "format": "int64",
+          "description": "کد چک لیست کلاینت",
+          "type": "integer"
+        },
+        "checklistCode": {
+          "format": "int32",
+          "description": "کد چک لیست نرم افزار محک\r\nاگر  از طریق نرم افزار محک اطلاعات ارسال می کنید باید حتما این فیلد  مقدار دهی شود",
+          "type": "integer"
+        },
+        "visitorId": {
+          "format": "int32",
+          "description": "کد کلاینت در سرور",
+          "type": "integer"
+        },
+        "status": {
+          "format": "int32",
+          "description": "0 = همه حالت ها\r\n1 = ارسال نشده از نرم افزار محک به سرور\r\n2 = ارسال شده از نرم افزار محک به سرور\r\n3 = انجام شده",
+          "type": "integer"
+        },
+        "type": {
+          "format": "int32",
+          "description": "1 = ثبت سفارش\r\n2 = تحویل سفارش\r\n3 = وصول  مطالبات",
+          "type": "integer"
+        },
+        "personId": {
+          "format": "int32",
+          "description": "شناسه شخص در سرور      \r\n را در اختیار ندارید (PersonId) در صورتی که شخص از قبل  به سرور ارسال نشده باشد و\r\n دو راه حل و جود دارد :\r\n راه حل اول و بهتر این است که شخص  همزمان با چک لیست ارسال شود \r\n  در مدل جاری (PersonClientId)  اگر از سمت کلاینت شخص ارسال می کنید باید فیلد\r\n  را با کد شخص در سایت ارسال  نمایید     \r\n  در مدل جاری (PersonCode)  اگر از سمت محک شخص ارسال می کنید باید فیلد\r\n  را با کد شخص در محک ارسال  نمایید \r\n  راه حل دوم :\r\n  ابتدا شخص  به سرور ارسال شود و شناسه شخص در سرور دریافت  و سپس چک لیست ارسال شود\r\n  راه حل اول پرفرمنس بهتری دارد و از این روش می توانید برای تمام موجودیت های وابسته استفاده کنید",
+          "type": "integer"
+        },
+        "description": {
+          "description": "توضیحات",
+          "type": "string"
+        },
+        "date": {
+          "format": "date-time",
+          "description": "تاریخ انجام دستور کار",
+          "type": "string"
+        },
+        "priority": {
+          "format": "int32",
+          "description": "اولویت",
+          "type": "integer"
+        },
+        "deleted": {
+          "description": "در صورتی که می خواهید رکوردی را حذف کنید این فیلد را مقداردهی کنید حذف منطقی از بانک صورت می گیرد",
+          "type": "boolean"
+        },
+        "rowVersion": {
+          "format": "int64",
+          "description": "این فیلد توسط دیتابیس تولید می شود و در  اختیار شما قرار می گیرد  می توانید بزرگترین مقدار این  فیلد را برای هر موجودیت دیتابیس  سمت سایت یا نرم افزار محک ذخیره کرده و هنگام فراخوانی متد\r\nGetAllData()\r\nبرای افزایش سرعت رکوردهایی که فقط تغییر داشته اند را از سرور دریافت نمایید",
+          "type": "integer"
+        },
+        "personClientId": {
+          "format": "int64",
+          "description": "کد شخص سمت کلاینت",
+          "type": "integer"
+        },
+        "personCode": {
+          "format": "int32",
+          "description": "کد شخص سمت نرم افزار محک",
+          "type": "integer"
+        }
+      }
+    },
+    "ChequeModel": {
+      "type": "object",
+      "properties": {
+        "chequeId": {
+          "format": "int32",
+          "description": "کد چک سمت سرور- که توسط دیتابیس  سرور تکمیل می شود",
+          "type": "integer"
+        },
+        "chequeClientId": {
+          "format": "int64",
+          "description": "کد چک سمت کلاینت، اگر از طریق سایت چک ارسال می کنید باید حتما این فیلد  مقدار دهی شود",
+          "type": "integer"
+        },
+        "chequeCode": {
+          "format": "int32",
+          "description": "کد چک سمت نرم افزار محک ، اگر از طریق محک چک ارسال می کنید باید حتما این فیلد  مقدار دهی شود",
+          "type": "integer"
+        },
+        "receiptId": {
+          "format": "int32",
+          "description": "کد حواله در سرور      \r\n را در اختیار ندارید (ReceiptId) در صورتی که حواله از قبل  به سرور ارسال نشده باشد و\r\n دو راه حل و جود دارد :\r\n راه حل اول و بهتر این است که چک  همزمان با حواله ارسال شود \r\n اگر از این راه حل استفاده میکنید بجای فیلد ReceiptId یکی از فیلدهای ReceiptClientId یا ReceiptCode را ارسال نمایید\r\n  در مدل جاری (ReceiptClientId)  اگر از سمت کلاینت ارسال می کنید باید فیلد\r\n  را با کد حواله در سایت ارسال  نمایید     \r\n  در مدل جاری (ReceiptCode)  اگر از سمت محک ارسال می کنید باید فیلد\r\n  را با کد حواله در محک ارسال  نمایید \r\n  راه حل دوم :\r\n  ابتدا حواله  به سرور ارسال شود و شناسه حواله در سرور دریافت و سپس چک ارسال شود\r\n  راه حل اول پرفرمنس بهتری دارد و از این روش می توانید برای تمام موجودیت های وابسته استفاده کنید",
+          "type": "integer"
+        },
+        "bankId": {
+          "format": "int32",
+          "description": "کد بانک در سرور      \r\n را در اختیار ندارید (BankId) در صورتی که بانک از قبل  به سرور ارسال نشده باشد و\r\n دو راه حل و جود دارد :\r\n راه حل اول و بهتر این است که چک همزمان با بانک ارسال شود \r\n  در مدل جاری (BankClientId) اگر از سمت کلاینت چک ارسال می کنید باید فیلد\r\n  را با کد بانک در سایت ارسال نمایید     \r\n  در مدل جاری (BankCode) اگر از سمت محک چک ارسال می کنید باید فیلد\r\n  را با کد بانک در محک ارسال  نمایید \r\n  راه حل دوم :\r\n  ابتدا بانک  به سرور ارسال شود و کد بانک در سرور دریافت و سپس چک ارسال شود\r\n  راه حل اول پرفرمنس بهتری دارد و از این روش می توانید برای تمام موجودیت های وابسته استفاده کنید",
+          "type": "integer"
+        },
+        "number": {
+          "description": "شماره چک",
+          "type": "string"
+        },
+        "bankName": {
+          "description": "نام بانک",
+          "type": "string"
+        },
+        "branch": {
+          "description": "نام شعبه",
+          "type": "string"
+        },
+        "amount": {
+          "format": "double",
+          "description": "مبلغ",
+          "type": "number"
+        },
+        "date": {
+          "format": "date-time",
+          "description": "تاریخ",
+          "type": "string"
+        },
+        "type": {
+          "format": "int32",
+          "description": "1 = چک دریافتی\r\n2 = حواله (رسید) نقدی",
+          "type": "integer"
+        },
+        "description": {
+          "description": "توضیحات",
+          "type": "string"
+        },
+        "deleted": {
+          "description": "در صورتی که می خواهید رکوردی را حذف کنید این فیلد را مقداردهی کنید حذف منطقی از بانک صورت می گیرد",
+          "type": "boolean"
+        },
+        "createDate": {
+          "format": "date-time",
+          "type": "string"
+        },
+        "rowVersion": {
+          "format": "int64",
+          "description": "این فیلد توسط دیتابیس تولید می شود و در  اختیار شما قرار می گیرد  می توانید بزرگترین مقدار این  فیلد را برای هر موجودیت دیتابیس  سمت کلاینت یا نرم افزار محک ذخیره کرده و هنگام فراخوانی متد\r\nGetAllData()\r\nبرای افزایش سرعت رکوردهایی که فقط تغییر داشته اند را از سرور دریافت نمایید",
+          "type": "integer"
+        },
+        "receiptClientId": {
+          "format": "int64",
+          "description": "کد حواله در کلاینت",
+          "type": "integer"
+        },
+        "receiptCode": {
+          "format": "int32",
+          "description": "کد حواله در محک",
+          "type": "integer"
+        },
+        "bankClientId": {
+          "format": "int64",
+          "description": "کد بانک در کلاینت",
+          "type": "integer"
+        },
+        "bankCode": {
+          "format": "int32",
+          "description": "کد بانک در محک",
+          "type": "integer"
+        }
+      }
+    },
+    "CommitDataModel": {
+      "type": "object",
+      "properties": {
+        "banks": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/BankModel"
+          }
+        },
+        "bankGroups": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/BankGroupModel"
+          }
+        },
+        "currencies": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/CurrencyModel"
+          }
+        },
+        "checklists": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/ChecklistModel"
+          }
+        },
+        "cheques": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/ChequeModel"
+          }
+        },
+        "cashes": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/CashModel"
+          }
+        },
+        "expenseGroups": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/ExpenseGroupModel"
+          }
+        },
+        "orders": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/OrderModel"
+          }
+        },
+        "orderDetails": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/OrderDetailModel"
+          }
+        },
+        "personGroups": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/PersonGroupModel"
+          }
+        },
+        "people": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/PersonModel"
+          }
+        },
+        "personAddresses": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/PersonAddressModel"
+          }
+        },
+        "pictures": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/PictureModel"
+          }
+        },
+        "photoGalleries": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/PhotoGalleryModel"
+          }
+        },
+        "products": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/ProductModel"
+          }
+        },
+        "productCategories": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/ProductCategoryModel"
+          }
+        },
+        "productDetails": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/ProductDetailModel"
+          }
+        },
+        "productProperties": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/ProductPropertyModel"
+          }
+        },
+        "propertyDescriptions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/PropertyDescriptionModel"
+          }
+        },
+        "propertyDescriptionValues": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/PropertyDescriptionValueModel"
+          }
+        },
+        "productDetailStoreAssets": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/ProductDetailStoreAssetModel"
+          }
+        },
+        "receipts": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/ReceiptModel"
+          }
+        },
+        "transactions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/TransactionModel"
+          }
+        },
+        "visitors": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/VisitorModel"
+          }
+        },
+        "visitorCashes": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/VisitorCashModel"
+          }
+        },
+        "visitorBanks": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/VisitorBankModel"
+          }
+        },
+        "visitorIncomes": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/VisitorIncomeModel"
+          }
+        },
+        "visitorExpenses": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/VisitorExpenseModel"
+          }
+        },
+        "visitorPeople": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/VisitorPersonModel"
+          }
+        },
+        "visitorLocations": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/VisitorLocationModel"
+          }
+        },
+        "visitorProducts": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/VisitorProductModel"
+          }
+        },
+        "promotions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/PromotionModel"
+          }
+        },
+        "promotionDetails": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/PromotionDetailModel"
+          }
+        },
+        "promotionEntities": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/PromotionEntityModel"
+          }
+        },
+        "returnReasons": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/ReturnReasonModel"
+          }
+        },
+        "transferAccounts": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/TransferAccountModel"
+          }
+        },
+        "transferStores": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/TransferStoreModel"
+          }
+        },
+        "transferStoreDetails": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/TransferStoreDetailModel"
+          }
+        },
+        "incomes": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/IncomeModel"
+          }
+        },
+        "expenses": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/ExpenseModel"
+          }
+        },
+        "incomeGroups": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/IncomeGroupModel"
+          }
+        },
+        "costLevelNames": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/CostLevelNameModel"
+          }
+        },
+        "notRegisters": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/NotRegisterModel"
+          }
+        },
+        "projects": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/ProjectModel"
+          }
+        },
+        "stores": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/StoreModel"
+          }
+        },
+        "settings": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/SettingModel"
+          }
+        },
+        "extraDatas": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/ExtraDataModel"
+          }
+        },
+        "regions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/RegionModel"
+          }
+        },
+        "missionDetails": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/MissionDetailModel"
+          }
+        },
+        "missions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/MissionModel"
+          }
+        },
+        "units": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/UnitModel"
+          }
+        },
+        "orderTaxStatuses": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/OrderTaxStatusModel"
+          }
+        },
+        "companies": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/CompanyInfoModel"
+          }
+        },
+        "payments": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/PaymentModel"
+          }
+        },
+        "paymentCheques": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/PaymentChequeModel"
+          }
+        },
+        "mahakpays": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/MahakPayModel"
+          }
+        },
+        "taxOrderReceipts": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/TaxOrderReceiptModel"
+          }
+        }
+      }
+    },
+    "CommitDataModelApiResult": {
+      "type": "object",
+      "properties": {
+        "result": {
+          "type": "boolean",
+          "readOnly": true
+        },
+        "code": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "message": {
+          "type": "string"
+        },
+        "data": {
+          "$ref": "#/definitions/CommitDataModelObject"
+        }
+      }
+    },
+    "CommitDataModelObject": {
+      "type": "object",
+      "properties": {
+        "objects": {
+          "$ref": "#/definitions/CommitDataModel"
+        }
+      }
+    },
+    "CompanyInfoModel": {
+      "type": "object",
+      "properties": {
+        "companyInfoId": {
+          "format": "int32",
+          "description": "کد مشخصات شرکت یا سازمان - بصورت اتومات توسط سرور تکمیل می شود",
+          "type": "integer"
+        },
+        "name": {
+          "description": "عنوان شرکت / سازمان",
+          "type": "string"
+        },
+        "fiscalYear": {
+          "description": "عنوان سال مالی",
+          "type": "string"
+        },
+        "tel1": {
+          "description": "تلفن 1",
+          "type": "string"
+        },
+        "tel2": {
+          "description": "تلفن 2",
+          "type": "string"
+        },
+        "address": {
+          "description": "آدرس",
+          "type": "string"
+        },
+        "fiscalYearStartDate": {
+          "description": "تاریخ شروع سال مالی",
+          "type": "string"
+        },
+        "fiscalYearEndDate": {
+          "description": "تاریخ پایان سال مالی",
+          "type": "string"
+        },
+        "economicNo": {
+          "description": "شماره اقتصادی",
+          "type": "string"
+        },
+        "registerationNumber": {
+          "description": "شناسه ثبت",
+          "type": "string"
+        },
+        "postalCode": {
+          "description": "کد پستی",
+          "type": "string"
+        },
+        "jobDescription": {
+          "description": "عنوان فعالیت",
+          "type": "string"
+        },
+        "nationalID": {
+          "description": "شناسه ملی کسب و کار",
+          "type": "string"
+        },
+        "deleted": {
+          "description": "در صورتی که می خواهید رکوردی را حذف کنید این فیلد را مقداردهی کنید حذف منطقی از بانک صورت می گیرد",
+          "type": "boolean"
+        },
+        "rowVersion": {
+          "format": "int64",
+          "description": "این فیلد توسط دیتابیس تولید می شود و در  اختیار شما قرار می گیرد  می توانید بزرگترین مقدار این  فیلد را برای هر موجودیت دیتابیس  سمت کلاینت یا نرم افزار محک ذخیره کرده و هنگام فراخوانی متد\r\nGetAllData()\r\nبرای افزایش سرعت رکوردهایی که فقط تغییر داشته اند را از سرور دریافت نمایید",
+          "type": "integer"
+        }
+      }
+    },
+    "CostLevelNameModel": {
+      "type": "object",
+      "properties": {
+        "costLevelNameId": {
+          "format": "int32",
+          "description": "کد سطح قیمتی - توسط دیتابیس  سرور ایجاد می شود",
+          "type": "integer"
+        },
+        "costLevelNameClientId": {
+          "format": "int64",
+          "description": "کد سطح قیمتی کلاینت\r\nاگر از طریق کلاینت اطلاعات ارسال می کنید باید حتما این فیلد  مقدار دهی شود",
+          "type": "integer"
+        },
+        "costLevelNameCode": {
+          "format": "int32",
+          "description": "کد سطح قیمتی سمت نرم افزار محک\r\nاگر از طریق محک اطلاعات ارسال می کنید باید حتما این فیلد  مقدار دهی شود",
+          "type": "integer"
+        },
+        "name": {
+          "description": "نام",
+          "type": "string"
+        },
+        "deleted": {
+          "description": "در صورتی که می خواهید رکوردی را حذف کنید این فیلد را مقداردهی کنید حذف منطقی از بانک اطلاعاتی صورت می گیرد",
+          "type": "boolean"
+        },
+        "rowVersion": {
+          "format": "int64",
+          "description": "این فیلد توسط دیتابیس تولید می شود و در  اختیار شما قرار می گیرد  می توانید بزرگترین مقدار این  فیلد را برای هر موجودیت دیتابیس  سمت کلاینت یا نرم افزار محک ذخیره کرده و هنگام فراخوانی متد\r\nGetAllData()\r\nبرای افزایش سرعت رکوردهایی که فقط تغییر داشته اند را از سرور دریافت نمایید",
+          "type": "integer"
+        }
+      }
+    },
+    "CurrencyModel": {
+      "type": "object",
+      "properties": {
+        "currencyId": {
+          "format": "int32",
+          "description": "کد بانک سمت کلاینت\r\nاگر از طریق کلاینت اطلاعات ارسال می کنید باید حتما این فیلد  مقدار دهی شود",
+          "type": "integer"
+        },
+        "currencyClientId": {
+          "format": "int64",
+          "type": "integer"
+        },
+        "currencyCode": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "name": {
+          "type": "string"
+        },
+        "country": {
+          "type": "string"
+        },
+        "amount": {
+          "format": "double",
+          "type": "number"
+        },
+        "comment": {
+          "type": "string"
+        },
+        "symbol": {
+          "type": "string"
+        },
+        "isBase": {
+          "type": "boolean"
+        },
+        "smallerUnit": {
+          "type": "string"
+        },
+        "currencyTIN": {
+          "type": "string"
+        },
+        "deleted": {
+          "type": "boolean"
+        },
+        "dataHash": {
+          "type": "string"
+        },
+        "createDate": {
+          "format": "date-time",
+          "type": "string"
+        },
+        "updateDate": {
+          "format": "date-time",
+          "type": "string"
+        },
+        "createSyncId": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "updateSyncId": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "rowVersion": {
+          "format": "int64",
+          "type": "integer"
+        }
+      }
+    },
+    "DisputeItem": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "rw": {
+          "format": "int64",
+          "type": "integer"
+        }
+      }
+    },
+    "DisputeOrder": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "code": {
+          "format": "int32",
+          "type": "integer"
+        }
+      }
+    },
+    "EntityUpdateResult": {
+      "type": "object",
+      "properties": {
+        "result": {
+          "type": "boolean"
+        },
+        "index": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "entityId": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "entityClientId": {
+          "format": "int64",
+          "type": "integer"
+        },
+        "entityCode": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "rowVersion": {
+          "format": "int64",
+          "type": "integer"
+        },
+        "errors": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/PropertyErrorModel"
+          }
+        },
+        "additionalData": { }
+      }
+    },
+    "ExpenseGroupModel": {
+      "type": "object",
+      "properties": {
+        "expenseGroupId": {
+          "format": "int32",
+          "description": "کد گروه هزینه سمت سرور - توسط دیتابیس  سرور ایجاد می شود",
+          "type": "integer"
+        },
+        "expenseGroupClientId": {
+          "format": "int64",
+          "description": "کد گروه هزینه سمت کلاینت - اگر از طریق کلاینت اطلاعات ارسال می کنید باید حتما این فیلد مقدار دهی شود",
+          "type": "integer"
+        },
+        "expenseGroupCode": {
+          "format": "int32",
+          "description": "کد گروه هزینه سمت نرم افزار - اگر از طریق محک اطلاعات ارسال می کنید باید حتما این فیلد  مقدار دهی شود",
+          "type": "integer"
+        },
+        "name": {
+          "description": "نام",
+          "type": "string"
+        },
+        "comment": {
+          "description": "توضیحات",
+          "type": "string"
+        },
+        "deleted": {
+          "description": "در صورتی که می خواهید رکوردی را حذف کنید این فیلد را مقداردهی کنید حذف منطقی از هزینه اطلاعاتی صورت می گیرد",
+          "type": "boolean"
+        },
+        "rowVersion": {
+          "format": "int64",
+          "description": "این فیلد توسط دیتابیس تولید می شود و در  اختیار شما قرار می گیرد  می توانید بزرگترین مقدار این  فیلد را برای هر موجودیت دیتابیس  سمت کلاینت یا نرم افزار محک ذخیره کرده و هنگام فراخوانی متد\r\nGetAllData()\r\nبرای افزایش سرعت رکوردهایی که فقط تغییر داشته اند را از سرور دریافت نمایید",
+          "type": "integer"
+        }
+      }
+    },
+    "ExpenseModel": {
+      "type": "object",
+      "properties": {
+        "expenseId": {
+          "format": "int32",
+          "description": "کد هزینه - توسط دیتابیس  سرور ایجاد می شود",
+          "type": "integer"
+        },
+        "expenseClientId": {
+          "format": "int64",
+          "description": "کد هزینه سمت کلاینت ، اگر از طریق کلاینت، هزینه ارسال می کنید باید حتما این فیلد  مقدار دهی شود",
+          "type": "integer"
+        },
+        "expenseCode": {
+          "format": "int32",
+          "description": "کد هزینه سمت نرم افزار ، اگر از طریق محک اطلاعات ارسال می کنید باید حتما این فیلد  مقدار دهی شود",
+          "type": "integer"
+        },
+        "name": {
+          "description": "نام",
+          "type": "string"
+        },
+        "expenseGroupId": {
+          "format": "int32",
+          "description": "شناسه گروه هزینه در  سرور \r\nاختیاری \r\n را در اختیار ندارید (ExpenseGroupId) در صورتی که گروه درامد از قبل  به سرور ارسال نشده باشد و\r\n دو راه حل و جود دارد :\r\n راه حل اول و بهتر این است که گروه درامد  همزمان با هزینه  ارسال شود \r\n  در مدل جاری پر شود (ExpenseGroupClientId)  اگر از سمت سایت هزینه ارسال می کنید باید فیلد\r\n  در مدل جاری پر شود (ExpenseGroupClientCode)  اگر از سمت محک هزینه ارسال می کنید باید فیلد\r\n  راه حل دوم :\r\n  ابتدا گروه هزینه  به سرور ارسال شود و شناسه گروه هزینه در سرور دریافت  و سپس هزینه  ارسال شود\r\n  راه حل اول پرفرمنس بهتری دارد و از این روش می توانید برای تمام موجودیت های وابسته استفاده کنید",
+          "type": "integer"
+        },
+        "amount": {
+          "format": "double",
+          "description": "مبلغ",
+          "type": "number"
+        },
+        "detailUniqueCode": {
+          "format": "int32",
+          "description": "کد تفصیلی یکتا",
+          "type": "integer"
+        },
+        "defaultCost": {
+          "format": "double",
+          "description": "قیمت پیش فرص",
+          "type": "number"
+        },
+        "comment": {
+          "description": "توضیحات",
+          "type": "string"
+        },
+        "deleted": {
+          "description": "در صورتی که می خواهید رکوردی را حذف کنید این فیلد را مقداردهی کنید حذف منطقی از بانک اطلاعاتی صورت می گیرد",
+          "type": "boolean"
+        },
+        "rowVersion": {
+          "format": "int64",
+          "description": "این فیلد توسط دیتابیس تولید می شود و در  اختیار شما قرار می گیرد  می توانید بزرگترین مقدار این  فیلد را برای هر موجودیت دیتابیس  سمت کلاینت یا نرم افزار محک ذخیره کرده و هنگام فراخوانی متد\r\nGetAllData()\r\nبرای افزایش سرعت رکوردهایی که فقط تغییر داشته اند را از سرور دریافت نمایید",
+          "type": "integer"
+        },
+        "expenseGroupClientId": {
+          "format": "int64",
+          "description": "کد هزینه در کلاینت",
+          "type": "integer"
+        },
+        "expenseGroupCode": {
+          "format": "int32",
+          "description": "کد هزینه در محک",
+          "type": "integer"
+        }
+      }
+    },
+    "ExtraDataModel": {
+      "description": "این موجودیت برای ثبت داده های اضافی بقیه موجودیت ها استفاده می شود\r\nبر حسب نوع داده های مختلف در این موجودیت ذخیره می شود\r\nفرمت ذخیره سازی بصورت جیسون می باشد",
+      "type": "object",
+      "properties": {
+        "extraDataId": {
+          "format": "int32",
+          "description": "کد داده اضافی - توسط دیتابیس  سرور ایجاد می شود",
+          "type": "integer"
+        },
+        "itemType": {
+          "format": "int32",
+          "description": "101 = برای ارسال اطلاعات اضافی مشتریان\r\n102 = اطلاعات اضافی کالاها\r\n10201 اطلاعات تغییر یافته کالاها\r\n140 = شهرها\r\n130 = اطلاعات دسته بندی\r\n10202 = دسته بندی های کالا",
+          "type": "integer"
+        },
+        "itemId": {
+          "format": "int32",
+          "description": "بر اساس مقدار ItemType ،مقدار این فیلد متناظر با مقدار در موجودیت مربوطه می باشد\r\nif ItemType = 101 => personCode\r\nif ItemType = 102 => productCode\r\nif ItemType = 10201 =>  productCode\r\nif ItemType = 13 =>  categoryCode\r\nif ItemType = 10202 => productCategoryCode",
+          "type": "integer"
+        },
+        "data": {
+          "description": "اطلاعات اضافی با فرمت جیسون ارسال شود",
+          "type": "string"
+        },
+        "deleted": {
+          "description": "در صورتی که می خواهید رکوردی را حذف کنید این فیلد را مقداردهی کنید حذف منطقی از بانک اطلاعاتی صورت می گیرد",
+          "type": "boolean"
+        },
+        "rowVersion": {
+          "format": "int64",
+          "description": "این فیلد توسط دیتابیس تولید می شود و در  اختیار شما قرار می گیرد  می توانید بزرگترین مقدار این  فیلد را برای هر موجودیت دیتابیس  سمت کلاینت یا نرم افزار محک ذخیره کرده و هنگام فراخوانی متد\r\nGetAllData()\r\nبرای افزایش سرعت رکوردهایی که فقط تغییر داشته اند را از سرور دریافت نمایید",
+          "type": "integer"
+        }
+      }
+    },
+    "IncomeGroupModel": {
+      "type": "object",
+      "properties": {
+        "incomeGroupId": {
+          "format": "int32",
+          "description": "کد گروه درآمد سمت سرور - توسط دیتابیس  سرور ایجاد می شود",
+          "type": "integer"
+        },
+        "incomeGroupClientId": {
+          "format": "int64",
+          "description": "کد گروه درآمد سمت کلاینت - اگر از طریق کلاینت اطلاعات ارسال می کنید باید حتما این فیلد مقدار دهی شود",
+          "type": "integer"
+        },
+        "incomeGroupCode": {
+          "format": "int32",
+          "description": "کد گروه درآمد سمت نرم افزار - اگر از طریق محک اطلاعات ارسال می کنید باید حتما این فیلد  مقدار دهی شود",
+          "type": "integer"
+        },
+        "name": {
+          "description": "نام",
+          "type": "string"
+        },
+        "comment": {
+          "description": "توضیحات",
+          "type": "string"
+        },
+        "deleted": {
+          "description": "در صورتی که می خواهید رکوردی را حذف کنید این فیلد را مقداردهی کنید حذف منطقی از بانک اطلاعاتی صورت می گیرد",
+          "type": "boolean"
+        },
+        "rowVersion": {
+          "format": "int64",
+          "description": "این فیلد توسط دیتابیس تولید می شود و در  اختیار شما قرار می گیرد  می توانید بزرگترین مقدار این  فیلد را برای هر موجودیت دیتابیس  سمت کلاینت یا نرم افزار محک ذخیره کرده و هنگام فراخوانی متد\r\nGetAllData()\r\nبرای افزایش سرعت رکوردهایی که فقط تغییر داشته اند را از سرور دریافت نمایید",
+          "type": "integer"
+        }
+      }
+    },
+    "IncomeModel": {
+      "type": "object",
+      "properties": {
+        "incomeId": {
+          "format": "int32",
+          "description": "کد درآمد - توسط دیتابیس  سرور ایجاد می شود",
+          "type": "integer"
+        },
+        "incomeClientId": {
+          "format": "int64",
+          "description": "کد درآمد سمت کلاینت ، اگر از طریق کلاینت، درآمد ارسال می کنید باید حتما این فیلد  مقدار دهی شود",
+          "type": "integer"
+        },
+        "incomeCode": {
+          "format": "int32",
+          "description": "کد درآمد سمت نرم افزار ، اگر از طریق محک اطلاعات ارسال می کنید باید حتما این فیلد  مقدار دهی شود",
+          "type": "integer"
+        },
+        "name": {
+          "description": "نام",
+          "type": "string"
+        },
+        "incomeGroupId": {
+          "format": "int32",
+          "description": "شناسه گروه درآمد در  سرور \r\nاختیاری \r\n را در اختیار ندارید (IncomeGroupId) در صورتی که گروه درامد از قبل  به سرور ارسال نشده باشد و\r\n دو راه حل و جود دارد :\r\n راه حل اول و بهتر این است که گروه درامد  همزمان با درآمد  ارسال شود \r\n  در مدل جاری پر شود (IncomeGroupClientId)  اگر از سمت سایت درآمد ارسال می کنید باید فیلد\r\n  در مدل جاری پر شود (IncomeGroupClientCode)  اگر از سمت محک درآمد ارسال می کنید باید فیلد\r\n  راه حل دوم :\r\n  ابتدا گروه درآمد  به سرور ارسال شود و شناسه گروه درآمد در سرور دریافت  و سپس درآمد  ارسال شود\r\n  راه حل اول پرفرمنس بهتری دارد و از این روش می توانید برای تمام موجودیت های وابسته استفاده کنید",
+          "type": "integer"
+        },
+        "amount": {
+          "format": "double",
+          "description": "مبلغ",
+          "type": "number"
+        },
+        "detailUniqueCode": {
+          "format": "int32",
+          "description": "کد تفصیلی یکتا",
+          "type": "integer"
+        },
+        "defaultCost": {
+          "format": "double",
+          "description": "قیمت پیش فرص",
+          "type": "number"
+        },
+        "comment": {
+          "description": "توضیحات",
+          "type": "string"
+        },
+        "deleted": {
+          "description": "در صورتی که می خواهید رکوردی را حذف کنید این فیلد را مقداردهی کنید حذف منطقی از بانک اطلاعاتی صورت می گیرد",
+          "type": "boolean"
+        },
+        "rowVersion": {
+          "format": "int64",
+          "description": "این فیلد توسط دیتابیس تولید می شود و در  اختیار شما قرار می گیرد  می توانید بزرگترین مقدار این  فیلد را برای هر موجودیت دیتابیس  سمت کلاینت یا نرم افزار محک ذخیره کرده و هنگام فراخوانی متد\r\nGetAllData()\r\nبرای افزایش سرعت رکوردهایی که فقط تغییر داشته اند را از سرور دریافت نمایید",
+          "type": "integer"
+        },
+        "incomeGroupClientId": {
+          "format": "int64",
+          "description": "کد درآمد در کلاینت",
+          "type": "integer"
+        },
+        "incomeGroupCode": {
+          "format": "int32",
+          "description": "کد درآمد در محک",
+          "type": "integer"
+        }
+      }
+    },
+    "LoginModel": {
+      "required": [
+        "databaseId",
+        "password",
+        "userName"
+      ],
+      "type": "object",
+      "properties": {
+        "userName": {
+          "type": "string"
+        },
+        "password": {
+          "type": "string"
+        },
+        "databaseId": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "packageNo": {
+          "type": "string"
+        },
+        "language": {
+          "default": "fa",
+          "type": "string"
+        },
+        "appId": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "clientVersion": {
+          "type": "string"
+        }
+      }
+    },
+    "LoginResultModel": {
+      "type": "object",
+      "properties": {
+        "userToken": {
+          "type": "string"
+        },
+        "syncId": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "visitorId": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "databaseId": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "errorCode": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "errorMessage": {
+          "type": "string"
+        },
+        "userTitle": {
+          "type": "string"
+        },
+        "mahakId": {
+          "type": "string"
+        },
+        "serverTime": {
+          "format": "date-time",
+          "type": "string"
+        },
+        "packageNo": {
+          "format": "int64",
+          "type": "integer"
+        },
+        "creditDay": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "hasRadara": {
+          "type": "boolean"
+        },
+        "withDataTransfer": {
+          "type": "boolean"
+        }
+      }
+    },
+    "LoginResultModelLoginResultApi": {
+      "type": "object",
+      "properties": {
+        "result": {
+          "type": "boolean",
+          "readOnly": true
+        },
+        "code": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "message": {
+          "type": "string"
+        },
+        "data": {
+          "$ref": "#/definitions/LoginResultModel"
+        }
+      }
+    },
+    "MahakPayModel": {
+      "type": "object",
+      "properties": {
+        "mahakPayId": {
+          "format": "int32",
+          "description": "کد محک پی سمت سرور - بصورت اتومات توسط سرور تکمیل می شود",
+          "type": "integer"
+        },
+        "mahakPayClientId": {
+          "format": "int64",
+          "description": "کد محک پی سمت کلاینت\r\nاگر از طریق کلاینت اطلاعات ارسال می کنید باید حتما این فیلد  مقدار دهی شود",
+          "type": "integer"
+        },
+        "mahakPayCode": {
+          "format": "int32",
+          "description": "کد محک پی سمت نرم افزار محک\r\nاگر  از طریق نرم افزار محک اطلاعات ارسال می کنید باید حتما این فیلد  مقدار دهی شود",
+          "type": "integer"
+        },
+        "deleted": {
+          "description": "در صورتی که می خواهید رکوردی را حذف کنید این فیلد را مقداردهی کنید حذف منطقی از محک پی صورت می گیرد",
+          "type": "boolean"
+        },
+        "isActive": {
+          "type": "boolean"
+        },
+        "pacakgeNo": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "apiKey": {
+          "type": "string"
+        },
+        "getwayType": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "bankId": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "rowVersion": {
+          "format": "int64",
+          "description": "این فیلد توسط دیتابیس تولید می شود و در  اختیار شما قرار می گیرد  می توانید بزرگترین مقدار این  فیلد را برای هر موجودیت دیتابیس  سمت کلاینت یا نرم افزار محک ذخیره کرده و هنگام فراخوانی متد\r\nGetAllData()\r\nبرای افزایش سرعت رکوردهایی که فقط تغییر داشته اند را از سرور دریافت نمایید",
+          "type": "integer"
+        }
+      }
+    },
+    "MissionDetailModel": {
+      "type": "object",
+      "properties": {
+        "statusProvided": {
+          "type": "boolean",
+          "readOnly": true
+        },
+        "descriptionProvided": {
+          "type": "boolean"
+        },
+        "missionDetailId": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "accountId": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "databaseId": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "missionDetailCode": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "missionDetailClientId": {
+          "format": "int64",
+          "type": "integer"
+        },
+        "status": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "priority": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "date": {
+          "format": "date-time",
+          "type": "string"
+        },
+        "type": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "personId": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "personAddressId": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "description": {
+          "type": "string"
+        },
+        "activityID": {
+          "type": "string"
+        },
+        "missionId": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "deleted": {
+          "type": "boolean"
+        },
+        "rowVersion": {
+          "format": "int64",
+          "type": "integer"
+        },
+        "personClientId": {
+          "format": "int64",
+          "type": "integer"
+        },
+        "personCode": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "missionClientId": {
+          "format": "int64",
+          "type": "integer"
+        },
+        "missionCode": {
+          "format": "int32",
+          "type": "integer"
+        }
+      }
+    },
+    "MissionModel": {
+      "type": "object",
+      "properties": {
+        "missionId": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "databaseId": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "missionCode": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "accountId": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "missionClientId": {
+          "format": "int64",
+          "type": "integer"
+        },
+        "statusAdmin": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "date": {
+          "format": "date-time",
+          "type": "string"
+        },
+        "statusDate": {
+          "format": "date-time",
+          "type": "string"
+        },
+        "deleted": {
+          "type": "boolean"
+        },
+        "description": {
+          "type": "string"
+        },
+        "rowVersion": {
+          "format": "int64",
+          "type": "integer"
+        },
+        "createDate": {
+          "format": "date-time",
+          "type": "string"
+        },
+        "updateDate": {
+          "format": "date-time",
+          "type": "string"
+        }
+      }
+    },
+    "MultiEntityUpdateResult": {
+      "type": "object",
+      "properties": {
+        "results": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/EntityUpdateResult"
+          }
+        }
+      }
+    },
+    "NotRegisterModel": {
+      "type": "object",
+      "properties": {
+        "notRegisterId": {
+          "format": "int32",
+          "description": "کد عدم ثبت سمت سرور - توسط دیتابیس  سرور ایجاد می شود،",
+          "type": "integer"
+        },
+        "notRegisterClientId": {
+          "format": "int64",
+          "description": "کد عدم ثبت سمت کلاینت",
+          "type": "integer"
+        },
+        "notRegisterCode": {
+          "format": "int32",
+          "description": "کد عدم ثبت سمت نرم افزار محک",
+          "type": "integer"
+        },
+        "personId": {
+          "format": "int32",
+          "description": "کد شخص",
+          "type": "integer"
+        },
+        "visitorId": {
+          "format": "int32",
+          "description": "کد کلاینت",
+          "type": "integer"
+        },
+        "date": {
+          "format": "date-time",
+          "description": "تاریخ عدم ثبت",
+          "type": "string"
+        },
+        "reasonCode": {
+          "format": "int32",
+          "description": "کد دلیل عدم ثبت",
+          "type": "integer"
+        },
+        "description": {
+          "description": "توضیحات",
+          "type": "string"
+        },
+        "deleted": {
+          "description": "در صورتی که می خواهید رکوردی را حذف کنید این فیلد را مقداردهی کنید حذف منطقی از بانک اطلاعاتی صورت می گیرد",
+          "type": "boolean"
+        },
+        "createDate": {
+          "format": "date-time",
+          "type": "string"
+        },
+        "personClientId": {
+          "format": "int64",
+          "description": "کد شخص سمت کلاینت\r\nاگر کد شخص سمت سرور را ندارید و از کلاینت ثبت میکنید این فیلد را تکمیل کنید",
+          "type": "integer"
+        },
+        "personCode": {
+          "format": "int32",
+          "description": "کد شخص سمت نرم افزار\r\nاگر کد شخص سمت سرور را ندارید و از محک ثبت میکنید این فیلد را تکمیل کنید",
+          "type": "integer"
+        },
+        "rowVersion": {
+          "format": "int64",
+          "description": "این فیلد توسط دیتابیس تولید می شود و در  اختیار شما قرار می گیرد  می توانید بزرگترین مقدار این  فیلد را برای هر موجودیت دیتابیس  سمت کلاینت یا نرم افزار محک ذخیره کرده و هنگام فراخوانی متد\r\nGetAllData()\r\nبرای افزایش سرعت رکوردهایی که فقط تغییر داشته اند را از سرور دریافت نمایید",
+          "type": "integer"
+        }
+      }
+    },
+    "OrderDetailModel": {
+      "type": "object",
+      "properties": {
+        "orderDetailId": {
+          "format": "int32",
+          "description": "کد جزئیات سفارش سمت سرور - توسط دیتابیس  سرور ایجاد می شود،",
+          "type": "integer"
+        },
+        "orderDetailClientId": {
+          "format": "int64",
+          "description": "کد جزئیات سفارش سمت کلاینت",
+          "type": "integer"
+        },
+        "itemType": {
+          "format": "int32",
+          "description": "1 = کالا در فاکتور\r\n2 = درآمد در فاکتور\r\ndefault =1\r\nاگر 1 ارسال می کنید  باید کد جزییات محصول ارسال شود\r\nاگر 2 ارسال می کنید باید کد درآمد ارسال شود",
+          "type": "integer"
+        },
+        "orderId": {
+          "format": "int32",
+          "description": "کد سفارش در سرور \r\n را در اختیار ندارید (OrderId) در صورتی که سفارش  از قبل  به سرور ارسال نشده باشد و\r\n دو راه حل وجود دارد :\r\n راه حل اول و بهتر این است که جزییات سفارش  همزمان با سفارش ارسال شود \r\n  در مدل جاری (OrderClientId)  اگر از سمت کلاینت جزییات سفارش ارسال می کنید باید فیلد\r\n  پر  شود و این فیلد دارای مقدار یکتا سمت کلاینت می باشد     \r\n  در مدل جاری (OrderCode)  اگر از سمت محک جزییات سفارش ارسال می کنید باید فیلد\r\n   پر  شود \r\n  راه حل دوم :\r\n  ابتدا سفارش به سرور ارسال شود و شناسه سفارش در سرور دریافت و سپس جزییات سفارش ارسال شود\r\n  راه حل اول پرفرمنس بهتری دارد و از این روش می توانید برای تمام موجودیت های وابسته استفاده کنید",
+          "type": "integer"
+        },
+        "productDetailId": {
+          "format": "int32",
+          "description": "کد جزییات محصول در سرور \r\n را در اختیار ندارید (ProductDetailId) در صورتی که جزییات محصول از قبل  به سرور ارسال نشده باشد و\r\n باید بر اساس درگاه ثبت یکی از دو فیلد زیر تکمیل شود\r\n در مدل جاری پر  شود  (ProductDetailClientId) اگر از سمت کلاینت جزییات سفارش ارسال می کنید باید فیلد\r\n در مدل جاری پر  شود  (ProductDetailCode)  اگر از سمت محک جزییات سفارش ارسال می کنید باید فیلد",
+          "type": "integer"
+        },
+        "incomeId": {
+          "format": "int32",
+          "description": "کد درآمد در سرور\r\nاختیاری",
+          "type": "integer"
+        },
+        "expenseId": {
+          "format": "int32",
+          "description": "کد هزینه در سرور\r\nاختیاری",
+          "type": "integer"
+        },
+        "price": {
+          "format": "double",
+          "description": "مبلغ",
+          "type": "number"
+        },
+        "count1": {
+          "format": "double",
+          "description": "در صورتی که از سیستم تک واحدی استفاده می کنید فقط فیلد موجودی 1 پر شود",
+          "type": "number"
+        },
+        "count2": {
+          "format": "double",
+          "description": "در صورتی که از سیستم دو واحدی استفاده می کنید\r\nمی توانید به صورت  جز( موجودی یک ) و کل( موجودی دو ) یا موجودی 1 و 2 استفاده شود",
+          "type": "number"
+        },
+        "promotionCode": {
+          "format": "int32",
+          "description": "کد طرح تشویقی در محک\r\nاختیاری",
+          "type": "integer"
+        },
+        "gift": {
+          "format": "int32",
+          "description": "1 = اشانتیون دستی\r\n2 = اشانتیون تعریف شده",
+          "type": "integer"
+        },
+        "description": {
+          "description": "توضیحات",
+          "type": "string"
+        },
+        "discount": {
+          "format": "double",
+          "description": "مبلغ تخفیف",
+          "type": "number"
+        },
+        "discountType": {
+          "format": "int32",
+          "description": "0 = تخفیف مبلغی\r\n1 = تخفیف درصدی",
+          "type": "integer"
+        },
+        "taxPercent": {
+          "format": "double",
+          "description": "درصد عوارض",
+          "type": "number"
+        },
+        "chargePercent": {
+          "format": "double",
+          "description": "درصد مالیات",
+          "type": "number"
+        },
+        "storeId": {
+          "format": "int32",
+          "description": "کد انبار در سرور\r\nاختیاری",
+          "type": "integer"
+        },
+        "width": {
+          "format": "double",
+          "description": "عرض \r\nبرای کالاها از نوع متر مربع",
+          "type": "number"
+        },
+        "height": {
+          "format": "double",
+          "description": "طول \r\nبرای کالاها از نوع متر مربع",
+          "type": "number"
+        },
+        "itemCount": {
+          "format": "int32",
+          "description": "تعداد \r\nبرای کالاها از نوع متر مربع\r\nبرای سایر کالاها نیاز به مقدار دهی به این فیلد نمی باشد",
+          "type": "integer"
+        },
+        "rowId": {
+          "format": "int32",
+          "description": "شماره سطر در فاکتور",
+          "type": "integer"
+        },
+        "deleted": {
+          "description": "در صورتی که می خواهید رکوردی را حذف کنید این فیلد را مقداردهی کنید حذف منطقی از بانک اطلاعاتی صورت می گیرد",
+          "type": "boolean"
+        },
+        "createDate": {
+          "format": "date-time",
+          "type": "string"
+        },
+        "rowVersion": {
+          "format": "int64",
+          "description": "این فیلد توسط دیتابیس تولید می شود و در  اختیار شما قرار می گیرد  می توانید بزرگترین مقدار این  فیلد را برای هر موجودیت دیتابیس  سمت کلاینت یا نرم افزار محک ذخیره کرده و هنگام فراخوانی متد\r\nGetAllData()\r\nبرای افزایش سرعت رکوردهایی که فقط تغییر داشته اند را از سرور دریافت نمایید",
+          "type": "integer"
+        },
+        "orderClientId": {
+          "format": "int64",
+          "description": "کد سفارش در کلاینت",
+          "type": "integer"
+        },
+        "orderCode": {
+          "format": "int32",
+          "description": "کد سفارش در محک",
+          "type": "integer"
+        },
+        "productDetailClientId": {
+          "format": "int64",
+          "description": "کد جزییات محصول در کلاینت",
+          "type": "integer"
+        },
+        "productDetailCode": {
+          "format": "int32",
+          "description": "کد جزییات محصول در محک",
+          "type": "integer"
+        }
+      }
+    },
+    "OrderModel": {
+      "type": "object",
+      "properties": {
+        "orderId": {
+          "format": "int32",
+          "description": "کد سفارش سمت سایت - توسط دیتابیس  سرور ایجاد می شود",
+          "type": "integer"
+        },
+        "orderClientId": {
+          "format": "int64",
+          "description": "کد سفارش سمت کلاینت ، اگر از طریق کلاینت سفارش ارسال می کنید باید حتما این فیلد مقدار دهی شود",
+          "type": "integer"
+        },
+        "fiscalYear": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "orderCode": {
+          "format": "int32",
+          "description": "کد سفارش سمت محک ، اگر از طریق محک سفارش درآمد ارسال می کنید باید حتما این فیلد  مقدار دهی شود",
+          "type": "integer"
+        },
+        "personId": {
+          "format": "int32",
+          "description": "کد مشتری سمت سرور",
+          "type": "integer"
+        },
+        "visitorId": {
+          "format": "int32",
+          "description": "کد کلاینت در سرور \r\nاجباری",
+          "type": "integer"
+        },
+        "receiptId": {
+          "format": "int32",
+          "description": "کد حواله در سرور\r\nاختیاری",
+          "type": "integer"
+        },
+        "paymentId": {
+          "format": "int32",
+          "description": "کد پرداخت در سرور\r\nاختیاری",
+          "type": "integer"
+        },
+        "orderType": {
+          "format": "int32",
+          "description": "201 = فاکتور فروش\r\n299 = پیش فاکتور ارسالی ( تحویلی ) \r\n202 = برگشت از فروش\r\n203 = پیش فروش (فاکتور ) دریافتی از سرور\r\n204 = فاکتور خرید",
+          "type": "integer"
+        },
+        "orderDate": {
+          "format": "date-time",
+          "description": "تاریخ ثبت سفارش",
+          "type": "string"
+        },
+        "deliveryDate": {
+          "format": "date-time",
+          "description": "تاریخ دریافت سفارش",
+          "type": "string"
+        },
+        "discount": {
+          "format": "double",
+          "description": "مبلغ تخفیف",
+          "type": "number"
+        },
+        "discountType": {
+          "format": "int32",
+          "description": "0 = تخفیف مبلغی\r\n1 = تخفیف درصدی",
+          "type": "integer"
+        },
+        "sendCost": {
+          "format": "double",
+          "description": "هزینه ارسال",
+          "type": "number"
+        },
+        "otherCost": {
+          "format": "double",
+          "description": "سایر هزینه ها",
+          "type": "number"
+        },
+        "settlementType": {
+          "format": "int32",
+          "description": "نوع تسویه فاکتور \r\n1 : نقدی\r\n0: نسیه",
+          "type": "integer"
+        },
+        "immediate": {
+          "description": "نیاز به ارسال فوری",
+          "type": "boolean"
+        },
+        "returnReasonId": {
+          "format": "int32",
+          "description": "کد دلیل برگشت از فروش در سرور",
+          "type": "integer"
+        },
+        "description": {
+          "description": "توضیحات",
+          "type": "string"
+        },
+        "expenseId": {
+          "format": "int32",
+          "description": "کد هزینه فاکتور\r\nاختیاری",
+          "type": "integer"
+        },
+        "projectId": {
+          "format": "int32",
+          "description": "کد مرکز هزینه در سرور\r\nاختیاری",
+          "type": "integer"
+        },
+        "latitude": {
+          "format": "double",
+          "description": "عرض جغرافیایی جهت دریافت سفارش",
+          "type": "number"
+        },
+        "longitude": {
+          "format": "double",
+          "description": "طول جغرافیایی جهت دریافت سفارش",
+          "type": "number"
+        },
+        "shippingAddress": {
+          "description": "آدرس فاکتور\r\nاین فیلد بصورت جیسون ذخیره می شود\r\ntitle/ description/ address/ postalcode/ tel/ mobile/ cityid/ latitude/ longitude\r\nفیلدهایی که در آبجکت آدرس فاکتور ذخیره می شود",
+          "type": "string"
+        },
+        "carrierType": {
+          "format": "int32",
+          "description": "نوع حمل کننده\r\n1 : راننده (کرایه به راننده پرداخت می شود)\r\nغیر از 1 : صندوق(هزینه حمل به صندوق پرداخت می شود)\r\n\r\nنکته : برای حمل کننده از نوع صندوق پیشنهاد می شود از مقدار 2 استفاده کنید",
+          "type": "integer"
+        },
+        "carrierID": {
+          "format": "int64",
+          "description": "در صورتی که نوع حمل کننده \" راننده\" باشد، مقدار این فیلد بایستی کد یک شخص سمت سرور باشد\r\nدر صورتی که نوع حمل کننده \" صندوق\" باشد، مقدار این فیلد بایستی کد یک صندوق سمت سرور باشد",
+          "type": "integer"
+        },
+        "driverCurrencyType": {
+          "format": "int32",
+          "description": "نوع ارز حمل کننده\r\n0 : ارز پایه\r\n1 : ارز فاکتور",
+          "type": "integer"
+        },
+        "carryingAsExpense": {
+          "description": "ثبت کرایه حمل به عنوان هزینه",
+          "type": "boolean"
+        },
+        "referenceOrderId": {
+          "format": "int32",
+          "description": "کد سغارش سمت سرور\r\nاز این کد برای ثبت فاکتور برگشتی، اصلاحی، ابطالی استفاده می شود",
+          "type": "integer"
+        },
+        "invoiceTemplate": {
+          "type": "string"
+        },
+        "userCode": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "userName": {
+          "type": "string"
+        },
+        "deleted": {
+          "description": "در صورتی که می خواهید رکوردی را حذف کنید این فیلد را مقداردهی کنید حذف منطقی از بانک اطلاعاتی صورت می گیرد",
+          "type": "boolean"
+        },
+        "createDate": {
+          "format": "date-time",
+          "type": "string"
+        },
+        "extraItems": {
+          "type": "string"
+        },
+        "personClientId": {
+          "format": "int64",
+          "description": "کد شخص در کلاینت",
+          "type": "integer"
+        },
+        "personCode": {
+          "format": "int32",
+          "description": "کد شخص در محک",
+          "type": "integer"
+        },
+        "receiptClientId": {
+          "format": "int64",
+          "description": "کد حواله در کلاینت",
+          "type": "integer"
+        },
+        "receiptCode": {
+          "format": "int32",
+          "description": "کد حواله در محک",
+          "type": "integer"
+        },
+        "paymentClientId": {
+          "format": "int64",
+          "description": "کد حواله در کلاینت",
+          "type": "integer"
+        },
+        "paymentCode": {
+          "format": "int32",
+          "description": "کد حواله در محک",
+          "type": "integer"
+        },
+        "cottageNumber": {
+          "type": "string"
+        },
+        "cottageDate": {
+          "format": "date-time",
+          "type": "string"
+        },
+        "currencyId": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "currExchangeRate": {
+          "format": "double",
+          "type": "number"
+        }
+      }
+    },
+    "OrderTaxStatusModel": {
+      "type": "object",
+      "properties": {
+        "orderTaxStatusId": {
+          "format": "int32",
+          "description": "کد  در سمت سرور- اتومات تکمیل می شود",
+          "type": "integer"
+        },
+        "taxId": {
+          "type": "string"
+        },
+        "operationDate": {
+          "format": "date-time",
+          "type": "string"
+        },
+        "refrenceNumber": {
+          "type": "string"
+        },
+        "status": {
+          "type": "string"
+        },
+        "resultMessage": {
+          "type": "string"
+        },
+        "retryCount": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "orderId": {
+          "format": "int32",
+          "description": "کد سفارش سمت سرور در صورت داشتن در این فیلد ذخیره می شود",
+          "type": "integer"
+        },
+        "visitorId": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "uid": {
+          "type": "string"
+        },
+        "errorCode": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "errorDetail": {
+          "type": "string"
+        },
+        "statusCode": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "deleted": {
+          "type": "boolean"
+        },
+        "updateDate": {
+          "format": "date-time",
+          "type": "string"
+        },
+        "rowVersion": {
+          "format": "int64",
+          "type": "integer"
+        }
+      }
+    },
+    "PaymentChequeModel": {
+      "type": "object",
+      "properties": {
+        "paymentChequeId": {
+          "format": "int32",
+          "description": "کد چک سمت سرور- که توسط دیتابیس  سرور تکمیل می شود",
+          "type": "integer"
+        },
+        "paymentChequeClientId": {
+          "format": "int64",
+          "description": "کد چک سمت کلاینت، اگر از طریق سایت چک ارسال می کنید باید حتما این فیلد  مقدار دهی شود",
+          "type": "integer"
+        },
+        "paymentChequeCode": {
+          "format": "int32",
+          "description": "کد چک سمت نرم افزار محک ، اگر از طریق محک چک ارسال می کنید باید حتما این فیلد  مقدار دهی شود",
+          "type": "integer"
+        },
+        "paymentId": {
+          "format": "int32",
+          "description": "کد حواله در سرور      \r\n را در اختیار ندارید (ReceiptId) در صورتی که حواله از قبل  به سرور ارسال نشده باشد و\r\n دو راه حل و جود دارد :\r\n راه حل اول و بهتر این است که چک  همزمان با حواله ارسال شود \r\n اگر از این راه حل استفاده میکنید بجای فیلد ReceiptId یکی از فیلدهای ReceiptClientId یا ReceiptCode را ارسال نمایید\r\n  در مدل جاری (ReceiptClientId)  اگر از سمت کلاینت ارسال می کنید باید فیلد\r\n  را با کد حواله در سایت ارسال  نمایید     \r\n  در مدل جاری (ReceiptCode)  اگر از سمت محک ارسال می کنید باید فیلد\r\n  را با کد حواله در محک ارسال  نمایید \r\n  راه حل دوم :\r\n  ابتدا حواله  به سرور ارسال شود و شناسه حواله در سرور دریافت و سپس چک ارسال شود\r\n  راه حل اول پرفرمنس بهتری دارد و از این روش می توانید برای تمام موجودیت های وابسته استفاده کنید",
+          "type": "integer"
+        },
+        "bankId": {
+          "format": "int32",
+          "description": "کد بانک در سرور      \r\n را در اختیار ندارید (BankId) در صورتی که بانک از قبل  به سرور ارسال نشده باشد و\r\n دو راه حل و جود دارد :\r\n راه حل اول و بهتر این است که چک همزمان با بانک ارسال شود \r\n  در مدل جاری (BankClientId) اگر از سمت کلاینت چک ارسال می کنید باید فیلد\r\n  را با کد بانک در سایت ارسال نمایید     \r\n  در مدل جاری (BankCode) اگر از سمت محک چک ارسال می کنید باید فیلد\r\n  را با کد بانک در محک ارسال  نمایید \r\n  راه حل دوم :\r\n  ابتدا بانک  به سرور ارسال شود و کد بانک در سرور دریافت و سپس چک ارسال شود\r\n  راه حل اول پرفرمنس بهتری دارد و از این روش می توانید برای تمام موجودیت های وابسته استفاده کنید",
+          "type": "integer"
+        },
+        "number": {
+          "description": "شماره چک",
+          "type": "string"
+        },
+        "bankName": {
+          "description": "نام بانک",
+          "type": "string"
+        },
+        "branch": {
+          "description": "نام شعبه",
+          "type": "string"
+        },
+        "amount": {
+          "format": "double",
+          "description": "مبلغ",
+          "type": "number"
+        },
+        "accountNumber": {
+          "description": "شماره حساب",
+          "type": "string"
+        },
+        "date": {
+          "format": "date-time",
+          "description": "تاریخ",
+          "type": "string"
+        },
+        "type": {
+          "format": "int32",
+          "description": "1 = چک دریافتی\r\n2 = حواله (رسید) نقدی",
+          "type": "integer"
+        },
+        "description": {
+          "description": "توضیحات",
+          "type": "string"
+        },
+        "deleted": {
+          "description": "در صورتی که می خواهید رکوردی را حذف کنید این فیلد را مقداردهی کنید حذف منطقی از بانک صورت می گیرد",
+          "type": "boolean"
+        },
+        "rowVersion": {
+          "format": "int64",
+          "description": "این فیلد توسط دیتابیس تولید می شود و در  اختیار شما قرار می گیرد  می توانید بزرگترین مقدار این  فیلد را برای هر موجودیت دیتابیس  سمت کلاینت یا نرم افزار محک ذخیره کرده و هنگام فراخوانی متد\r\nGetAllData()\r\nبرای افزایش سرعت رکوردهایی که فقط تغییر داشته اند را از سرور دریافت نمایید",
+          "type": "integer"
+        },
+        "paymentClientId": {
+          "format": "int64",
+          "description": "کد حواله در کلاینت",
+          "type": "integer"
+        },
+        "paymentCode": {
+          "format": "int32",
+          "description": "کد حواله در محک",
+          "type": "integer"
+        },
+        "bankClientId": {
+          "format": "int64",
+          "description": "کد بانک در کلاینت",
+          "type": "integer"
+        },
+        "bankCode": {
+          "format": "int32",
+          "description": "کد بانک در محک",
+          "type": "integer"
+        }
+      }
+    },
+    "PaymentModel": {
+      "type": "object",
+      "properties": {
+        "paymentId": {
+          "format": "int32",
+          "description": "کد حواله در سمت سرور- اتومات تکمیل می شود",
+          "type": "integer"
+        },
+        "paymentClientId": {
+          "format": "int64",
+          "description": "کد حواله سمت کلاینت\r\nدرصورتی که حواله از سمت کلاینت تکمیل میشود این فیلد باید ارسال شود\r\nهمچنین این مقدار سمت کلاینت بصورت یکتا می باشد",
+          "type": "integer"
+        },
+        "paymentCode": {
+          "format": "int32",
+          "description": "کد حواله سمت نرم افزار\r\nدرصورتیکه حواله از سمت نرم افزار محک ارسال می شود این فیلد باید تکمیل گردد\r\nمقدار این فیلد بصورت یکتا در نرم افزار محک می باشد",
+          "type": "integer"
+        },
+        "personId": {
+          "format": "int32",
+          "description": "کد شخص در سمت سرور باید در ثبت حواله ارسال شود",
+          "type": "integer"
+        },
+        "visitorId": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "cashAmount": {
+          "format": "double",
+          "description": "مبلغ نقدی حواله در این فیلد ثبت می شود",
+          "type": "number"
+        },
+        "cashCode": {
+          "format": "int32",
+          "description": "کد صندوق در این فیلد ثبت می شود",
+          "type": "integer"
+        },
+        "description": {
+          "description": "در صورت داشتن توضیحات این فیلد ارسال شود",
+          "type": "string"
+        },
+        "date": {
+          "format": "date-time",
+          "description": "تاریخ حواله",
+          "type": "string"
+        },
+        "projectId": {
+          "format": "int32",
+          "description": "کد مرکز هزینه سمت سرور درصورت داشتن باید در این فیلد ذخیره شود",
+          "type": "integer"
+        },
+        "orderId": {
+          "format": "int32",
+          "description": "کد سفارش سمت سرور در صورت داشتن در این فیلد ذخیره می شود",
+          "type": "integer"
+        },
+        "deleted": {
+          "description": "در صورتی که می خواهید رکوردی را حذف کنید این فیلد را مقداردهی کنید حذف منطقی از بانک اطلاعاتی صورت می گیرد",
+          "type": "boolean"
+        },
+        "updateDate": {
+          "format": "date-time",
+          "type": "string"
+        },
+        "rowVersion": {
+          "format": "int64",
+          "description": "این فیلد توسط دیتابیس تولید می شود و در  اختیار شما قرار می گیرد  می توانید بزرگترین مقدار این  فیلد را برای هر موجودیت دیتابیس  سمت کلاینت یا نرم افزار محک ذخیره کرده و هنگام فراخوانی متد\r\nGetAllData()\r\nبرای افزایش سرعت رکوردهایی که فقط تغییر داشته اند را از سرور دریافت نمایید",
+          "type": "integer"
+        },
+        "orderClientId": {
+          "format": "int64",
+          "description": "کد سفارش در کلاینت",
+          "type": "integer"
+        },
+        "orderCode": {
+          "format": "int32",
+          "description": "کد سفارش در محک",
+          "type": "integer"
+        }
+      }
+    },
+    "PersonAddressModel": {
+      "description": "این موجودیت برای نگهداری آدرس اشخاص استفاده می شود\r\nهر شخص می تواند چندین آدرس داشته باشد",
+      "type": "object",
+      "properties": {
+        "personAddressId": {
+          "format": "int32",
+          "description": "کد آدرس - توسط دیتابیس  سرور ایجاد می شود",
+          "type": "integer"
+        },
+        "personAddressClientId": {
+          "format": "int64",
+          "description": "کد آدرس سمت کلاینت ، اگر از طریق کلاینت آدرس ارسال می کنید باید حتما این فیلد  مقدار دهی شود",
+          "type": "integer"
+        },
+        "personAddressCode": {
+          "format": "int32",
+          "description": "کد آدرس سمت نرم افزار ، اگر از طریق محک آدرس ارسال می کنید باید حتما این فیلد  مقدار دهی شود",
+          "type": "integer"
+        },
+        "personId": {
+          "format": "int32",
+          "description": "کد شخص در سرور",
+          "type": "integer"
+        },
+        "title": {
+          "description": "عنوان\r\nمثلا آدرس منزل",
+          "type": "string"
+        },
+        "description": {
+          "description": "توضیحات",
+          "type": "string"
+        },
+        "address": {
+          "description": "آدرس کامل",
+          "type": "string"
+        },
+        "postalCode": {
+          "description": "کد پستی",
+          "type": "string"
+        },
+        "tel": {
+          "description": "تلفن",
+          "type": "string"
+        },
+        "mobile": {
+          "description": "موبایل",
+          "type": "string"
+        },
+        "cityId": {
+          "format": "int32",
+          "description": "کد  شهر  در سرور",
+          "type": "integer"
+        },
+        "latitude": {
+          "format": "double",
+          "description": "عرض جغرافیایی",
+          "type": "number"
+        },
+        "longitude": {
+          "format": "double",
+          "description": "طول جغرافیایی",
+          "type": "number"
+        },
+        "isDefault": {
+          "description": "فعال کردن آدرس پیش فرض",
+          "type": "boolean"
+        },
+        "personClientId": {
+          "format": "int64",
+          "description": "کد شخص در کلاینت",
+          "type": "integer"
+        },
+        "personCode": {
+          "format": "int32",
+          "description": "کد شخص در محک",
+          "type": "integer"
+        },
+        "deleted": {
+          "description": "در صورتی که می خواهید رکوردی را حذف کنید این فیلد را مقداردهی کنید حذف منطقی از بانک اطلاعاتی صورت می گیرد",
+          "type": "boolean"
+        },
+        "rowVersion": {
+          "format": "int64",
+          "description": "این فیلد توسط دیتابیس تولید می شود و در  اختیار شما قرار می گیرد  می توانید بزرگترین مقدار این  فیلد را برای هر موجودیت دیتابیس  سمت کلاینت یا نرم افزار محک ذخیره کرده و هنگام فراخوانی متد\r\nGetAllData()\r\nبرای افزایش سرعت رکوردهایی که فقط تغییر داشته اند را از سرور دریافت نمایید",
+          "type": "integer"
+        }
+      }
+    },
+    "PersonGroupModel": {
+      "type": "object",
+      "properties": {
+        "personGroupId": {
+          "format": "int32",
+          "description": "کد گروه اشخاص - توسط دیتابیس  سرور ایجاد می شود،",
+          "type": "integer"
+        },
+        "personGroupClientId": {
+          "format": "int64",
+          "description": "کد گروه اشخاص سمت کلاینت ، اگر از طریق کلاینت گروه اشخاص ارسال می کنید باید حتما این فیلد  مقدار دهی شود",
+          "type": "integer"
+        },
+        "personGroupCode": {
+          "format": "int32",
+          "description": "کد گروه اشخاص سمت نرم افزار ، اگر از طریق محک گروه اشخاص ارسال می کنید باید حتما این فیلد  مقدار دهی شود",
+          "type": "integer"
+        },
+        "name": {
+          "description": "نام",
+          "type": "string"
+        },
+        "color": {
+          "description": "رنگ",
+          "type": "string"
+        },
+        "icon": {
+          "description": "آیکون",
+          "type": "string"
+        },
+        "discountPercent": {
+          "format": "double",
+          "description": "درصد تخفیف",
+          "type": "number"
+        },
+        "sellPriceLevel": {
+          "format": "int32",
+          "description": "سطح قیمتی فروش",
+          "type": "integer"
+        },
+        "deleted": {
+          "description": "در صورتی که می خواهید رکوردی را حذف کنید این فیلد را مقداردهی کنید حذف منطقی از بانک اطلاعاتی صورت می گیرد",
+          "type": "boolean"
+        },
+        "rowVersion": {
+          "format": "int64",
+          "description": "این فیلد توسط دیتابیس تولید می شود و در  اختیار شما قرار می گیرد  می توانید بزرگترین مقدار این  فیلد را برای هر موجودیت دیتابیس  سمت کلاینت یا نرم افزار محک ذخیره کرده و هنگام فراخوانی متد\r\nGetAllData()\r\nبرای افزایش سرعت رکوردهایی که فقط تغییر داشته اند را از سرور دریافت نمایید",
+          "type": "integer"
+        }
+      }
+    },
+    "PersonModel": {
+      "type": "object",
+      "properties": {
+        "personId": {
+          "format": "int32",
+          "description": "کد شخص در سرور ، توسط دیتابیس  سرور ایجاد می شود",
+          "type": "integer"
+        },
+        "personClientId": {
+          "format": "int64",
+          "description": "کد شخص سمت کلاینت، اگر از طریق کلاینت شخص ارسال می کنید باید حتما این فیلد  مقدار دهی شود",
+          "type": "integer"
+        },
+        "branchCode": {
+          "description": "کد شعبه\r\nرشته با حداکثر طول 4 کاراکتر",
+          "type": "string"
+        },
+        "personCode": {
+          "format": "int32",
+          "description": "کد شخص سمت نرم افزار ، اگر از طریق محک شخص ارسال می کنید باید حتما این فیلد  مقدار دهی شود",
+          "type": "integer"
+        },
+        "personGroupId": {
+          "format": "int32",
+          "description": "کد گروه اشخاص در سرور\r\nاختیاری \r\n را در اختیار ندارید (PersonGroupId) در صورتی که گروه شخص از قبل  به سرور ارسال نشده باشد و\r\n دو راه حل و جود دارد :\r\n راه حل اول و بهتر این است که گروه شخص  همزمان با شخص  ارسال شود \r\n  در مدل جاری پر شود (PersonGroupClientId)  اگر از سمت کلاینت گروه شخص ارسال می کنید باید فیلد\r\n  در مدل جاری پر شود (PersonGroupCode)  اگر از سمت محک ارسال می کنید باید فیلد\r\n  راه حل دوم :\r\n  ابتدا گروه اشخاص به سرور ارسال شود و شناسه گروه اشخاص در سرور دریافت و سپس ارسال شود\r\n  راه حل اول پرفرمنس بهتری دارد و از این روش می توانید برای تمام موجودیت های وابسته استفاده کنید",
+          "type": "integer"
+        },
+        "personType": {
+          "format": "int32",
+          "description": "0 = شخص حقیقی\r\n1 = شخص حقوقی",
+          "type": "integer"
+        },
+        "prifix": {
+          "description": "پیشوند شخص\r\nآقای یا خانم",
+          "type": "string"
+        },
+        "firstName": {
+          "description": "نام",
+          "type": "string"
+        },
+        "lastName": {
+          "description": "نام خانوادگی",
+          "type": "string"
+        },
+        "organization": {
+          "description": "نام سازمان",
+          "type": "string"
+        },
+        "gender": {
+          "format": "int32",
+          "description": "جنسیت",
+          "type": "integer"
+        },
+        "nationalCode": {
+          "description": "کد ملی",
+          "type": "string"
+        },
+        "credit": {
+          "format": "double",
+          "description": "مبلغ اعتبار",
+          "type": "number"
+        },
+        "balance": {
+          "format": "double",
+          "description": "مانده حساب",
+          "type": "number"
+        },
+        "email": {
+          "description": "ایمیل",
+          "type": "string"
+        },
+        "userName": {
+          "description": "نام کاربری",
+          "type": "string"
+        },
+        "password": {
+          "description": "رمز عبور",
+          "type": "string"
+        },
+        "discountPercent": {
+          "format": "double",
+          "description": "درصد تخفیف",
+          "type": "number"
+        },
+        "sellPriceLevel": {
+          "format": "int32",
+          "description": "سطح قیمتی فروش",
+          "type": "integer"
+        },
+        "state": {
+          "description": "نام استان",
+          "type": "string"
+        },
+        "city": {
+          "description": "نام شهر",
+          "type": "string"
+        },
+        "cityCode": {
+          "format": "int32",
+          "description": "کد شهر در سرور",
+          "type": "integer"
+        },
+        "zone": {
+          "description": "نام منطقه",
+          "type": "string"
+        },
+        "address": {
+          "description": "آدرس کامل",
+          "type": "string"
+        },
+        "latitude": {
+          "format": "double",
+          "description": "عرض جغرافیایی",
+          "type": "number"
+        },
+        "longitude": {
+          "format": "double",
+          "description": "طول جغرافیایی",
+          "type": "number"
+        },
+        "phone": {
+          "description": "تلفن",
+          "type": "string"
+        },
+        "mobile": {
+          "description": "موبایل",
+          "type": "string"
+        },
+        "fax": {
+          "description": "فکس",
+          "type": "string"
+        },
+        "description": {
+          "description": "توضیحات",
+          "type": "string"
+        },
+        "financeTaxPayerType": {
+          "format": "int32",
+          "description": "نوع مودی",
+          "type": "integer"
+        },
+        "economicNo": {
+          "description": "شماره اقتصادی",
+          "type": "string"
+        },
+        "postalCode": {
+          "description": "کد پستی",
+          "type": "string"
+        },
+        "birthDate": {
+          "format": "date-time",
+          "description": "تاریخ تولد",
+          "type": "string"
+        },
+        "deleted": {
+          "description": "در صورتی که می خواهید رکوردی را حذف کنید این فیلد را مقداردهی کنید حذف منطقی از بانک اطلاعاتی صورت می گیرد",
+          "type": "boolean"
+        },
+        "rowVersion": {
+          "format": "int64",
+          "description": "این فیلد توسط دیتابیس تولید می شود و در  اختیار شما قرار می گیرد  می توانید بزرگترین مقدار این  فیلد را برای هر موجودیت دیتابیس  سمت کلاینت یا نرم افزار محک ذخیره کرده و هنگام فراخوانی متد\r\nGetAllData()\r\nبرای افزایش سرعت رکوردهایی که فقط تغییر داشته اند را از سرور دریافت نمایید",
+          "type": "integer"
+        },
+        "personGroupClientId": {
+          "format": "int64",
+          "description": "کد گروه اشخاص در کلاینت",
+          "type": "integer"
+        },
+        "personGroupCode": {
+          "format": "int32",
+          "description": "کد گروه اشخاص در محک",
+          "type": "integer"
+        }
+      }
+    },
+    "PhotoGalleryModel": {
+      "description": "این موجودیت برای ارتباط بین موجودیت ها و تصاویر می باشد\r\nاگر عکس کالا باشد ارتباط بین کالا و تصاویر\r\nاگر عکس اشخاص باشد ارتباط بین اشخاص و تصاویر",
+      "type": "object",
+      "properties": {
+        "photoGalleryId": {
+          "format": "int32",
+          "description": "کد گالری تصاویر در سرور ، توسط دیتابیس  سرور ایجاد می شود",
+          "type": "integer"
+        },
+        "pictureId": {
+          "format": "int32",
+          "description": "کد تصویر در سرور",
+          "type": "integer"
+        },
+        "entityType": {
+          "format": "int32",
+          "description": "اگر کالا باشد مقدار 102\r\nاگر اشخاص باشد مقدار 101\r\nدفترچه تلفن 603\r\nاسناد 401\r\nاقلام سند 401",
+          "type": "integer"
+        },
+        "itemCode": {
+          "format": "int32",
+          "description": "اگر کالا باشد، شناسه کالا سمت سرور\r\nاگر اشخاص باشد، شناسه شخص سمت سرور\r\nبر اساس نوع موجودیت، مقدار آن قرار میگیرد. مشابه دو مثال فوق",
+          "type": "integer"
+        },
+        "itemType": {
+          "format": "int32",
+          "description": "اگر کالا باشد مقدار 102\r\nاگر تصویر شخص باشد مقدار 0\r\nاگر امضای شخص باشد مقدار 1\r\nاگر اسناد باشد مقدار -2",
+          "type": "integer"
+        },
+        "deleted": {
+          "description": "در صورتی که می خواهید رکوردی را حذف کنید این فیلد را مقداردهی کنید حذف منطقی از بانک اطلاعاتی صورت می گیرد",
+          "type": "boolean"
+        },
+        "rowVersion": {
+          "format": "int64",
+          "description": "این فیلد توسط دیتابیس تولید می شود و در  اختیار شما قرار می گیرد  می توانید بزرگترین مقدار این  فیلد را برای هر موجودیت دیتابیس  سمت کلاینت یا نرم افزار محک ذخیره کرده و هنگام فراخوانی متد\r\nGetAllData()\r\nبرای افزایش سرعت رکوردهایی که فقط تغییر داشته اند را از سرور دریافت نمایید",
+          "type": "integer"
+        }
+      }
+    },
+    "PictureModel": {
+      "description": "این موجودیت برای مشخصات تصاویر استفاده می شود",
+      "type": "object",
+      "properties": {
+        "pictureId": {
+          "format": "int32",
+          "description": "کد تصویر در سرور ، توسط دیتابیس  سرور ایجاد می شود",
+          "type": "integer"
+        },
+        "pictureClientId": {
+          "format": "int64",
+          "description": "کد تصویر سمت کلاینت ، اگر از طریق کلاینت تصویر ارسال می کنید باید حتما این فیلد  مقدار دهی شود",
+          "type": "integer"
+        },
+        "pictureCode": {
+          "format": "int32",
+          "description": "کد تصویر سمت نرم افزار ، اگر از طریق محک تصویر ارسال می کنید باید حتما این فیلد مقدار دهی شود",
+          "type": "integer"
+        },
+        "fileName": {
+          "description": "نام فایل",
+          "type": "string"
+        },
+        "displayOrder": {
+          "format": "int32",
+          "description": "اولویت نمایش",
+          "type": "integer"
+        },
+        "title": {
+          "description": "عنوان",
+          "type": "string"
+        },
+        "url": {
+          "description": "آدرس تصویر",
+          "type": "string"
+        },
+        "fileSize": {
+          "format": "int32",
+          "description": "حجم فایل",
+          "type": "integer"
+        },
+        "width": {
+          "format": "int32",
+          "description": "عرض تصویر",
+          "type": "integer"
+        },
+        "height": {
+          "format": "int32",
+          "description": "ارتفاع تصویر",
+          "type": "integer"
+        },
+        "format": {
+          "description": "فرمت",
+          "type": "string"
+        },
+        "deleted": {
+          "description": "در صورتی که می خواهید رکوردی را حذف کنید این فیلد را مقداردهی کنید حذف منطقی از بانک اطلاعاتی صورت می گیرد",
+          "type": "boolean"
+        },
+        "rowVersion": {
+          "format": "int64",
+          "description": "این فیلد توسط دیتابیس تولید می شود و در  اختیار شما قرار می گیرد  می توانید بزرگترین مقدار این  فیلد را برای هر موجودیت دیتابیس  سمت کلاینت یا نرم افزار محک ذخیره کرده و هنگام فراخوانی متد\r\nGetAllData()\r\nبرای افزایش سرعت رکوردهایی که فقط تغییر داشته اند را از سرور دریافت نمایید",
+          "type": "integer"
+        }
+      }
+    },
+    "ProductCategoryModel": {
+      "type": "object",
+      "properties": {
+        "productCategoryId": {
+          "format": "int32",
+          "description": "کد گروه کالا سمت سرور ، توسط دیتابیس  سرور ایجاد می شود",
+          "type": "integer"
+        },
+        "productCategoryClientId": {
+          "format": "int64",
+          "description": "کد گروه کالا سمت کلاینت، اگر از طریق کلاینت گروه کالا ارسال می کنید باید حتما این فیلد  مقدار دهی شود",
+          "type": "integer"
+        },
+        "productCategoryCode": {
+          "format": "int32",
+          "description": "کد گروه کالا سمت نرم افزار ، اگر از طریق محک گروه کالا ارسال می کنید باید حتما این فیلد  مقدار دهی شود",
+          "type": "integer"
+        },
+        "name": {
+          "description": "نام گروه",
+          "type": "string"
+        },
+        "color": {
+          "description": "رنگ",
+          "type": "string"
+        },
+        "icon": {
+          "description": "آیکون",
+          "type": "string"
+        },
+        "deleted": {
+          "description": "در صورتی که می خواهید رکوردی را حذف کنید این فیلد را مقداردهی کنید حذف منطقی از بانک اطلاعاتی صورت می گیرد",
+          "type": "boolean"
+        },
+        "rowVersion": {
+          "format": "int64",
+          "description": "این فیلد توسط دیتابیس تولید می شود و در  اختیار شما قرار می گیرد  می توانید بزرگترین مقدار این  فیلد را برای هر موجودیت دیتابیس  سمت کلاینت یا نرم افزار محک ذخیره کرده و هنگام فراخوانی متد\r\nGetAllData()\r\nبرای افزایش سرعت رکوردهایی که فقط تغییر داشته اند را از سرور دریافت نمایید",
+          "type": "integer"
+        }
+      }
+    },
+    "ProductDetailModel": {
+      "type": "object",
+      "properties": {
+        "productDetailId": {
+          "format": "int32",
+          "description": "کد جزییات کالا سمت سرور ، توسط دیتابیس  سرور ایجاد می شود",
+          "type": "integer"
+        },
+        "productDetailClientId": {
+          "format": "int64",
+          "description": "کد جزییات کالا سمت کلاینت ، اگر از طریق کلاینت جزییات کالا ارسال می کنید باید حتما این فیلد  مقدار دهی شود",
+          "type": "integer"
+        },
+        "productDetailCode": {
+          "format": "int32",
+          "description": "کد جزییات کالا سمت نرم افزار، اگر از طریق محک  جزییات کالا ارسال می کنید باید حتما این فیلد  مقدار دهی شود",
+          "type": "integer"
+        },
+        "productId": {
+          "format": "int32",
+          "description": "کد کالا سمت سرور \r\n را در اختیار ندارید (ProductId) در صورتی که کالا از قبل به سرور ارسال نشده باشد و\r\n دو راه حل و جود دارد :\r\n راه حل اول و بهتر این است که جزییات کالا همزمان با کالا ارسال شود \r\n  در مدل جاری (ProductClientId) اگر از سمت کلاینت جزییات کالا ارسال می کنید باید فیلد\r\n  پر  شود و این فیلد دارای مقدار یکتا سمت کلاینت می باشد     \r\n  در مدل جاری (ProductCode)  اگر از سمت محک جزییات کالا ارسال می کنید باید فیلد\r\n   پر  شود \r\n  راه حل دوم :\r\n  ابتدا کالا به سرور ارسال شود و کد کالا در سرور دریافت و سپس جزییات آن ارسال شود\r\n  راه حل اول پرفرمنس بهتری دارد و از این روش می توانید برای تمام موجودیت های وابسته استفاده کنید",
+          "type": "integer"
+        },
+        "properties": {
+          "type": "string"
+        },
+        "properties2": {
+          "type": "string"
+        },
+        "barcode": {
+          "description": "بارکد",
+          "type": "string"
+        },
+        "price1": {
+          "format": "double",
+          "description": "سطح قیمتی یک\r\nبرای هر کالا می توانید سطح قیمتی های متفاوت ثبت نمایید",
+          "type": "number"
+        },
+        "price2": {
+          "format": "double",
+          "type": "number"
+        },
+        "price3": {
+          "format": "double",
+          "type": "number"
+        },
+        "price4": {
+          "format": "double",
+          "type": "number"
+        },
+        "price5": {
+          "format": "double",
+          "type": "number"
+        },
+        "price6": {
+          "format": "double",
+          "type": "number"
+        },
+        "price7": {
+          "format": "double",
+          "type": "number"
+        },
+        "price8": {
+          "format": "double",
+          "type": "number"
+        },
+        "price9": {
+          "format": "double",
+          "type": "number"
+        },
+        "price10": {
+          "format": "double",
+          "type": "number"
+        },
+        "discount": {
+          "format": "double",
+          "description": "مبلغ تخفیف",
+          "type": "number"
+        },
+        "discount1": {
+          "format": "double",
+          "type": "number"
+        },
+        "discount2": {
+          "format": "double",
+          "type": "number"
+        },
+        "discount3": {
+          "format": "double",
+          "type": "number"
+        },
+        "discount4": {
+          "format": "double",
+          "type": "number"
+        },
+        "defaultDiscountLevel": {
+          "format": "int32",
+          "description": "سطح پیش فرض تخفیف",
+          "type": "integer"
+        },
+        "discountType": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "defaultSellPriceLevel": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "customerPrice": {
+          "format": "double",
+          "type": "number"
+        },
+        "serials": {
+          "type": "string"
+        },
+        "defaultConsumerPriceLevel": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "consumerPrice1": {
+          "format": "double",
+          "type": "number"
+        },
+        "consumerPrice2": {
+          "format": "double",
+          "type": "number"
+        },
+        "consumerPrice3": {
+          "format": "double",
+          "type": "number"
+        },
+        "consumerPrice4": {
+          "format": "double",
+          "type": "number"
+        },
+        "consumerPrice5": {
+          "format": "double",
+          "type": "number"
+        },
+        "consumerPrice6": {
+          "format": "double",
+          "type": "number"
+        },
+        "consumerPrice7": {
+          "format": "double",
+          "type": "number"
+        },
+        "consumerPrice8": {
+          "format": "double",
+          "type": "number"
+        },
+        "consumerPrice9": {
+          "format": "double",
+          "type": "number"
+        },
+        "consumerPrice10": {
+          "format": "double",
+          "type": "number"
+        },
+        "deleted": {
+          "type": "boolean"
+        },
+        "dataHash": {
+          "type": "string"
+        },
+        "createDate": {
+          "format": "date-time",
+          "type": "string"
+        },
+        "rowVersion": {
+          "format": "int64",
+          "type": "integer"
+        },
+        "productClientId": {
+          "format": "int64",
+          "description": "کد کالا سمت کلاینت",
+          "type": "integer"
+        },
+        "productCode": {
+          "format": "int32",
+          "description": "کد کالا سمت محک",
+          "type": "integer"
+        }
+      }
+    },
+    "ProductDetailStoreAssetModel": {
+      "type": "object",
+      "properties": {
+        "productDetailStoreAssetId": {
+          "format": "int32",
+          "description": "کد موجودی انبار به تفکیک جزئیات کالا در سورو، توسط سرور ایجاد می شود",
+          "type": "integer"
+        },
+        "productDetailId": {
+          "format": "int32",
+          "description": "کد جزئیات کالا در سرور",
+          "type": "integer"
+        },
+        "storeId": {
+          "format": "int32",
+          "description": "کد انبار در سرور",
+          "type": "integer"
+        },
+        "count1": {
+          "format": "double",
+          "description": "موجودی جزئیات کالا در انبار بر اساس واحد اصلی کالا",
+          "type": "number"
+        },
+        "count2": {
+          "format": "double",
+          "description": "موجودی جزئیات کالا در انبار بر اساس واحد فرعی ( در صورت وجود)ـ",
+          "type": "number"
+        },
+        "deleted": {
+          "description": "در صورتی که می خواهید رکوردی را حذف کنید این فیلد را مقداردهی کنید حذف منطقی از بانک اطلاعاتی صورت می گیرد",
+          "type": "boolean"
+        },
+        "createDate": {
+          "format": "date-time",
+          "description": "زمان ثبت اطلاعات",
+          "type": "string"
+        },
+        "rowVersion": {
+          "format": "int64",
+          "description": "این فیلد توسط دیتابیس تولید می شود و در  اختیار شما قرار می گیرد  می توانید بزرگترین مقدار این  فیلد را برای هر موجودیت دیتابیس  سمت کلاینت یا نرم افزار محک ذخیره کرده و هنگام فراخوانی متد\r\nGetAllData()\r\nبرای افزایش سرعت رکوردهایی که فقط تغییر داشته اند را از سرور دریافت نمایید",
+          "type": "integer"
+        }
+      }
+    },
+    "ProductModel": {
+      "type": "object",
+      "properties": {
+        "productId": {
+          "format": "int32",
+          "description": "کد کالا در سرور ، توسط دیتابیس  سرور ایجاد می شود",
+          "type": "integer"
+        },
+        "productClientId": {
+          "format": "int64",
+          "description": "کد کالا در کلاینت ، اگر از طریق کلاینت ارسال می کنید باید حتما این فیلد  مقدار دهی شود",
+          "type": "integer"
+        },
+        "productCode": {
+          "format": "int32",
+          "description": "کد کالا در محک ، اگر از طریق محک  محصول ارسال می کنید باید حتما این فیلد  مقدار دهی شود",
+          "type": "integer"
+        },
+        "productCategoryId": {
+          "format": "int32",
+          "description": "شناسه گروه محصول  در  سرور \r\n را در اختیار ندارید (ProductCategoryId) در صورتی که گروه کالا از قبل  به سرور ارسال نشده باشد و\r\n دو راه حل و جود دارد :\r\n راه حل اول و بهتر این است که گروه کالا همزمان با آن ارسال شود \r\n  در مدل جاری (ProductCategoryClientId)  اگر از سمت کلاینت گروه کالا ارسال می کنید باید فیلد\r\n  پر  شود و این فیلد دارای مقدار یکتا سمت سایت می باشد     \r\n  در مدل جاری (ProductCategoryCode)  اگر از سمت محک گروه کالا ارسال می کنید باید فیلد\r\n   پر  شود \r\n  راه حل دوم :\r\n  ابتدا گروه کالا  به سرور ارسال شود و کد گروه در سرور دریافت  و سپس محصول ارسال شود\r\n  راه حل اول پرفرمنس بهتری دارد و از این روش می توانید برای تمام موجودیت های وابسته استفاده کنید",
+          "type": "integer"
+        },
+        "name": {
+          "description": "نام",
+          "type": "string"
+        },
+        "unitName": {
+          "description": "نام واحد",
+          "type": "string"
+        },
+        "unitName2": {
+          "description": "نام واحد",
+          "type": "string"
+        },
+        "unitCode": {
+          "format": "int32",
+          "description": "کد واحد یک",
+          "type": "integer"
+        },
+        "unitCode2": {
+          "format": "int32",
+          "description": "کد واحد دو",
+          "type": "integer"
+        },
+        "tags": {
+          "description": "برچسب محصول",
+          "type": "string"
+        },
+        "unitRatio": {
+          "format": "double",
+          "description": "نسبت واحد اندازه گیری دوم (فرعی) به واحد اندازه گیری اول(اصل) کالا\r\nمثال : هر یک شل(واحد دوم) از کالا برابر است با 12 عدد(واحد اول)ـ",
+          "type": "number"
+        },
+        "min": {
+          "format": "double",
+          "description": "حداقل تعداد کالا",
+          "type": "number"
+        },
+        "taxPercent": {
+          "format": "double",
+          "description": "درصد عوارض",
+          "type": "number"
+        },
+        "chargePercent": {
+          "format": "double",
+          "description": "درصد مالیات",
+          "type": "number"
+        },
+        "width": {
+          "format": "double",
+          "description": "عرض",
+          "type": "number"
+        },
+        "height": {
+          "format": "double",
+          "description": "ارتفاع",
+          "type": "number"
+        },
+        "length": {
+          "format": "double",
+          "description": "طول",
+          "type": "number"
+        },
+        "weight": {
+          "format": "double",
+          "description": "وزن",
+          "type": "number"
+        },
+        "type": {
+          "format": "int32",
+          "description": "نوع کالا",
+          "type": "integer"
+        },
+        "description": {
+          "description": "توضیحات",
+          "type": "string"
+        },
+        "productTIN": {
+          "description": "شناسه یکتا مالیاتی کالا\r\nاز این شناسه برای صدور صورتحساب مالیاتی در سامانه مودیان استفاده می شود",
+          "type": "string"
+        },
+        "unitTIN": {
+          "description": "شناسه واحد اندازه گیری در سامانه مودیان",
+          "type": "string"
+        },
+        "deleted": {
+          "description": "در صورتی که می خواهید رکوردی را حذف کنید این فیلد را مقداردهی کنید حذف منطقی از بانک اطلاعاتی صورت می گیرد",
+          "type": "boolean"
+        },
+        "rowVersion": {
+          "format": "int64",
+          "description": "در صورتی که می خواهید رکوردی را حذف کنید این فیلد را مقداردهی کنید حذف منطقی از بانک اطلاعاتی صورت می گیرد",
+          "type": "integer"
+        },
+        "productCategoryClientId": {
+          "format": "int64",
+          "description": "کد گروه کالا در کلاینت",
+          "type": "integer"
+        },
+        "productCategoryCode": {
+          "format": "int32",
+          "description": "کد گروه کالا در محک",
+          "type": "integer"
+        }
+      }
+    },
+    "ProductPropertyModel": {
+      "type": "object",
+      "properties": {
+        "productPropertyId": {
+          "format": "int32",
+          "description": "کد ویژگی کالا در سرور ، توسط دیتابیس  سرور ایجاد می شود",
+          "type": "integer"
+        },
+        "productId": {
+          "format": "int32",
+          "description": "کد کالا در سرور \r\n را در اختیار ندارید (ProductId) در صورتی که کالا از قبل  به سرور ارسال نشده باشد و\r\n دو راه حل و جود دارد :\r\n راه حل اول و بهتر این است که ویژگی کالا همزمان با کالا ارسال شود \r\n  در مدل جاری (ProductClientId)  اگر از سمت کلاینت ویژگی کالا ارسال می کنید باید فیلد\r\n  پر  شود و این فیلد دارای مقدار یکتا سمت کلاینت می باشد     \r\n  در مدل جاری (ProductCode)  اگر از سمت محک ویژگی کالا ارسال می کنید باید فیلد\r\n   پر  شود \r\n  راه حل دوم :\r\n  ابتدا کالا به سرور ارسال شود و شناسه کالا در سرور دریافت  و سپس ویژگی کالا ارسال شود\r\n  راه حل اول پرفرمنس بهتری دارد و از این روش می توانید برای تمام موجودیت های وابسته استفاده کنید",
+          "type": "integer"
+        },
+        "propertyDescriptionId": {
+          "format": "int32",
+          "description": "کد توضیحات کالا در سرور",
+          "type": "integer"
+        },
+        "deleted": {
+          "description": "در صورتی که می خواهید رکوردی را حذف کنید این فیلد را مقداردهی کنید حذف منطقی از بانک اطلاعاتی صورت می گیرد",
+          "type": "boolean"
+        },
+        "rowVersion": {
+          "format": "int64",
+          "description": "این فیلد توسط دیتابیس تولید می شود و در  اختیار شما قرار می گیرد  می توانید بزرگترین مقدار این  فیلد را برای هر موجودیت دیتابیس  سمت کلاینت یا نرم افزار محک ذخیره کرده و هنگام فراخوانی متد\r\nGetAllData()\r\nبرای افزایش سرعت رکوردهایی که فقط تغییر داشته اند را از سرور دریافت نمایید",
+          "type": "integer"
+        },
+        "productClientId": {
+          "format": "int64",
+          "description": "کد کالا در کلاینت",
+          "type": "integer"
+        },
+        "productCode": {
+          "format": "int32",
+          "description": "کد کالا در محک",
+          "type": "integer"
+        }
+      }
+    },
+    "ProjectModel": {
+      "type": "object",
+      "properties": {
+        "projectId": {
+          "format": "int32",
+          "description": "کد مرکز هزینه در سرور ، توسط دیتابیس  سرور ایجاد می شود",
+          "type": "integer"
+        },
+        "projectClientId": {
+          "format": "int64",
+          "description": "کد مرکز هزینه در کلاینت، اگر از طریق کلاینت مرکز هزینه ارسال می کنید باید حتما این فیلد  مقدار دهی شود",
+          "type": "integer"
+        },
+        "projectCode": {
+          "format": "int32",
+          "description": "کد مرکز هزینه در محک  ، اگر از طریق محک مرکز هزینه ارسال می کنید باید حتما این فیلد  مقدار دهی شود",
+          "type": "integer"
+        },
+        "title": {
+          "description": "عنوان",
+          "type": "string"
+        },
+        "tafsili": {
+          "format": "int32",
+          "description": "کد تفصیلی",
+          "type": "integer"
+        },
+        "parentCode": {
+          "format": "int32",
+          "description": "کد مرکز هزینه سطح بالاتر\r\nاین فیلد برای حالت سلسه مراتبی مراکز هزینه استفاده می شود.",
+          "type": "integer"
+        },
+        "levelCode": {
+          "format": "int32",
+          "description": "سطح مرکز هزینه\r\nاین فیلد برای حالت سلسه مراتبی مراکز هزینه استفاده می شود.\r\nاین فیلد نشان میدهد که مرکز هزینه جاری در چه سطحی قرار دارد",
+          "type": "integer"
+        },
+        "comment": {
+          "description": "توضیحات",
+          "type": "string"
+        },
+        "projectCrn": {
+          "description": "شناسه یکتا ثبت قرارداد\r\nاز این فیلد برای صدور صورتحساب پیمانکاری در سامانه مودیان استفاده می شود",
+          "type": "string"
+        },
+        "deleted": {
+          "description": "در صورتی که می خواهید رکوردی را حذف کنید این فیلد را مقداردهی کنید حذف منطقی از بانک اطلاعاتی صورت می گیرد",
+          "type": "boolean"
+        },
+        "rowVersion": {
+          "format": "int64",
+          "description": "این فیلد توسط دیتابیس تولید می شود و در  اختیار شما قرار می گیرد  می توانید بزرگترین مقدار این  فیلد را برای هر موجودیت دیتابیس  سمت کلاینت یا نرم افزار محک ذخیره کرده و هنگام فراخوانی متد\r\nGetAllData()\r\nبرای افزایش سرعت رکوردهایی که فقط تغییر داشته اند را از سرور دریافت نمایید",
+          "type": "integer"
+        }
+      }
+    },
+    "PromotionDetailModel": {
+      "description": "جزئیات طرح های تشویقی",
+      "type": "object",
+      "properties": {
+        "promotionDetailId": {
+          "format": "int32",
+          "description": "کد جزییات طرح تشویقی در سرور ، توسط دیتابیس  سرور ایجاد می شود",
+          "type": "integer"
+        },
+        "promotionDetailClientId": {
+          "format": "int64",
+          "description": "کد جزییات طرح تشویقی در کلاینت ، اگر از طریق جزییات طرح تشویقی ارسال می کنید باید حتما این فیلد مقدار دهی شود",
+          "type": "integer"
+        },
+        "promotionDetailCode": {
+          "format": "int32",
+          "description": "کد جزییات طرح تشویقی در نرم افزار، اگر از طریق محک جزییات طرح تشویقی ارسال می کنید باید حتما این فیلد مقدار دهی شود",
+          "type": "integer"
+        },
+        "promotionId": {
+          "format": "int32",
+          "description": "کد محصول در سرور \r\n را در اختیار ندارید (PromotionId) در صورتی که طرح تشویقی از قبل به سرور ارسال نشده باشد و\r\n دو راه حل و جود دارد :\r\n راه حل اول و بهتر این است که طرح تشویقی همزمان با جزییات طرح تشویقی ارسال شود \r\n  در مدل جاری (PromotionClientId)  اگر از سمت کلاینت طرح تشویقی ارسال می کنید باید فیلد\r\n  پر  شود و این فیلد دارای مقدار یکتا سمت کلاینت می باشد     \r\n  در مدل جاری (PromotionCode)  اگر از سمت محک  طرح تشویقی ارسال می کنید باید فیلد\r\n   پر  شود \r\n  راه حل دوم :\r\n  ابتدا طرح تشویقی به سرور ارسال شود و شناسه طرح تشویقی از سرور دریافت و سپس جزییات طرح تشویقی ارسال شود\r\n  راه حل اول پرفرمنس بهتری دارد و از این روش می توانید برای تمام موجودیت های وابسته استفاده کنید",
+          "type": "integer"
+        },
+        "otherFields": {
+          "description": "سایر فیلد ها بصورت جیسون در این فیلد ذخیره می شوند",
+          "type": "string"
+        },
+        "deleted": {
+          "description": "در صورتی که می خواهید رکوردی را حذف کنید این فیلد را مقداردهی کنید حذف منطقی از بانک اطلاعاتی صورت می گیرد",
+          "type": "boolean"
+        },
+        "rowVersion": {
+          "format": "int64",
+          "description": "این فیلد توسط دیتابیس تولید می شود و در  اختیار شما قرار می گیرد  می توانید بزرگترین مقدار این  فیلد را برای هر موجودیت دیتابیس  سمت کلاینت یا نرم افزار محک ذخیره کرده و هنگام فراخوانی متد\r\nGetAllData()\r\nبرای افزایش سرعت رکوردهایی که فقط تغییر داشته اند را از سرور دریافت نمایید",
+          "type": "integer"
+        },
+        "promotionClientId": {
+          "format": "int64",
+          "description": "کد طرح تشویقی در کلاینت",
+          "type": "integer"
+        },
+        "promotionCode": {
+          "format": "int32",
+          "description": "کد طرح تشویقی محک",
+          "type": "integer"
+        }
+      }
+    },
+    "PromotionEntityModel": {
+      "description": "شرایط طرح های تشویفی",
+      "type": "object",
+      "properties": {
+        "promotionEntityId": {
+          "format": "int32",
+          "description": "کد شرایط طرح تشویقی سمت سرور\r\nبه صورت خودکار در سرور ثبت می شود",
+          "type": "integer"
+        },
+        "promotionEntityCode": {
+          "format": "int32",
+          "description": "کد شرط طرح تشویقی",
+          "type": "integer"
+        },
+        "promotionId": {
+          "format": "int32",
+          "description": "شناسه طرح تشویقی در سرور",
+          "type": "integer"
+        },
+        "promotionEntityClientId": {
+          "format": "int64",
+          "description": "شناسه شرط طرح تشویقی در کلاینت",
+          "type": "integer"
+        },
+        "otherFields": {
+          "description": "سایر فیلد ها بصورت جیسون در این فیلد ذخیره می شوند",
+          "type": "string"
+        },
+        "deleted": {
+          "description": "در صورتی که می خواهید رکوردی را حذف کنید این فیلد را مقداردهی کنید حذف منطقی از بانک اطلاعاتی صورت می گیرد",
+          "type": "boolean"
+        },
+        "rowVersion": {
+          "format": "int64",
+          "description": "این فیلد توسط دیتابیس تولید می شود و در  اختیار شما قرار می گیرد  می توانید بزرگترین مقدار این  فیلد را برای هر موجودیت دیتابیس  سمت کلاینت یا نرم افزار محک ذخیره کرده و هنگام فراخوانی متد\r\nGetAllData()\r\nبرای افزایش سرعت رکوردهایی که فقط تغییر داشته اند را از سرور دریافت نمایید",
+          "type": "integer"
+        }
+      }
+    },
+    "PromotionModel": {
+      "description": "طرح های تشویقی",
+      "type": "object",
+      "properties": {
+        "promotionId": {
+          "format": "int32",
+          "description": "کد طرح تشویقی در سرور\r\nبه صورت خودکار در سرور ثبت می شود",
+          "type": "integer"
+        },
+        "promotionClientId": {
+          "format": "int64",
+          "description": "کد طرح تشویقی در کلاینت",
+          "type": "integer"
+        },
+        "promotionCode": {
+          "format": "int32",
+          "description": "کد طرح تشویفی",
+          "type": "integer"
+        },
+        "visitors": {
+          "description": "شناسه کلاینت در سرور",
+          "type": "string"
+        },
+        "stores": {
+          "description": "کدهای انبار",
+          "type": "string"
+        },
+        "otherFields": {
+          "description": "سایر فیلدها\r\nدر قالب جیسون",
+          "type": "string"
+        },
+        "deleted": {
+          "description": "در صورتی که می خواهید رکوردی را حذف کنید این فیلد را مقداردهی کنید حذف منطقی از بانک اطلاعاتی صورت می گیرد",
+          "type": "boolean"
+        },
+        "rowVersion": {
+          "format": "int64",
+          "description": "این فیلد توسط دیتابیس تولید می شود و در  اختیار شما قرار می گیرد  می توانید بزرگترین مقدار این  فیلد را برای هر موجودیت دیتابیس  سمت کلاینت یا نرم افزار محک ذخیره کرده و هنگام فراخوانی متد\r\nGetAllData()\r\nبرای افزایش سرعت رکوردهایی که فقط تغییر داشته اند را از سرور دریافت نمایید",
+          "type": "integer"
+        }
+      }
+    },
+    "PropertyDescriptionModel": {
+      "type": "object",
+      "properties": {
+        "propertyDescriptionId": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "propertyDescriptionClientId": {
+          "format": "int64",
+          "type": "integer"
+        },
+        "propertyDescriptionCode": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "name": {
+          "type": "string"
+        },
+        "title": {
+          "type": "string"
+        },
+        "emptyTitle": {
+          "type": "string"
+        },
+        "dataType": {
+          "format": "int32",
+          "description": "2 = متنی\r\n3 = سریال\r\n4 = عددی\r\n5 = تاریخی\r\n6 = بارکدی",
+          "type": "integer"
+        },
+        "displayType": {
+          "format": "int32",
+          "description": "2 = متنی\r\n3 = سریال\r\n4 = عددی\r\n5 = تاریخی\r\n6 = بارکدی",
+          "type": "integer"
+        },
+        "description": {
+          "type": "string"
+        },
+        "deleted": {
+          "type": "boolean"
+        },
+        "updateDate": {
+          "format": "date-time",
+          "type": "string"
+        },
+        "rowVersion": {
+          "format": "int64",
+          "type": "integer"
+        }
+      }
+    },
+    "PropertyDescriptionValueModel": {
+      "type": "object",
+      "properties": {
+        "propertyDescriptionValueId": {
+          "format": "int32",
+          "description": "توسط سرور ایجاد می شود",
+          "type": "integer"
+        },
+        "propertyDescriptionValueClientId": {
+          "format": "int64",
+          "type": "integer"
+        },
+        "propertyDescriptionValueCode": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "propertyDescriptionCode": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "row": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "value": {
+          "type": "string"
+        },
+        "deleted": {
+          "description": "در صورتی که می خواهید رکوردی را حذف کنید این فیلد را مقداردهی کنید حذف منطقی از بانک اطلاعاتی صورت می گیرد",
+          "type": "boolean"
+        },
+        "createDate": {
+          "format": "date-time",
+          "description": "زمان ثبت اطلاعات",
+          "type": "string"
+        },
+        "rowVersion": {
+          "format": "int64",
+          "description": "این فیلد توسط دیتابیس تولید می شود و در  اختیار شما قرار می گیرد  می توانید بزرگترین مقدار این  فیلد را برای هر موجودیت دیتابیس  سمت کلاینت یا نرم افزار محک ذخیره کرده و هنگام فراخوانی متد\r\nGetAllData()\r\nبرای افزایش سرعت رکوردهایی که فقط تغییر داشته اند را از سرور دریافت نمایید",
+          "type": "integer"
+        }
+      }
+    },
+    "PropertyErrorModel": {
+      "type": "object",
+      "properties": {
+        "property": {
+          "type": "string"
+        },
+        "code": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "error": {
+          "type": "string"
+        }
+      }
+    },
+    "ReceiptModel": {
+      "type": "object",
+      "properties": {
+        "receiptId": {
+          "format": "int32",
+          "description": "کد حواله در سمت سرور- اتومات تکمیل می شود",
+          "type": "integer"
+        },
+        "receiptClientId": {
+          "format": "int64",
+          "description": "کد حواله سمت کلاینت\r\nدرصورتی که حواله از سمت کلاینت تکمیل میشود این فیلد باید ارسال شود\r\nهمچنین این مقدار سمت کلاینت بصورت یکتا می باشد",
+          "type": "integer"
+        },
+        "receiptCode": {
+          "format": "int32",
+          "description": "کد حواله سمت نرم افزار\r\nدرصورتیکه حواله از سمت نرم افزار محک ارسال می شود این فیلد باید تکمیل گردد\r\nمقدار این فیلد بصورت یکتا در نرم افزار محک می باشد",
+          "type": "integer"
+        },
+        "personId": {
+          "format": "int32",
+          "description": "کد شخص در سمت سرور باید در ثبت حواله ارسال شود",
+          "type": "integer"
+        },
+        "visitorId": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "cashAmount": {
+          "format": "double",
+          "description": "مبلغ نقدی حواله در این فیلد ثبت می شود",
+          "type": "number"
+        },
+        "cashCode": {
+          "format": "int32",
+          "description": "کد صندوق در این فیلد ثبت می شود",
+          "type": "integer"
+        },
+        "description": {
+          "description": "در صورت داشتن توضیحات این فیلد ارسال شود",
+          "type": "string"
+        },
+        "date": {
+          "format": "date-time",
+          "description": "تاریخ حواله",
+          "type": "string"
+        },
+        "trackingCode": {
+          "description": "کد پیگیری حواله بصورت رشته ای",
+          "type": "string"
+        },
+        "projectId": {
+          "format": "int32",
+          "description": "کد مرکز هزینه سمت سرور درصورت داشتن باید در این فیلد ذخیره شود",
+          "type": "integer"
+        },
+        "orderId": {
+          "format": "int32",
+          "description": "کد سفارش سمت سرور در صورت داشتن در این فیلد ذخیره می شود",
+          "type": "integer"
+        },
+        "deleted": {
+          "description": "در صورتی که می خواهید رکوردی را حذف کنید این فیلد را مقداردهی کنید حذف منطقی از بانک اطلاعاتی صورت می گیرد",
+          "type": "boolean"
+        },
+        "createDate": {
+          "format": "date-time",
+          "type": "string"
+        },
+        "updateDate": {
+          "format": "date-time",
+          "type": "string"
+        },
+        "rowVersion": {
+          "format": "int64",
+          "description": "این فیلد توسط دیتابیس تولید می شود و در  اختیار شما قرار می گیرد  می توانید بزرگترین مقدار این  فیلد را برای هر موجودیت دیتابیس  سمت کلاینت یا نرم افزار محک ذخیره کرده و هنگام فراخوانی متد\r\nGetAllData()\r\nبرای افزایش سرعت رکوردهایی که فقط تغییر داشته اند را از سرور دریافت نمایید",
+          "type": "integer"
+        },
+        "orderClientId": {
+          "format": "int64",
+          "description": "کد سفارش در کلاینت",
+          "type": "integer"
+        },
+        "orderCode": {
+          "format": "int32",
+          "description": "کد سفارش در محک",
+          "type": "integer"
+        },
+        "orderType": {
+          "format": "int32",
+          "type": "integer"
+        }
+      }
+    },
+    "RegionModel": {
+      "type": "object",
+      "properties": {
+        "cityID": {
+          "format": "int32",
+          "description": "کد شهر سمت سرور که بصورت اتومات پر می شود",
+          "type": "integer"
+        },
+        "cityName": {
+          "description": "نام شهر",
+          "type": "string"
+        },
+        "provinceID": {
+          "format": "int32",
+          "description": "کد استان",
+          "type": "integer"
+        },
+        "provinceName": {
+          "description": "نام استان",
+          "type": "string"
+        },
+        "rowVersion": {
+          "format": "int64",
+          "description": "این فیلد توسط دیتابیس تولید می شود و در  اختیار شما قرار می گیرد  می توانید بزرگترین مقدار این  فیلد را برای هر موجودیت دیتابیس  سمت کلاینت یا نرم افزار محک ذخیره کرده و هنگام فراخوانی متد\r\nGetAllData()\r\nبرای افزایش سرعت رکوردهایی که فقط تغییر داشته اند را از سرور دریافت نمایید",
+          "type": "integer"
+        }
+      }
+    },
+    "RequestAllDataModel": {
+      "type": "object",
+      "properties": {
+        "currentVisitorId": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "fromBankVersion": {
+          "format": "int64",
+          "type": "integer"
+        },
+        "fromBankGroupVersion": {
+          "format": "int64",
+          "type": "integer"
+        },
+        "fromCurrencyVersion": {
+          "format": "int64",
+          "type": "integer"
+        },
+        "fromCashVersion": {
+          "format": "int64",
+          "type": "integer"
+        },
+        "fromExpenseVersion": {
+          "format": "int64",
+          "type": "integer"
+        },
+        "fromExpenseGroupVersion": {
+          "format": "int64",
+          "type": "integer"
+        },
+        "fromRegionVersion": {
+          "format": "int64",
+          "type": "integer"
+        },
+        "fromChecklistVersion": {
+          "format": "int64",
+          "type": "integer"
+        },
+        "fromChequeVersion": {
+          "format": "int64",
+          "type": "integer"
+        },
+        "fromExtraDataVersion": {
+          "format": "int64",
+          "type": "integer"
+        },
+        "fromOrderDetailVersion": {
+          "format": "int64",
+          "type": "integer"
+        },
+        "fromOrderVersion": {
+          "format": "int64",
+          "type": "integer"
+        },
+        "fromPersonGroupVersion": {
+          "format": "int64",
+          "type": "integer"
+        },
+        "fromPersonVersion": {
+          "format": "int64",
+          "type": "integer"
+        },
+        "fromPersonAddressVersion": {
+          "format": "int64",
+          "type": "integer"
+        },
+        "fromPictureVersion": {
+          "format": "int64",
+          "type": "integer"
+        },
+        "fromProductCategoryVersion": {
+          "format": "int64",
+          "type": "integer"
+        },
+        "fromProductDetailVersion": {
+          "format": "int64",
+          "type": "integer"
+        },
+        "fromProductVersion": {
+          "format": "int64",
+          "type": "integer"
+        },
+        "fromReceiptVersion": {
+          "format": "int64",
+          "type": "integer"
+        },
+        "fromSettingVersion": {
+          "format": "int64",
+          "type": "integer"
+        },
+        "fromTransactionVersion": {
+          "format": "int64",
+          "type": "integer"
+        },
+        "fromVisitorVersion": {
+          "format": "int64",
+          "type": "integer"
+        },
+        "fromVisitorCashVersion": {
+          "format": "int64",
+          "type": "integer"
+        },
+        "fromVisitorBankVersion": {
+          "format": "int64",
+          "type": "integer"
+        },
+        "fromVisitorIncomeVersion": {
+          "format": "int64",
+          "type": "integer"
+        },
+        "fromVisitorExpenseVersion": {
+          "format": "int64",
+          "type": "integer"
+        },
+        "fromVisitorPersonVersion": {
+          "format": "int64",
+          "type": "integer"
+        },
+        "fromVisitorProductVersion": {
+          "format": "int64",
+          "type": "integer"
+        },
+        "fromCostLevelNameVersion": {
+          "format": "int64",
+          "type": "integer"
+        },
+        "fromNotRegisterVersion": {
+          "format": "int64",
+          "type": "integer"
+        },
+        "fromPromotionVersion": {
+          "format": "int64",
+          "type": "integer"
+        },
+        "fromPromotionDetailVersion": {
+          "format": "int64",
+          "type": "integer"
+        },
+        "fromPromotionEntityVersion": {
+          "format": "int64",
+          "type": "integer"
+        },
+        "fromReturnReasonVersion": {
+          "format": "int64",
+          "type": "integer"
+        },
+        "fromTransferAccountVersion": {
+          "format": "int64",
+          "type": "integer"
+        },
+        "fromTransferStoreVersion": {
+          "format": "int64",
+          "type": "integer"
+        },
+        "fromTransferStoreDetailVersion": {
+          "format": "int64",
+          "type": "integer"
+        },
+        "fromVisitorLocationVersion": {
+          "format": "int64",
+          "type": "integer"
+        },
+        "fromProductPropertyVersion": {
+          "format": "int64",
+          "type": "integer"
+        },
+        "fromPropertyDescriptionVersion": {
+          "format": "int64",
+          "type": "integer"
+        },
+        "fromPropertyDescriptionValueVersion": {
+          "format": "int64",
+          "type": "integer"
+        },
+        "fromIncomeVersion": {
+          "format": "int64",
+          "type": "integer"
+        },
+        "fromIncomeGroupVersion": {
+          "format": "int64",
+          "type": "integer"
+        },
+        "fromProjectVersion": {
+          "format": "int64",
+          "type": "integer"
+        },
+        "fromStoreVersion": {
+          "format": "int64",
+          "type": "integer"
+        },
+        "fromPhotoGalleryVersion": {
+          "format": "int64",
+          "type": "integer"
+        },
+        "fromProductDetailStoreAssetVersion": {
+          "format": "int64",
+          "type": "integer"
+        },
+        "orderTypes": {
+          "type": "array",
+          "items": {
+            "format": "int32",
+            "type": "integer"
+          }
+        },
+        "fromMissionVersion": {
+          "format": "int64",
+          "type": "integer"
+        },
+        "fromMissionDetailVersion": {
+          "format": "int64",
+          "type": "integer"
+        },
+        "fromUnitVersion": {
+          "format": "int64",
+          "type": "integer"
+        },
+        "fromOrderTaxStatusVersion": {
+          "format": "int64",
+          "type": "integer"
+        },
+        "fromCompanyVersion": {
+          "format": "int64",
+          "type": "integer"
+        },
+        "fromPaymentVersion": {
+          "format": "int64",
+          "type": "integer"
+        },
+        "fromPaymentChequeVersion": {
+          "format": "int64",
+          "type": "integer"
+        },
+        "fromMahakPayVersion": {
+          "format": "int64",
+          "type": "integer"
+        },
+        "fromTaxOrderReceiptVersion": {
+          "format": "int64",
+          "type": "integer"
+        },
+        "pageSize": {
+          "format": "int32",
+          "type": "integer"
+        }
+      }
+    },
+    "ReturnReasonModel": {
+      "description": "دلائل برگشت از فروش",
+      "type": "object",
+      "properties": {
+        "returnReasonId": {
+          "format": "int32",
+          "description": "کد برگشت از فروش سمت سرور - در سرور بضورت اتومات تکمیل می شود",
+          "type": "integer"
+        },
+        "returnReasonClientId": {
+          "format": "int64",
+          "description": "کد برگشت از فروش سمت کلاینت\r\nدر صورتیکه توسط کلاینت دلیلی برگشت از فروشی ثبت می شود  باید کد آن در این فیلد ذخیره شود\r\nاین کد سمت کلاینت یونیک میباشد",
+          "type": "integer"
+        },
+        "returnReasonCode": {
+          "format": "int32",
+          "description": "کد برگشت از فروش سمت نرم افزار محک که به سرور ارسال می شود",
+          "type": "integer"
+        },
+        "type": {
+          "format": "int32",
+          "description": "برای عدم ثبت سفارش باید نوع آن 138 ارسال شود",
+          "type": "integer"
+        },
+        "name": {
+          "description": "عنوان یا دلیل برگشت از فروش در این فیلد ثبت می شود",
+          "type": "string"
+        },
+        "description": {
+          "description": "توضیحات",
+          "type": "string"
+        },
+        "deleted": {
+          "description": "در صورتی که می خواهید رکوردی را حذف کنید این فیلد را مقداردهی کنید حذف منطقی از بانک اطلاعاتی صورت می گیرد",
+          "type": "boolean"
+        },
+        "rowVersion": {
+          "format": "int64",
+          "description": "این فیلد توسط دیتابیس تولید می شود و در  اختیار شما قرار می گیرد  می توانید بزرگترین مقدار این  فیلد را برای هر موجودیت دیتابیس  سمت کلاینت یا نرم افزار محک ذخیره کرده و هنگام فراخوانی متد\r\nGetAllData()\r\nبرای افزایش سرعت رکوردهایی که فقط تغییر داشته اند را از سرور دریافت نمایید",
+          "type": "integer"
+        }
+      }
+    },
+    "SaveAllDataResult": {
+      "type": "object",
+      "properties": {
+        "banks": {
+          "$ref": "#/definitions/MultiEntityUpdateResult"
+        },
+        "bankGroups": {
+          "$ref": "#/definitions/MultiEntityUpdateResult"
+        },
+        "currencies": {
+          "$ref": "#/definitions/MultiEntityUpdateResult"
+        },
+        "cashes": {
+          "$ref": "#/definitions/MultiEntityUpdateResult"
+        },
+        "checklists": {
+          "$ref": "#/definitions/MultiEntityUpdateResult"
+        },
+        "cheques": {
+          "$ref": "#/definitions/MultiEntityUpdateResult"
+        },
+        "expenses": {
+          "$ref": "#/definitions/MultiEntityUpdateResult"
+        },
+        "expenseGroups": {
+          "$ref": "#/definitions/MultiEntityUpdateResult"
+        },
+        "extraDatas": {
+          "$ref": "#/definitions/MultiEntityUpdateResult"
+        },
+        "orderDetails": {
+          "$ref": "#/definitions/MultiEntityUpdateResult"
+        },
+        "orders": {
+          "$ref": "#/definitions/MultiEntityUpdateResult"
+        },
+        "personGroups": {
+          "$ref": "#/definitions/MultiEntityUpdateResult"
+        },
+        "people": {
+          "$ref": "#/definitions/MultiEntityUpdateResult"
+        },
+        "personAddresses": {
+          "$ref": "#/definitions/MultiEntityUpdateResult"
+        },
+        "pictures": {
+          "$ref": "#/definitions/MultiEntityUpdateResult"
+        },
+        "productCategories": {
+          "$ref": "#/definitions/MultiEntityUpdateResult"
+        },
+        "productDetails": {
+          "$ref": "#/definitions/MultiEntityUpdateResult"
+        },
+        "products": {
+          "$ref": "#/definitions/MultiEntityUpdateResult"
+        },
+        "receipts": {
+          "$ref": "#/definitions/MultiEntityUpdateResult"
+        },
+        "settings": {
+          "$ref": "#/definitions/MultiEntityUpdateResult"
+        },
+        "transactions": {
+          "$ref": "#/definitions/MultiEntityUpdateResult"
+        },
+        "visitors": {
+          "$ref": "#/definitions/MultiEntityUpdateResult"
+        },
+        "visitorCashes": {
+          "$ref": "#/definitions/MultiEntityUpdateResult"
+        },
+        "visitorBanks": {
+          "$ref": "#/definitions/MultiEntityUpdateResult"
+        },
+        "visitorIncomes": {
+          "$ref": "#/definitions/MultiEntityUpdateResult"
+        },
+        "visitorExpenses": {
+          "$ref": "#/definitions/MultiEntityUpdateResult"
+        },
+        "visitorPeople": {
+          "$ref": "#/definitions/MultiEntityUpdateResult"
+        },
+        "visitorProducts": {
+          "$ref": "#/definitions/MultiEntityUpdateResult"
+        },
+        "costLevelNames": {
+          "$ref": "#/definitions/MultiEntityUpdateResult"
+        },
+        "notRegisters": {
+          "$ref": "#/definitions/MultiEntityUpdateResult"
+        },
+        "promotions": {
+          "$ref": "#/definitions/MultiEntityUpdateResult"
+        },
+        "promotionDetails": {
+          "$ref": "#/definitions/MultiEntityUpdateResult"
+        },
+        "promotionEntities": {
+          "$ref": "#/definitions/MultiEntityUpdateResult"
+        },
+        "returnReasons": {
+          "$ref": "#/definitions/MultiEntityUpdateResult"
+        },
+        "transferAccounts": {
+          "$ref": "#/definitions/MultiEntityUpdateResult"
+        },
+        "transferStores": {
+          "$ref": "#/definitions/MultiEntityUpdateResult"
+        },
+        "transferStoreDetails": {
+          "$ref": "#/definitions/MultiEntityUpdateResult"
+        },
+        "visitorLocations": {
+          "$ref": "#/definitions/MultiEntityUpdateResult"
+        },
+        "productProperties": {
+          "$ref": "#/definitions/MultiEntityUpdateResult"
+        },
+        "propertyDescriptions": {
+          "$ref": "#/definitions/MultiEntityUpdateResult"
+        },
+        "propertyDescriptionValues": {
+          "$ref": "#/definitions/MultiEntityUpdateResult"
+        },
+        "incomes": {
+          "$ref": "#/definitions/MultiEntityUpdateResult"
+        },
+        "incomeGroups": {
+          "$ref": "#/definitions/MultiEntityUpdateResult"
+        },
+        "projects": {
+          "$ref": "#/definitions/MultiEntityUpdateResult"
+        },
+        "stores": {
+          "$ref": "#/definitions/MultiEntityUpdateResult"
+        },
+        "photoGalleries": {
+          "$ref": "#/definitions/MultiEntityUpdateResult"
+        },
+        "productDetailStoreAssets": {
+          "$ref": "#/definitions/MultiEntityUpdateResult"
+        },
+        "missions": {
+          "$ref": "#/definitions/MultiEntityUpdateResult"
+        },
+        "missionDetails": {
+          "$ref": "#/definitions/MultiEntityUpdateResult"
+        },
+        "units": {
+          "$ref": "#/definitions/MultiEntityUpdateResult"
+        },
+        "companies": {
+          "$ref": "#/definitions/MultiEntityUpdateResult"
+        },
+        "payments": {
+          "$ref": "#/definitions/MultiEntityUpdateResult"
+        },
+        "paymentCheques": {
+          "$ref": "#/definitions/MultiEntityUpdateResult"
+        },
+        "mahakPays": {
+          "$ref": "#/definitions/MultiEntityUpdateResult"
+        },
+        "taxOrderReceipts": {
+          "$ref": "#/definitions/MultiEntityUpdateResult"
+        }
+      }
+    },
+    "SaveAllDataResultApiResult": {
+      "type": "object",
+      "properties": {
+        "result": {
+          "type": "boolean",
+          "readOnly": true
+        },
+        "code": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "message": {
+          "type": "string"
+        },
+        "data": {
+          "$ref": "#/definitions/SaveAllDataResultObject"
+        }
+      }
+    },
+    "SaveAllDataResultObject": {
+      "type": "object",
+      "properties": {
+        "objects": {
+          "$ref": "#/definitions/SaveAllDataResult"
+        }
+      }
+    },
+    "SettingModel": {
+      "type": "object",
+      "properties": {
+        "settingId": {
+          "format": "int32",
+          "description": "کد تنظیمات در سرور",
+          "type": "integer"
+        },
+        "settingCode": {
+          "format": "int32",
+          "description": "14008 = فعال بودن عوارض و مالیات \r\n1000 = دو واحدی\r\n1013 = جزئیات  کالا\r\n1015 = واحد کالا مقدار جز و کل\r\n1022 = یک واحدی  \r\n1037 = دو واحدی با ضریب متغیر   \r\n1038 = اجباری بودن ثبت جزئیات برای کالاهای دارای جزئیات    \r\n26008 = استفاده از درصد تخفیف کالا بعنوان تخفیف سطری پیش فرض در فاکتور فروش  \r\n14000 =  درصد عوارض\r\n14001 =  درصد مالیات\r\n1019 = واحد متر مربع  \r\n1042 = نوع تخفیف سطری   \r\n1032 = تعداد ارقام اعشار فیلدهای عددی\r\n1033 = تعداد ارقام اعشار فیلدهای مبلغی",
+          "type": "integer"
+        },
+        "settingClientId": {
+          "format": "int64",
+          "description": "کد تنظیمات سمت کلاینت",
+          "type": "integer"
+        },
+        "visitorId": {
+          "format": "int32",
+          "description": "شناسه کلاینت در سرور",
+          "type": "integer"
+        },
+        "value": {
+          "description": "if SettingCode = 14008 => فعال  یا غیر فعال بودن عوارض و مالیات ( 1 =  فعال  ، 0 =  غیر فعال )\r\nif SettingCode = 1000 => فعال  یا غیر فعال بودن  دو واحدی  (  1  =  فعال  ، 0 =  غیر فعال )\r\nif SettingCode = 1013 =>  فعال  یا غیر فعال بودن  جزئیات کالا   ( 1 = فعال ، 0 =  غیر فعال )\r\nif SettingCode = 1015 =>  فعال  یا غیر فعال بودن  واحد کالا مقدار جز و کل (1 = فعال ، 0 =  غیر فعال )\r\nif SettingCode = 1022 => فعال  یا غیر فعال بودن  یک واحدی  (1 = فعال، 0 =  غیر فعال) \r\nif SettingCode = 1037 => فعال  یا غیر فعال بودن  دو واحدی با ضریب متغیر (1 = فعال ، 0 =  غیر فعال ) \r\nif SettingCode = 1038 => اجباری یا اختیاری  بودن  ثبت جزئیات برای کالاهای دارای جزئیات (1 = اجباری،  0 =  اختیاری ) \r\nif SettingCode = 26008 => مقدار درصد تخفیف کالا بعنوان تخفیف سطری پیش فرض در فاکتور فروش  وارد شود \r\nif SettingCode = 14000 => مقدار درصد عوارض وارد شود \r\nif SettingCode = 14001 => مقدار  درصد مالیات وارد شود \r\nif SettingCode = 1019 => مقدار واحد متر مربع وارد شود \r\nif SettingCode = 1042 =>  صفر : مبلغی  ، یک : درصدی\r\nif SettingCode = 1032 => تعداد ارقام اعشار فیلدهای عددی وارد شود \r\nif SettingCode = 1033 => تعداد ارقام اعشار فیلدهای مبلغی وارد شود",
+          "type": "string"
+        },
+        "deleted": {
+          "type": "boolean"
+        },
+        "rowVersion": {
+          "format": "int64",
+          "type": "integer"
+        }
+      }
+    },
+    "SolveDisputeRequestModel": {
+      "type": "object",
+      "properties": {
+        "databaseId": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "entityName": {
+          "type": "string"
+        },
+        "disputeItems": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/DisputeItem"
+          }
+        }
+      }
+    },
+    "SolveOrderDisputeRequestModel": {
+      "type": "object",
+      "properties": {
+        "databaseId": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "disputeItems": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/DisputeOrder"
+          }
+        }
+      }
+    },
+    "StoreModel": {
+      "description": "برای ارسال و دریافت لیست انبار استفاده می شود",
+      "type": "object",
+      "properties": {
+        "storeId": {
+          "format": "int32",
+          "description": "کد انبار سمت سرور که بصورت اتومات تکمیل می شود",
+          "type": "integer"
+        },
+        "storeClientId": {
+          "format": "int64",
+          "description": "کد انبار سمت کلاینت\r\nدر صورت ثبت انبار از سمت کلاینت باید این فیلد تکمیل شود\r\nاین مقدار باید سمت کلاینت یونیک باشد",
+          "type": "integer"
+        },
+        "storeCode": {
+          "format": "int32",
+          "description": "کد انبار سمت نرم افزار\r\nکد انبار که از سمت نرم افزار محک ارسال می شود\r\nاین فیلد سمت نرم افزار محک مقدار یونیک دارد",
+          "type": "integer"
+        },
+        "name": {
+          "description": "نام انبار",
+          "type": "string"
+        },
+        "stock": {
+          "format": "double",
+          "description": "موجودی انبار",
+          "type": "number"
+        },
+        "comment": {
+          "description": "توضیحات",
+          "type": "string"
+        },
+        "deleted": {
+          "description": "در صورتی که می خواهید رکوردی را حذف کنید این فیلد را مقداردهی کنید حذف منطقی از بانک اطلاعاتی صورت می گیرد",
+          "type": "boolean"
+        },
+        "rowVersion": {
+          "format": "int64",
+          "description": "این فیلد توسط دیتابیس تولید می شود و در  اختیار شما قرار می گیرد  می توانید بزرگترین مقدار این  فیلد را برای هر موجودیت دیتابیس  سمت کلاینت یا نرم افزار محک ذخیره کرده و هنگام فراخوانی متد\r\nGetAllData()\r\nبرای افزایش سرعت رکوردهایی که فقط تغییر داشته اند را از سرور دریافت نمایید",
+          "type": "integer"
+        }
+      }
+    },
+    "TaxOrderReceiptModel": {
+      "type": "object",
+      "properties": {
+        "taxOrderReceiptId": {
+          "format": "int32",
+          "description": "کد درآمد - توسط دیتابیس  سرور ایجاد می شود",
+          "type": "integer"
+        },
+        "taxOrderReceiptClientId": {
+          "format": "int64",
+          "description": "کد درآمد سمت کلاینت ، اگر از طریق کلاینت، درآمد ارسال می کنید باید حتما این فیلد  مقدار دهی شود",
+          "type": "integer"
+        },
+        "taxOrderReceiptCode": {
+          "format": "int32",
+          "description": "کد درآمد سمت نرم افزار ، اگر از طریق محک اطلاعات ارسال می کنید باید حتما این فیلد  مقدار دهی شود",
+          "type": "integer"
+        },
+        "orderId": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "errorDetail": {
+          "type": "string"
+        },
+        "status": {
+          "type": "string"
+        },
+        "amount": {
+          "format": "double",
+          "description": "مبلغ",
+          "type": "number"
+        },
+        "operationType": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "operationDate": {
+          "format": "date-time",
+          "type": "string"
+        },
+        "deleted": {
+          "description": "در صورتی که می خواهید رکوردی را حذف کنید این فیلد را مقداردهی کنید حذف منطقی از بانک اطلاعاتی صورت می گیرد",
+          "type": "boolean"
+        },
+        "rowVersion": {
+          "format": "int64",
+          "description": "این فیلد توسط دیتابیس تولید می شود و در  اختیار شما قرار می گیرد  می توانید بزرگترین مقدار این  فیلد را برای هر موجودیت دیتابیس  سمت کلاینت یا نرم افزار محک ذخیره کرده و هنگام فراخوانی متد\r\nGetAllData()\r\nبرای افزایش سرعت رکوردهایی که فقط تغییر داشته اند را از سرور دریافت نمایید",
+          "type": "integer"
+        }
+      }
+    },
+    "TransactionModel": {
+      "description": "برای ثبت و ارسال گردش حساب اشخاص استفاده می شود",
+      "type": "object",
+      "properties": {
+        "transactionId": {
+          "format": "int32",
+          "description": "کد گردش سمت سرور - بصورت اتوامت توسط سرور تکمیل می شود",
+          "type": "integer"
+        },
+        "transactionClientId": {
+          "format": "int64",
+          "description": "کد گردش حسای سمت کلاینت\r\nدرصورتیکه گردش از سمت کلاینت ثبت شود باید این مقدار نیز ارسال گردد",
+          "type": "integer"
+        },
+        "transactionCode": {
+          "format": "int32",
+          "description": "کد گردش حساب سمت نرم افزار محک - در زمان ثبت گردش از سمت محک ارسال می شود",
+          "type": "integer"
+        },
+        "personId": {
+          "format": "int32",
+          "description": "کد شخص سمت سرور برای ثبت گردش حساب",
+          "type": "integer"
+        },
+        "type": {
+          "format": "int32",
+          "description": "گردش حساب انواع مختلفی دارد که در زمان ثبت نوع آن باید یکی از مقادیر زیر باشد\r\n1 = نقل از قبل\r\n201 = فاکتور فروش\r\n204 = فاکتور خرید\r\n202 = برگشت از فروش\r\n203 = پیش فروش\r\n205 = برگشت از خرید\r\n206 = دریافت\r\n207 = پرداخت\r\n208 = چک های دریافتی\r\n209 = چک های پرداختی\r\n215 = چک های دریافتی اول دوره\r\n216 = چک های پرداختی اول دوره\r\n217 = حواله های دریافتی\r\n218 = حواله های پرداختی\r\n222 = حواله دریافتی از کارتخوان\r\n303 = حواله حساب\r\n305 = کالای امانی\r\n306 = چک ها امانی",
+          "type": "integer"
+        },
+        "debtAmount": {
+          "format": "double",
+          "description": "مبلغ بدهکاری در گردش حساب",
+          "type": "number"
+        },
+        "creditAmount": {
+          "format": "double",
+          "description": "مبلغ بستانکاری در گردش",
+          "type": "number"
+        },
+        "balance": {
+          "format": "double",
+          "description": "مانده حساب در گردش",
+          "type": "number"
+        },
+        "status": {
+          "format": "int32",
+          "description": "وضعیت گردش حساب",
+          "type": "integer"
+        },
+        "description": {
+          "description": "توضیحات",
+          "type": "string"
+        },
+        "row": {
+          "format": "int32",
+          "description": "شماره سطر تراکنش",
+          "type": "integer"
+        },
+        "date": {
+          "format": "date-time",
+          "description": "تاریخ و زمان تراکنش",
+          "type": "string"
+        },
+        "deleted": {
+          "description": "در صورتی که می خواهید رکوردی را حذف کنید این فیلد را مقداردهی کنید حذف منطقی از بانک اطلاعاتی صورت می گیرد",
+          "type": "boolean"
+        },
+        "rowVersion": {
+          "format": "int64",
+          "description": "این فیلد توسط دیتابیس تولید می شود و در  اختیار شما قرار می گیرد  می توانید بزرگترین مقدار این  فیلد را برای هر موجودیت دیتابیس  سمت کلاینت یا نرم افزار محک ذخیره کرده و هنگام فراخوانی متد\r\nGetAllData()\r\nبرای افزایش سرعت رکوردهایی که فقط تغییر داشته اند را از سرور دریافت نمایید",
+          "type": "integer"
+        }
+      }
+    },
+    "TransferAccountModel": {
+      "description": "برای ثبت حواله حساب استفاده می شود",
+      "type": "object",
+      "properties": {
+        "transferAccountId": {
+          "format": "int32",
+          "description": "کد حواله حساب در سرور - بصورت اتومات پر می شود",
+          "type": "integer"
+        },
+        "transferAccountClientId": {
+          "format": "int64",
+          "description": "کد حواله حساب کلاینت - در صورتیکه از سمت کلاینت تکمیل می شود، باید ارسال گردد",
+          "type": "integer"
+        },
+        "transferAccountCode": {
+          "format": "int32",
+          "description": "کد حواله حساب سمت نرم افزار محک\r\nدرصورتیکه حواله حساب از سمت نرم افزار محک ثبت می شود، حتما باید ارسال شود",
+          "type": "integer"
+        },
+        "date": {
+          "format": "date-time",
+          "type": "string"
+        },
+        "type": {
+          "format": "int32",
+          "description": "نوع دریافت کننده\r\n1 = صندوق\r\n2 = شخص\r\n3 = بانک\r\n4 = هزینه\r\n5 = درآمد\r\n8 = مرکز هزینه\r\n999 = کد حسابداری",
+          "type": "integer"
+        },
+        "receiverId": {
+          "format": "int32",
+          "description": "کد دریافت کننده  بر اساس نوع دریافت کننده تکمیل میشود\r\nاگر کد نوع دریافت کننده هر یک از مقادیر باشد باید مقادیر متناظر ثبت شود\r\n1 = کد صندوق\r\n2 = کد شخص\r\n3 = کد بانک\r\n4 = کد هزینه\r\n5 = کد درآمد\r\n8 = کد مرکز هزینه\r\n999 = کد حسابداری",
+          "type": "integer"
+        },
+        "payerType": {
+          "format": "int32",
+          "description": "نوع پرداخت کننده\r\n1 = صندوق\r\n2 = شخص\r\n3 = بانک\r\n4 = هزینه\r\n5 = درآمد\r\n8 = مرکز هزینه\r\n999 = کد حسابداری",
+          "type": "integer"
+        },
+        "payerId": {
+          "format": "int32",
+          "description": "کد پرداخت کننده  بر اساس نوع پرداخت  کننده تکمیل میشود\r\nاگر کد نوع پرداخت کننده هر یک از مقادیر باشد باید مقادیر متناظر ثبت شود\r\n1 = کد صندوق\r\n2 = کد شخص\r\n3 = کد بانک\r\n4 = کد هزینه\r\n5 = کد درآمد\r\n8 = کد مرکز هزینه\r\n999 = کد حسابداری",
+          "type": "integer"
+        },
+        "price": {
+          "format": "double",
+          "description": "مبلغ حواله حساب",
+          "type": "number"
+        },
+        "visitorId": {
+          "format": "int32",
+          "description": "کد شخص",
+          "type": "integer"
+        },
+        "projectId": {
+          "format": "int32",
+          "description": "کد مرکزهزینه",
+          "type": "integer"
+        },
+        "description": {
+          "description": "توضیحات",
+          "type": "string"
+        },
+        "deleted": {
+          "description": "در صورتی که می خواهید رکوردی را حذف کنید این فیلد را مقداردهی کنید حذف منطقی از بانک اطلاعاتی صورت می گیرد",
+          "type": "boolean"
+        },
+        "createDate": {
+          "format": "date-time",
+          "type": "string"
+        },
+        "rowVersion": {
+          "format": "int64",
+          "description": "این فیلد توسط دیتابیس تولید می شود و در  اختیار شما قرار می گیرد  می توانید بزرگترین مقدار این  فیلد را برای هر موجودیت دیتابیس  سمت کلاینت یا نرم افزار محک ذخیره کرده و هنگام فراخوانی متد\r\nGetAllData()\r\nبرای افزایش سرعت رکوردهایی که فقط تغییر داشته اند را از سرور دریافت نمایید",
+          "type": "integer"
+        }
+      }
+    },
+    "TransferStoreDetailModel": {
+      "description": "برای ثبت جزئیات حواله انبار استفاده می شود",
+      "type": "object",
+      "properties": {
+        "transferStoreDetailId": {
+          "format": "int32",
+          "description": "کد جزئیات حواله انبار سمت سرور\r\nسمت سرور بصورت اتومات تکمیل می شود",
+          "type": "integer"
+        },
+        "transferStoreId": {
+          "format": "int32",
+          "description": "کد حواله انبار سمت سرور\r\nاین کد از موجودیت حواله انبار باید ارسال شود",
+          "type": "integer"
+        },
+        "transferStoreDetailClientId": {
+          "format": "int64",
+          "description": "کد جزئیات حواله انبار سمت کلاینت",
+          "type": "integer"
+        },
+        "productDetailId": {
+          "format": "int32",
+          "description": "کد جزئیات کالا\r\nمقدار این فیلد در موجودیت جزئیات کالا قبلا ثبت شده است",
+          "type": "integer"
+        },
+        "count1": {
+          "format": "double",
+          "description": "موجودی 1",
+          "type": "number"
+        },
+        "count2": {
+          "format": "double",
+          "description": "موجودی 2",
+          "type": "number"
+        },
+        "description": {
+          "description": "توضیحات",
+          "type": "string"
+        },
+        "deleted": {
+          "description": "در صورتی که می خواهید رکوردی را حذف کنید این فیلد را مقداردهی کنید حذف منطقی از بانک اطلاعاتی صورت می گیرد",
+          "type": "boolean"
+        },
+        "rowVersion": {
+          "format": "int64",
+          "description": "این فیلد توسط دیتابیس تولید می شود و در  اختیار شما قرار می گیرد  می توانید بزرگترین مقدار این  فیلد را برای هر موجودیت دیتابیس  سمت کلاینت یا نرم افزار محک ذخیره کرده و هنگام فراخوانی متد\r\nGetAllData()\r\nبرای افزایش سرعت رکوردهایی که فقط تغییر داشته اند را از سرور دریافت نمایید",
+          "type": "integer"
+        }
+      }
+    },
+    "TransferStoreModel": {
+      "type": "object",
+      "properties": {
+        "transferStoreId": {
+          "format": "int32",
+          "description": "کد حواله انبار سمت سرور\r\nسمت سرور بصورت اتومات تکمیل می شود",
+          "type": "integer"
+        },
+        "transferStoreClientId": {
+          "format": "int64",
+          "description": "کد حواله انبار سمت کلاینت",
+          "type": "integer"
+        },
+        "transferStoreCode": {
+          "format": "int32",
+          "description": "کد حواله انبار",
+          "type": "integer"
+        },
+        "senderVisitorId": {
+          "format": "int32",
+          "description": "شناسه شخص فرستنده",
+          "type": "integer"
+        },
+        "receiverVisitorId": {
+          "format": "int32",
+          "description": "کد شخص گیرنده",
+          "type": "integer"
+        },
+        "senderStoreCode": {
+          "format": "int32",
+          "description": "کد انبار فرستنده",
+          "type": "integer"
+        },
+        "receiverStoreCode": {
+          "format": "int32",
+          "description": "کد انبار گیرنده",
+          "type": "integer"
+        },
+        "date": {
+          "format": "date-time",
+          "description": "تاریخ حواله",
+          "type": "string"
+        },
+        "isAccepted": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "description": {
+          "description": "توضیحات",
+          "type": "string"
+        },
+        "deleted": {
+          "description": "در صورتی که می خواهید رکوردی را حذف کنید این فیلد را مقداردهی کنید حذف منطقی از بانک اطلاعاتی صورت می گیرد",
+          "type": "boolean"
+        },
+        "rowVersion": {
+          "format": "int64",
+          "description": "این فیلد توسط دیتابیس تولید می شود و در  اختیار شما قرار می گیرد  می توانید بزرگترین مقدار این  فیلد را برای هر موجودیت دیتابیس  سمت کلاینت یا نرم افزار محک ذخیره کرده و هنگام فراخوانی متد\r\nGetAllData()\r\nبرای افزایش سرعت رکوردهایی که فقط تغییر داشته اند را از سرور دریافت نمایید",
+          "type": "integer"
+        }
+      }
+    },
+    "UnitModel": {
+      "type": "object",
+      "properties": {
+        "unitId": {
+          "format": "int32",
+          "description": "کد واحد انازه گیری در سرور\r\nبه صورت خودکار در سرور ثبت می شود",
+          "type": "integer"
+        },
+        "unitCode": {
+          "format": "int32",
+          "description": "کد واحد اندازه گیری",
+          "type": "integer"
+        },
+        "unitClientId": {
+          "format": "int64",
+          "description": "کد واحد اندازه گیری در کلاینت",
+          "type": "integer"
+        },
+        "name": {
+          "description": "نام واحد اندازه گیری",
+          "type": "string"
+        },
+        "comment": {
+          "description": "توضیحات",
+          "type": "string"
+        },
+        "unitTIN": {
+          "description": "شناسه یکتا واحد اندازه گیری",
+          "type": "string"
+        },
+        "deleted": {
+          "description": "در صورتی که می خواهید رکوردی را حذف کنید این فیلد را مقداردهی کنید حذف منطقی از بانک اطلاعاتی صورت می گیرد",
+          "type": "boolean"
+        },
+        "rowVersion": {
+          "format": "int64",
+          "description": "این فیلد توسط دیتابیس تولید می شود و در  اختیار شما قرار می گیرد  می توانید بزرگترین مقدار این  فیلد را برای هر موجودیت دیتابیس  سمت کلاینت یا نرم افزار محک ذخیره کرده و هنگام فراخوانی متد\r\nGetAllData()\r\nبرای افزایش سرعت رکوردهایی که فقط تغییر داشته اند را از سرور دریافت نمایید",
+          "type": "integer"
+        }
+      }
+    },
+    "VisitorBankModel": {
+      "description": "این موجودیت برای ارتباط هر بانک با کلاینت استفاده می شود\r\nموجودیتی واسط بین اشخاص و کلاینت\r\nاشخاص از سمت نرم افزار حسابداری ارسال می شوند ولی به هر کلاینت می تواند تعدادی از آن اشخاص انتصاب داده شود",
+      "type": "object",
+      "properties": {
+        "visitorBankId": {
+          "format": "int32",
+          "description": "کد ویزیتور بانک\r\nاز سمت سرور به صورت اتومات ارسال می شود",
+          "type": "integer"
+        },
+        "bankId": {
+          "format": "int32",
+          "description": "کد بانک\r\nاین کد بانک مبانک میکند چه اشخاصی به کلاینت شما اختصاص داده شده است\r\nاین کد متناظر با کد بانک سمت سرور هست",
+          "type": "integer"
+        },
+        "visitorId": {
+          "format": "int32",
+          "description": "این کد متناظر کد کلاینت می باشد\r\nکه در اینجا کد سایت یا ویزیتور می باشد",
+          "type": "integer"
+        },
+        "deleted": {
+          "type": "boolean"
+        },
+        "rowVersion": {
+          "format": "int64",
+          "type": "integer"
+        },
+        "bankClientId": {
+          "format": "int64",
+          "type": "integer"
+        },
+        "bankCode": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "visitorClientId": {
+          "format": "int64",
+          "type": "integer"
+        },
+        "visitorCode": {
+          "format": "int32",
+          "type": "integer"
+        }
+      }
+    },
+    "VisitorCashModel": {
+      "description": "این موجودیت برای ارتباط هر صندوق با کلاینت استفاده می شود\r\nموجودیتی واسط بین اشخاص و کلاینت\r\nاشخاص از سمت نرم افزار حسابداری ارسال می شوند ولی به هر کلاینت می تواند تعدادی از آن اشخاص انتصاب داده شود",
+      "type": "object",
+      "properties": {
+        "visitorCashId": {
+          "format": "int32",
+          "description": "کد ویزیتور صندوق\r\nاز سمت سرور به صورت اتومات ارسال می شود",
+          "type": "integer"
+        },
+        "cashId": {
+          "format": "int32",
+          "description": "کد صندوق\r\nاین کد صندوق مصندوق میکند چه اشخاصی به کلاینت شما اختصاص داده شده است\r\nاین کد متناظر با کد صندوق سمت سرور هست",
+          "type": "integer"
+        },
+        "visitorId": {
+          "format": "int32",
+          "description": "این کد متناظر کد کلاینت می باشد\r\nکه در اینجا کد سایت یا ویزیتور می باشد",
+          "type": "integer"
+        },
+        "deleted": {
+          "type": "boolean"
+        },
+        "rowVersion": {
+          "format": "int64",
+          "type": "integer"
+        },
+        "cashClientId": {
+          "format": "int64",
+          "type": "integer"
+        },
+        "cashCode": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "visitorClientId": {
+          "format": "int64",
+          "type": "integer"
+        },
+        "visitorCode": {
+          "format": "int32",
+          "type": "integer"
+        }
+      }
+    },
+    "VisitorExpenseModel": {
+      "description": "این موجودیت برای ارتباط هر هزینه با کلاینت استفاده می شود\r\nموجودیتی واسط بین اشخاص و کلاینت\r\nاشخاص از سمت نرم افزار حسابداری ارسال می شوند ولی به هر کلاینت می تواند تعدادی از آن اشخاص انتصاب داده شود",
+      "type": "object",
+      "properties": {
+        "visitorExpenseId": {
+          "format": "int32",
+          "description": "کد ویزیتور هزینه\r\nاز سمت سرور به صورت اتومات ارسال می شود",
+          "type": "integer"
+        },
+        "expenseId": {
+          "format": "int32",
+          "description": "کد هزینه\r\nاین کد هزینه مهزینه میکند چه اشخاصی به کلاینت شما اختصاص داده شده است\r\nاین کد متناظر با کد هزینه سمت سرور هست",
+          "type": "integer"
+        },
+        "visitorId": {
+          "format": "int32",
+          "description": "این کد متناظر کد کلاینت می باشد\r\nکه در اینجا کد سایت یا ویزیتور می باشد",
+          "type": "integer"
+        },
+        "deleted": {
+          "type": "boolean"
+        },
+        "rowVersion": {
+          "format": "int64",
+          "type": "integer"
+        },
+        "expenseClientId": {
+          "format": "int64",
+          "type": "integer"
+        },
+        "expenseCode": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "visitorClientId": {
+          "format": "int64",
+          "type": "integer"
+        },
+        "visitorCode": {
+          "format": "int32",
+          "type": "integer"
+        }
+      }
+    },
+    "VisitorIncomeModel": {
+      "description": "این موجودیت برای ارتباط هر درآمد با کلاینت استفاده می شود\r\nموجودیتی واسط بین اشخاص و کلاینت\r\nاشخاص از سمت نرم افزار حسابداری ارسال می شوند ولی به هر کلاینت می تواند تعدادی از آن اشخاص انتصاب داده شود",
+      "type": "object",
+      "properties": {
+        "visitorIncomeId": {
+          "format": "int32",
+          "description": "کد ویزیتور درآمد\r\nاز سمت سرور به صورت اتومات ارسال می شود",
+          "type": "integer"
+        },
+        "incomeId": {
+          "format": "int32",
+          "description": "کد درآمد\r\nاین کد درآمد مدرآمد میکند چه اشخاصی به کلاینت شما اختصاص داده شده است\r\nاین کد متناظر با کد درآمد سمت سرور هست",
+          "type": "integer"
+        },
+        "visitorId": {
+          "format": "int32",
+          "description": "این کد متناظر کد کلاینت می باشد\r\nکه در اینجا کد سایت یا ویزیتور می باشد",
+          "type": "integer"
+        },
+        "deleted": {
+          "type": "boolean"
+        },
+        "rowVersion": {
+          "format": "int64",
+          "type": "integer"
+        },
+        "incomeClientId": {
+          "format": "int64",
+          "type": "integer"
+        },
+        "incomeCode": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "visitorClientId": {
+          "format": "int64",
+          "type": "integer"
+        },
+        "visitorCode": {
+          "format": "int32",
+          "type": "integer"
+        }
+      }
+    },
+    "VisitorLocationModel": {
+      "description": "این موجودیت برای ثبت موقعیت ویزیتور استفاده می شود\r\nاگر از سفارش گیری و افزونه سفارش گیر همراه استفاده میکنید کاربرد دارد",
+      "type": "object",
+      "properties": {
+        "deleted": {
+          "type": "boolean"
+        },
+        "deletedProvided": {
+          "type": "boolean",
+          "readOnly": true
+        },
+        "visitorLocationId": {
+          "format": "int32",
+          "description": "کد شناسه موقعیت کلاینت در سرور\r\nبه صورت خودکار در سرور ایجاد می شود",
+          "type": "integer"
+        },
+        "visitorId": {
+          "format": "int32",
+          "description": "کد کلاینت در سرور",
+          "type": "integer"
+        },
+        "latitude": {
+          "format": "double",
+          "description": "عرض جغرافیایی",
+          "type": "number"
+        },
+        "longitude": {
+          "format": "double",
+          "description": "طول جغرافیایی",
+          "type": "number"
+        },
+        "createDate": {
+          "format": "date-time",
+          "description": "تاریخ و زمان ثبت",
+          "type": "string"
+        },
+        "rowVersion": {
+          "format": "int64",
+          "description": "این فیلد توسط دیتابیس تولید می شود و در  اختیار شما قرار می گیرد  می توانید بزرگترین مقدار این  فیلد را برای هر موجودیت دیتابیس  سمت کلاینت یا نرم افزار محک ذخیره کرده و هنگام فراخوانی متد\r\nGetAllData()\r\nبرای افزایش سرعت رکوردهایی که فقط تغییر داشته اند را از سرور دریافت نمایید",
+          "type": "integer"
+        }
+      }
+    },
+    "VisitorModel": {
+      "description": "این موجودیت برای نعریف کلاینت ها استفاده می شود.\r\nدر صورتیکه از افزونه بازارا یا سفارش گیر همراه استفاده میکنید می توانید برای تعریف ویزیتور یا سایت خود از این موجودیت استفاده نمایید",
+      "type": "object",
+      "properties": {
+        "visitorId": {
+          "format": "int32",
+          "description": "کد کلاینت سمت سرور",
+          "type": "integer"
+        },
+        "visitorClientId": {
+          "format": "int64",
+          "description": "کد کلاینت",
+          "type": "integer"
+        },
+        "visitorCode": {
+          "format": "int32",
+          "description": "کد کلاینت سمت نرم افزار محک",
+          "type": "integer"
+        },
+        "name": {
+          "description": "نام کلاینت",
+          "type": "string"
+        },
+        "extraInfo": {
+          "description": "اطلاعات مازاد کلاینت بصورت جیسون ذخیره می شود\r\nاین اطلاعات حسب افزونه شما متفاوت می باشد\r\nو بر اساس اطلاعاتی که در نرم افزار محک زمان تعریف کلاینت تکمیل می کنید در این قسمت ثبت می شود",
+          "type": "string"
+        },
+        "username": {
+          "description": "نام کاربری\r\nزمانی کاربرد دارد که شما برای کلاینت مورد نظرتون لاگین و احراز هویت لازم داشته باشید",
+          "type": "string"
+        },
+        "password": {
+          "description": "رمز عبور",
+          "type": "string"
+        },
+        "visitorType": {
+          "format": "int32",
+          "description": "مقدار 1  ارسال شود",
+          "type": "integer"
+        },
+        "isActive": {
+          "description": "وضعیت فعال بودن کلاینت",
+          "type": "boolean"
+        },
+        "deleted": {
+          "description": "در صورتی که می خواهید رکوردی را حذف کنید این فیلد را مقداردهی کنید حذف منطقی از بانک اطلاعاتی صورت می گیرد",
+          "type": "boolean"
+        },
+        "rowVersion": {
+          "format": "int64",
+          "description": "این فیلد توسط دیتابیس تولید می شود و در  اختیار شما قرار می گیرد  می توانید بزرگترین مقدار این  فیلد را برای هر موجودیت دیتابیس  سمت کلاینت یا نرم افزار محک ذخیره کرده و هنگام فراخوانی متد\r\nGetAllData()\r\nبرای افزایش سرعت رکوردهایی که فقط تغییر داشته اند را از سرور دریافت نمایید",
+          "type": "integer"
+        }
+      }
+    },
+    "VisitorPersonModel": {
+      "description": "این موجودیت برای ارتباط هر شخص با کلاینت استفاده می شود\r\nموجودیتی واسط بین اشخاص و کلاینت\r\nاشخاص از سمت نرم افزار حسابداری ارسال می شوند ولی به هر کلاینت می تواند تعدادی از آن اشخاص انتصاب داده شود",
+      "type": "object",
+      "properties": {
+        "visitorPersonId": {
+          "format": "int32",
+          "description": "کد ویزیتور شخص\r\nاز سمت سرور به صورت اتومات ارسال می شود",
+          "type": "integer"
+        },
+        "personId": {
+          "format": "int32",
+          "description": "کد شخص\r\nاین کد شخص مشخص میکند چه اشخاصی به کلاینت شما اختصاص داده شده است\r\nاین کد متناظر با کد شخص سمت سرور هست",
+          "type": "integer"
+        },
+        "visitorId": {
+          "format": "int32",
+          "description": "این کد متناظر کد کلاینت می باشد\r\nکه در اینجا کد سایت یا ویزیتور می باشد",
+          "type": "integer"
+        },
+        "deleted": {
+          "type": "boolean"
+        },
+        "createDate": {
+          "format": "date-time",
+          "type": "string"
+        },
+        "rowVersion": {
+          "format": "int64",
+          "type": "integer"
+        },
+        "personClientId": {
+          "format": "int64",
+          "type": "integer"
+        },
+        "personCode": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "visitorClientId": {
+          "format": "int64",
+          "type": "integer"
+        },
+        "visitorCode": {
+          "format": "int32",
+          "type": "integer"
+        }
+      }
+    },
+    "VisitorProductModel": {
+      "description": "این موجودیت برای ارتباط هر کالا با کلاینت استفاده می شود\r\nموجودیتی واسط بین کالاها و کلاینت\r\nکالاها از سمت نرم افزار حسابداری ارسال می شوند ولی به هر کلاینت می تواند تعدادی از آن کالاها انتصاب داده شود",
+      "type": "object",
+      "properties": {
+        "visitorProductId": {
+          "format": "int32",
+          "description": "کد ویزیتور کالا\r\nاز سمت سرور به صورت اتومات ارسال می شود",
+          "type": "integer"
+        },
+        "productDetailId": {
+          "format": "int32",
+          "description": "کد جزئیات کالا\r\nاین کد جزئیات کالا مشخص میکند چه کالاهایی به کلاینت شما اختصاص داده شده است\r\nاین کد متناظر با کد جزئیات کالا سمت سرور هست",
+          "type": "integer"
+        },
+        "visitorId": {
+          "format": "int32",
+          "description": "این کد متناظر کد کلاینت می باشد\r\nکه در اینجا کد سایت یا ویزیتور می باشد",
+          "type": "integer"
+        },
+        "count1": {
+          "format": "double",
+          "description": "موجودی یک",
+          "type": "number"
+        },
+        "count2": {
+          "format": "double",
+          "description": "موجودی دو",
+          "type": "number"
+        },
+        "price": {
+          "format": "double",
+          "type": "number"
+        },
+        "serials": {
+          "type": "string"
+        },
+        "deleted": {
+          "type": "boolean"
+        },
+        "rowVersion": {
+          "format": "int64",
+          "type": "integer"
+        },
+        "productDetailClientId": {
+          "format": "int64",
+          "type": "integer"
+        },
+        "productDetailCode": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "visitorClientId": {
+          "format": "int64",
+          "type": "integer"
+        },
+        "visitorCode": {
+          "format": "int32",
+          "type": "integer"
+        }
+      }
+    }
+  },
+  "securityDefinitions": {
+    "Bearer": {
+      "type": "apiKey",
+      "name": "Authorization",
+      "in": "header",
+      "description": "Standard Authorization header using the Bearer scheme. Example: \"bearer {token}\""
+    }
+  },
+  "security": [
+    {
+      "Bearer": [ ]
+    }
+  ]
+}
