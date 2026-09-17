@@ -75,6 +75,7 @@ php bin/console sync:products
 
 ```text
 php bin/console mahak:login
+php bin/console mahak:products:inspect
 php bin/console mixin:health
 php bin/console mixin:info
 php bin/console sync:products:dry-run
@@ -123,10 +124,14 @@ curl http://127.0.0.1:8080/connections \
 
 - [معماری و جریان داده](docs/architecture.md)
 - [تنظیم و استقرار](docs/configuration.md)
+- [استقرار روی CloudPanel](docs/cloudpanel-deployment.md)
+- [آماده‌سازی بازارا و API محک](docs/mahak-setup.md)
+- [یافته‌های سازگاری APIها](docs/api-compatibility.md)
 - [جدول mapping](docs/mapping.md)
 - [Runbook عملیاتی](docs/operations.md)
 - [قرارداد API داخلی](docs/internal-api.md)
 - [سیاست امنیت](SECURITY.md)
+- [تاریخچه تغییرات](CHANGELOG.md)
 
 ## محدودیت‌های نسخه فعلی
 
