@@ -145,7 +145,7 @@ final class ProductSyncService
                 $ids[(string) $detailId] = true;
             }
         }
-        return array_keys($ids);
+        return array_map('strval', array_keys($ids));
     }
 
     /** @param list<array<string,mixed>> $items */
