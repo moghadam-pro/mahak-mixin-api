@@ -35,6 +35,7 @@ cp .env.example .env
 
 ```bash
 php bin/console mahak:login
+php bin/console mahak:products:inspect
 php bin/console mixin:health
 php bin/console sync:products:dry-run
 ```
@@ -80,6 +81,8 @@ php tests/run.php
 ```
 
 `sync:products` نیز مقدار `SYNC_DRY_RUN` را رعایت می‌کند. بنابراین تا زمانی که این مقدار `false` نشده، هیچ کالایی ایجاد یا ویرایش نمی‌شود.
+
+فرمان `mahak:products:inspect` فقط ساختار و تعداد رکوردهای پاسخ محک را نشان می‌دهد و هیچ محصول یا اطلاعات محرمانه‌ای چاپ یا ثبت نمی‌کند.
 
 ## HTTP API داخلی
 

@@ -86,6 +86,10 @@ final class MahakClient
         if (!is_array($response)) {
             throw new RuntimeException('Mahak returned a non-JSON response');
         }
+        $result = $this->read($response, 'Result');
+        if ($result === false) {
+            throw new RuntimeException($this->apiError($path, $response));
+        }
 
         return $response;
     }
@@ -124,5 +128,19 @@ final class MahakClient
         }
 
         return 'Mahak login failed' . ($parts === [] ? '' : ': ' . implode(' - ', $parts));
+    }
+
+    private function apiError(string $path, array $response): string
+    {
+        $parts = [];
+        $code = $this->read($response, 'Code');
+        $message = $this->read($response, 'Message');
+        if (is_scalar($code) && (string) $code !== '') {
+            $parts[] = 'code=' . (string) $code;
+        }
+        if (is_string($message) && trim($message) !== '') {
+            $parts[] = trim($message);
+        }
+        return "Mahak {$path} failed" . ($parts === [] ? '' : ': ' . implode(' - ', $parts));
     }
 }

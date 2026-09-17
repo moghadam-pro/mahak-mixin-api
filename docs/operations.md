@@ -4,6 +4,7 @@
 
 ```bash
 php bin/console mahak:login
+php bin/console mahak:products:inspect
 php bin/console mixin:health
 php bin/console mixin:info
 ```

@@ -6,12 +6,14 @@ declare(strict_types=1);
 require dirname(__DIR__) . '/bootstrap.php';
 
 use MahakMixin\AppFactory;
+use MahakMixin\Client\MahakClient;
 use MahakMixin\Config;
 $command = $argv[1] ?? 'help';
 
 try {
     $result = match ($command) {
         'mahak:login' => sanitizeLogin(AppFactory::mahak()->login()),
+        'mahak:products:inspect' => inspectMahakProducts(AppFactory::mahak(), Config::int('MAHAK_VISITOR_ID')),
         'mixin:health' => AppFactory::mixin()->health(),
         'mixin:info' => AppFactory::mixin()->info(),
         'sync:products' => AppFactory::productSync()->run(Config::bool('SYNC_DRY_RUN', true)),
@@ -19,6 +21,7 @@ try {
         default => [
             'usage' => [
                 'php bin/console mahak:login',
+                'php bin/console mahak:products:inspect',
                 'php bin/console mixin:health',
                 'php bin/console mixin:info',
                 'php bin/console sync:products:dry-run',
@@ -47,4 +50,54 @@ function sanitizeLogin(array $response): array
         }
     }
     return $response;
+}
+
+function inspectMahakProducts(MahakClient $client, int $visitorId): array
+{
+    $login = $client->login();
+    $response = $client->getAllData([
+        'currentVisitorId' => $visitorId,
+        'fromProductVersion' => 0,
+        'fromProductDetailVersion' => 0,
+        'fromVisitorProductVersion' => 0,
+        'fromProductCategoryVersion' => 0,
+        'pageSize' => 5,
+    ]);
+
+    $loginData = ciValue($login, 'Data', []);
+    $data = ciValue($response, 'Data', []);
+    $objects = is_array($data) ? ciValue($data, 'Objects', []) : [];
+    $counts = [];
+    if (is_array($objects)) {
+        foreach ($objects as $name => $items) {
+            if (is_array($items)) {
+                $counts[(string) $name] = count($items);
+            }
+        }
+    }
+
+    return [
+        'login' => [
+            'visitor_id' => is_array($loginData) ? ciValue($loginData, 'VisitorId') : null,
+            'database_id' => is_array($loginData) ? ciValue($loginData, 'DatabaseId') : null,
+            'with_data_transfer' => is_array($loginData) ? ciValue($loginData, 'WithDataTransfer') : null,
+        ],
+        'response' => [
+            'result' => ciValue($response, 'Result'),
+            'code' => ciValue($response, 'Code'),
+            'message' => ciValue($response, 'Message'),
+            'object_keys' => is_array($objects) ? array_keys($objects) : [],
+            'counts' => $counts,
+        ],
+    ];
+}
+
+function ciValue(array $data, string $key, mixed $default = null): mixed
+{
+    foreach ($data as $candidate => $value) {
+        if (strcasecmp((string) $candidate, $key) === 0) {
+            return $value;
+        }
+    }
+    return $default;
 }
