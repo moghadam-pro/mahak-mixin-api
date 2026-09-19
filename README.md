@@ -2,25 +2,26 @@
 
 سرویس همگام‌سازی امن و افزایشی بین **Mahak API v3** و **Mixin API v4 (Evya)**، نوشته‌شده با PHP 8.2 و بدون وابستگی اجرایی خارجی.
 
-> وضعیت فعلی: اتصال هر دو API، همگام‌سازی کالا از محک به Mixin، ذخیره نگاشت شناسه‌ها و `RowVersion` پیاده‌سازی شده است. همگام‌سازی نوشتنی به‌صورت پیش‌فرض خاموش و در حالت `dry-run` است.
+> وضعیت فعلی: اتصال هر دو API و dry-run واقعی ۴ کالا تأیید شده است. ۶ تست خودکار پاس می‌شوند. همگام‌سازی نوشتنی همچنان با `SYNC_DRY_RUN=true` خاموش است تا قیمت، موجودی و اولین اجرای تک‌محصولی دستی تأیید شوند.
 
 ## قابلیت‌ها
 
-- استفاده از endpointهای بدون V2 (`Login`, `GetAllData`, `SaveAllData`) مطابق اعلام پشتیبانی محک
+- استفاده از endpointهای بدون V2 (`Login`، `GetAllData`، `SaveAllData`) مطابق اعلام پشتیبانی محک
 - ارسال توکن محک با `Authorization: Bearer ...`
 - احراز هویت Mixin با `Authorization: Api-Key ...`
 - خواندن افزایشی کالا، جزئیات و موجودی واسط `VisitorProduct`
+- fallback قیمت از VisitorProduct صفر به `ProductDetail.Price1`
 - تبدیل قیمت ریال محک به تومان Mixin با ضریب قابل تنظیم
 - ایجاد و به‌روزرسانی کالای Mixin
 - ذخیره checkpoint و نگاشت شناسه‌ها در SQLite
 - اجرای امن `dry-run` و پیش‌نمایش حداکثر ۱۰ تغییر
 - API مدیریتی محافظت‌شده و CLI مناسب Cron
-- عدم نمایش توکن محک در خروجی فرمان تست
+- عدم نمایش توکن محک در خروجی فرمان‌های تشخیصی
 
 ## نیازمندی‌ها
 
 - PHP 8.2 یا جدیدتر
-- افزونه‌های `curl`, `json`, `pdo`, `pdo_sqlite`
+- افزونه‌های `curl`، `json`، `pdo` و `pdo_sqlite`
 - دسترسی HTTPS به APIهای محک و فروشگاه
 
 ## نصب سریع
@@ -36,17 +37,18 @@ cp .env.example .env
 ```bash
 php bin/console mahak:login
 php bin/console mahak:products:inspect
+php bin/console mahak:products:diagnose
 php bin/console mixin:health
+php bin/console mixin:info
+php tests/run.php
 php bin/console sync:products:dry-run
 ```
 
-اگر خروجی dry-run صحیح بود:
+قبل از تغییر `SYNC_DRY_RUN` به `false`، قیمت حداقل سه کالا، معنای `Count1` و نتیجه یک اجرای کنترل‌شده تک‌محصولی را بررسی کن. اجرای واقعی:
 
 ```dotenv
 SYNC_DRY_RUN=false
 ```
-
-و اجرای واقعی:
 
 ```bash
 php bin/console sync:products
@@ -76,6 +78,7 @@ php bin/console sync:products
 ```text
 php bin/console mahak:login
 php bin/console mahak:products:inspect
+php bin/console mahak:products:diagnose
 php bin/console mixin:health
 php bin/console mixin:info
 php bin/console sync:products:dry-run
@@ -85,7 +88,20 @@ php tests/run.php
 
 `sync:products` نیز مقدار `SYNC_DRY_RUN` را رعایت می‌کند. بنابراین تا زمانی که این مقدار `false` نشده، هیچ کالایی ایجاد یا ویرایش نمی‌شود.
 
-فرمان `mahak:products:inspect` فقط ساختار و تعداد رکوردهای پاسخ محک را نشان می‌دهد و هیچ محصول یا اطلاعات محرمانه‌ای چاپ یا ثبت نمی‌کند.
+فرمان‌های `mahak:products:inspect` و `mahak:products:diagnose` برای بررسی ساختار، تعداد و فیلدهای لازم طراحی شده‌اند و credential یا توکن را چاپ نمی‌کنند.
+
+## نتیجه آخرین آزمایش واقعی
+
+در `2026-09-19`:
+
+- Mahak GetAllData چهار کالا و چهار ProductDetail/VisitorProduct برگرداند.
+- Mixin health و info نسخه `4.0.0` را تأیید کردند.
+- هر ۶ تست خودکار پاس شد.
+- dry-run نتیجه `received=4`، `created=4`، `updated=0` و `skipped=0` داشت.
+- به‌دلیل صفر بودن VisitorProduct.Price، قیمت از ProductDetail.Price1 خوانده شد.
+- هیچ درخواست ایجاد یا ویرایش محصول به Mixin ارسال نشد.
+
+جزئیات و موارد باز در [وضعیت فعلی پروژه](docs/project-status.md) و [یافته‌های سازگاری](docs/api-compatibility.md) ثبت شده‌اند.
 
 ## HTTP API داخلی
 
@@ -139,6 +155,8 @@ curl http://127.0.0.1:8080/connections \
 
 - sync دسته‌بندی قبل از کالا هنوز پیاده‌سازی نشده؛ نام و مشخصات اصلی کالا منتقل می‌شود.
 - چند `ProductDetail` محک فعلاً به چند محصول مستقل در Mixin تبدیل می‌شوند؛ مدل variant نیازمند تأیید داده واقعی است.
+- معنای کسب‌وکاری `Count1` در برابر `Count2` هنوز باید دستی تأیید شود.
+- نرمال‌سازی فاصله‌های داخلی و حروف عربی/فارسی نام محصول هنوز انجام نمی‌شود.
 - سفارش و مشتری فقط در کلاینت Mixin قابل خواندن‌اند؛ تبدیل و ثبت آن‌ها در محک پس از تأیید `orderType`، انبار، شخص پیش‌فرض و روش تسویه اضافه می‌شود.
 - تصاویر نیازمند strategy جداگانه برای upload و نگاشت فایل هستند.
 - checkpoint تنها پس از اجرای واقعی موفق جلو می‌رود؛ dry-run آن را تغییر نمی‌دهد.
