@@ -6,6 +6,18 @@
 - snapshot کامل OpenAPI محک و Mixin به منابع پروژه اضافه شد.
 - وضعیت استقرار، تصمیم‌های قطعی و چک‌لیست ادامه پروژه مستند شد.
 
+## 2026-09-19
+
+- تأیید خواندن واقعی ۴ Product، ۲ ProductCategory، ۴ ProductDetail و ۴ VisitorProduct از محک.
+- تأیید اتصال Mixin API v4 و پاسخ health نسخه `4.0.0`.
+- رفع خطای type ناشی از تبدیل شناسه عددی ProductDetail به integer در کلیدهای آرایه PHP.
+- اضافه‌شدن fallback قیمت از `VisitorProduct.Price` صفر به `ProductDetail.Price1`.
+- trim شدن فاصله ابتدا و انتهای نام محصول.
+- اضافه‌شدن فرمان امن `mahak:products:diagnose`.
+- افزایش تست‌ها به ۶ مورد؛ صفر failure و صفر skipped.
+- اجرای موفق dry-run با ۴ create، صفر update و صفر skip؛ بدون نوشتن production.
+- ثبت نیاز به تأیید دستی واحد قیمت، `Count1` در برابر `Count2` و اولین اجرای تک‌محصولی.
+
 ## 2026-09-17
 
 - تغییر همه endpointهای Mahak به نسخه‌های بدون V2 مطابق اعلام پشتیبانی.
