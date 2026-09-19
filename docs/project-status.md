@@ -1,58 +1,77 @@
 # وضعیت فعلی پروژه
 
-آخرین بروزرسانی: `2026-09-17`
+آخرین بروزرسانی: `2026-09-19`
 
 ## وضعیت پیاده‌سازی
 
 | بخش | وضعیت | توضیح |
 |---|---|---|
-| استقرار CloudPanel | تأییدشده | PHP 8.3، Document Root روی `app/public` |
+| استقرار CloudPanel | تأییدشده | PHP 8.3، مسیر پروژه `/home/sayid-bridge/htdocs/bridge.sayid.ir/app` و Document Root روی `app/public` |
 | PHP extensions | تأییدشده | curl، json، PDO و pdo_sqlite |
 | Bridge health | تأییدشده | `GET /health` پاسخ سالم می‌دهد |
 | Mahak Login | تأییدشده | `/Sync/Login` موفق و token در CLI مخفی می‌شود |
-| Mixin health | تأییدشده | `/api/v4/health/` پاسخ نسخه 4 می‌دهد |
-| Mahak GetAllData | تأیید transport | `/Sync/GetAllData` بدون V2؛ آماده بررسی بعد از ارسال اولیه بازارا |
-| Product dry-run | آماده | تا دریافت اولین ProductDetail خروجی تغییر ندارد |
-| Product write | پیاده‌سازی‌شده ولی غیرفعال | `SYNC_DRY_RUN=true` باقی می‌ماند تا mapping تأیید شود |
+| Mixin health/info | تأییدشده | نسخه `4.0.0`، عنوان `Mixin API v4` و احراز هویت Session/API Key مشاهده شد |
+| Mahak GetAllData | تأییدشده با داده واقعی | ۴ Product، ۲ ProductCategory، ۴ ProductDetail و ۴ VisitorProduct دریافت شد |
+| Product dry-run | تأییدشده | ۴ رکورد دریافت و هر ۴ مورد برای create پیش‌نمایش شدند؛ خطا صفر |
+| Automated tests | تأییدشده | ۶ تست، صفر skipped و صفر failure |
+| Product write | پیاده‌سازی‌شده ولی غیرفعال | `SYNC_DRY_RUN=true` است و تاکنون هیچ نوشتن production انجام نشده |
 | Customer sync | برنامه‌ریزی‌شده | قواعد Person و duplicate detection باید نهایی شود |
 | Order sync | برنامه‌ریزی‌شده | orderType، settlement، store و payment باید تعیین شوند |
 | Dashboard | برنامه‌ریزی‌شده | پنل سبک server-rendered روی PHP |
 
-## تصمیم‌های قطعی
+## تصمیم‌ها و یافته‌های قطعی
 
 1. endpointهای محک بدون V2 استفاده می‌شوند.
-2. `WithDataTransfer` فقط از پاسخ Login مشاهده می‌شود و در request ارسال نمی‌شود.
+2. `WithDataTransfer` فقط مشاهده تشخیصی است؛ مقدار `false` در محیط آزمایش‌شده مانع دریافت داده از `GetAllData` نشد.
 3. `MIXIN_BASE_URL` فقط origin است و `/api/v4` ندارد.
-4. عملیات نوشتن تا بررسی دستی نام، قیمت، stock و barcode در dry-run فعال نمی‌شود.
-5. اولین آزمایش فقط با یک کالای مشخص انجام می‌شود.
-6. PHP ساده، PHP-FPM کم‌مصرف و SQLite برای فاز اول حفظ می‌شوند.
-7. داشبورد نباید هنگام باز شدن مستقیماً APIهای خارجی را فراخوانی کند؛ فقط state محلی را نمایش می‌دهد.
+4. پاسخ‌های واقعی محک PascalCase هستند و Bridge آن‌ها را می‌پذیرد.
+5. شناسه‌های عددی ProductDetail پیش از استفاده در mapping به string نرمال می‌شوند.
+6. اگر `VisitorProduct.Price` صفر یا نامعتبر باشد، قیمت از `ProductDetail.Price1` خوانده می‌شود.
+7. `DefaultSellPriceLevel=1` در داده آزمایش مشاهده شد و با fallback به `Price1` سازگار است.
+8. نام محصول از ابتدا و انتها trim می‌شود؛ یکسان‌سازی فاصله داخلی و حروف عربی/فارسی هنوز تصمیم‌گیری نشده است.
+9. عملیات نوشتن تا بررسی دستی قیمت، موجودی و اولین آزمایش تک‌محصولی فعال نمی‌شود.
+10. PHP ساده، PHP-FPM کم‌مصرف و SQLite برای فاز اول حفظ می‌شوند.
 
-## وضعیت داده محک
+## نتیجه اجرای واقعی خواندن و dry-run
 
-در تست اولیه، Login و GetAllData از نظر transport موفق بودند اما collectionهای محصول خالی بودند. پشتیبانی اعلام کرد کالا باید ابتدا از این مسیر در نرم‌افزار محک ارسال شود:
+بعد از ارسال اولیه کالا از مسیر زیر در نرم‌افزار محک:
 
 ```text
 عملیات خاص → بازارا → کالاهای ارسالی → کالای جدید
 → انتخاب کد کالا → اضافه‌کردن به بازارا → ارسال و دریافت اطلاعات
 ```
 
-پس از این عملیات باید فرمان زیر دوباره اجرا شود:
+فرمان بازرسی چهار رکورد کالا و جزئیات آن را دریافت کرد. سپس:
 
 ```bash
-php8.3 bin/console mahak:products:inspect
-```
-
-اگر Product، ProductDetail و VisitorProduct برگشتند، مرحله بعد:
-
-```bash
+php8.3 tests/run.php
 php8.3 bin/console sync:products:dry-run
 ```
 
+نتیجه dry-run:
+
+| شاخص | مقدار |
+|---|---:|
+| received | 4 |
+| created | 4 |
+| updated | 0 |
+| skipped | 0 |
+
+قیمت‌های پیش‌نمایش‌شده پس از تقسیم بر `SYNC_PRICE_DIVISOR=10` برابر ۳۶۰۰، ۴۶۱۱۰، ۴۹۵۹۰ و ۳۶۰۰۰ بودند. موجودی‌های فعلی از `VisitorProduct.Count1` به‌ترتیب ۵۲۰۰، ۲۰۱۵، ۲۵۶۵ و ۱۸۹۰ خوانده شدند. این مقادیر برای عیب‌یابی ثبت شده‌اند و پیش از production write باید با پنل محک تطبیق دستی شوند.
+
+## اصلاحات انجام‌شده در مسیر آزمایش
+
+- خطای type ناشی از تبدیل کلید عددی آرایه PHP به integer رفع و تست بازگشت اضافه شد.
+- fallback قیمت زمانی که `VisitorProduct.Price=0` است به `ProductDetail.Price1` اضافه شد.
+- فاصله ابتدا و انتهای نام محصول حذف شد.
+- فرمان تشخیصی امن `mahak:products:diagnose` برای دیدن فیلدهای لازم بدون چاپ اطلاعات حساس اضافه شد.
+
 ## کارهای لازم پیش از production write
 
-- مقایسه حداقل سه قیمت برای تأیید ریال/تومان.
-- مقایسه stock با موجودی بازارا.
+- تأیید دستی واحد قیمت با حداقل سه کالای نمونه.
+- تأیید اینکه موجودی کسب‌وکار واقعاً `Count1` است؛ معنای `Count2` هنوز قطعی نیست.
+- تصمیم درباره نرمال‌سازی فاصله‌های داخلی و تبدیل `ي/ك` عربی به `ی/ک` فارسی.
+- اجرای واقعی فقط برای یک محصول و کنترل نتیجه در Mixin.
 - تأیید رفتار چند ProductDetail به‌عنوان محصول مستقل یا variant.
 - تعیین mapping دسته‌بندی.
 - افزودن lock برای جلوگیری از اجرای هم‌زمان Cron.
