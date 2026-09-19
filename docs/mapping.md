@@ -1,31 +1,43 @@
 # قرارداد نگاشت داده
 
+آخرین اعتبارسنجی با داده واقعی: `2026-09-19`
+
 ## کالا: Mahak → Mixin
 
 | Mahak | Mixin | توضیح |
 |---|---|---|
-| `Product.name` | `name` | اجباری؛ رکورد بدون نام رد می‌شود |
-| `Product.description` | `description` | رشته خالی ارسال نمی‌شود |
-| `VisitorProduct.price` یا `ProductDetail.price1` | `price` | اولویت با قیمت ویزیتور؛ تقسیم بر `SYNC_PRICE_DIVISOR` |
-| `VisitorProduct.count1` | `stock` | مقدار منفی به صفر تبدیل می‌شود |
+| `Product.Name` | `name` | اجباری؛ ابتدا و انتهای نام trim می‌شود و رکورد بدون نام رد می‌شود |
+| `Product.Description` | `description` | رشته خالی ارسال نمی‌شود |
+| `VisitorProduct.Price > 0`، وگرنه `ProductDetail.Price1` | `price` | سپس بر `SYNC_PRICE_DIVISOR` تقسیم می‌شود |
+| `VisitorProduct.Count1` | `stock` | مقدار منفی به صفر تبدیل می‌شود؛ انتخاب Count1 هنوز نیازمند تأیید کسب‌وکار است |
 | موجودی مثبت | `stock_type=limited` | موجودی صفر `out_of_stock` است |
 | وضعیت حذف + موجودی | `available` | رکورد حذف‌شده یا بدون موجودی ناموجود است |
-| `ProductDetail.barcode` | `barcode` | اختیاری |
-| `ProductDetail.productDetailId` | `product_identifier` | شناسه پایدار detail |
+| `ProductDetail.Barcode` | `barcode` | اختیاری |
+| `ProductDetail.ProductDetailId` | `product_identifier` | شناسه پایدار detail و همیشه string |
 | شناسه‌های Product/Detail | `external_ids` | برای audit و بازیابی mapping |
 | ابعاد/وزن Product | همان فیلدها | گرد شده و منفی‌ها صفر می‌شوند |
+
+> در نمونه واقعی، قیمت VisitorProduct صفر و `Price1` دارای مقدار بود. به همین دلیل صفر به‌عنوان قیمت ترجیحی معتبر در نظر گرفته نمی‌شود. همچنین `DefaultSellPriceLevel=1` با استفاده از `Price1` سازگار بود.
 
 ## موجودیت واسط
 
 محک محصول قابل ارائه به هر سایت را با `VisitorProduct` مشخص می‌کند. joinهای نسخه فعلی:
 
 ```text
-Product.productId = ProductDetail.productId
-ProductDetail.productDetailId = VisitorProduct.productDetailId
-VisitorProduct.visitorId = MAHAK_VISITOR_ID
+Product.ProductId = ProductDetail.ProductId
+ProductDetail.ProductDetailId = VisitorProduct.ProductDetailId
+VisitorProduct.VisitorId = MAHAK_VISITOR_ID
 ```
 
-`currentVisitorId` نیز در `GetAllData` ارسال می‌شود.
+`currentVisitorId` نیز در `GetAllData` ارسال می‌شود. کلیدهای عددی PHP ممکن است به integer تبدیل شوند؛ Bridge شناسه‌های detail را پیش از مراجعه به StateStore با `strval` نرمال می‌کند.
+
+## نرمال‌سازی نام
+
+فعلاً فقط فاصله ابتدا و انتهای نام حذف می‌شود. موارد زیر عمداً تا تأیید کسب‌وکار تغییر نمی‌کنند:
+
+- فاصله‌های تکراری داخل نام
+- تبدیل حروف عربی `ي/ك` به حروف فارسی `ی/ک`
+- نیم‌فاصله و قواعد نمایشی عنوان
 
 ## مشتری و سفارش
 
