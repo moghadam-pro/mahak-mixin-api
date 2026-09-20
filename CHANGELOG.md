@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- نمایش بدنه خطاهای HTTP در CLI برای تشخیص validation API با حذف خودکار credentialها.
 - پنل مشتری، صف کارها، retry/backoff، circuit breaker و قفل worker در roadmap هستند.
 - snapshot کامل OpenAPI محک و Mixin به منابع پروژه اضافه شد.
 - وضعیت استقرار، تصمیم‌های قطعی و چک‌لیست ادامه پروژه مستند شد.

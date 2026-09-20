@@ -9,6 +9,7 @@ use MahakMixin\AppFactory;
 use MahakMixin\Client\MahakClient;
 use MahakMixin\Client\MixinClient;
 use MahakMixin\Config;
+use MahakMixin\Http\HttpException;
 use MahakMixin\Support\TestProductFactory;
 $command = $argv[1] ?? 'help';
 
@@ -42,12 +43,35 @@ try {
     echo json_encode($result, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR) . PHP_EOL;
     exit(0);
 } catch (Throwable $exception) {
-    fwrite(STDERR, json_encode([
+    $error = [
         'ok' => false,
         'error' => $exception->getMessage(),
         'type' => $exception::class,
-    ], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) . PHP_EOL);
+    ];
+    if ($exception instanceof HttpException) {
+        $error['status_code'] = $exception->statusCode;
+        $error['response'] = sanitizeDiagnostic($exception->responseBody);
+    }
+    fwrite(STDERR, json_encode($error, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) . PHP_EOL);
     exit(1);
+}
+
+function sanitizeDiagnostic(mixed $value, ?string $key = null): mixed
+{
+    if ($key !== null && preg_match('/authorization|api.?key|token|password|secret/i', $key) === 1) {
+        return '[REDACTED]';
+    }
+    if (is_array($value)) {
+        $safe = [];
+        foreach ($value as $childKey => $childValue) {
+            $safe[$childKey] = sanitizeDiagnostic($childValue, (string) $childKey);
+        }
+        return $safe;
+    }
+    if (is_string($value) && strlen($value) > 2000) {
+        return substr($value, 0, 2000) . '...[truncated]';
+    }
+    return $value;
 }
 
 function sanitizeLogin(array $response): array
