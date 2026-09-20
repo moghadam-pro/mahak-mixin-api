@@ -135,17 +135,18 @@ php8.3 bin/console sync:products:dry-run
 - ثبت sync run و خطا بدون payload حساس.
 - تهیه backup از SQLite پیش از خروج از dry-run.
 
-## برنامه داشبورد مشتری
+## داشبورد مشتری
 
-نسخه سبک پیشنهادی با PHP server-rendered و بدون Node process دائمی:
+نسخه فعلی با PHP server-rendered، طراحی mobile-first و بدون Node process دائمی اجرا می‌شود:
 
-- وضعیت اتصال هر سرویس.
-- آخرین اجرای موفق و مدت پاسخ.
-- تعداد created، updated، skipped و failed.
-- صف خطا و retry دستی.
-- pause/resume همگام‌سازی.
-- نمایش mapping بدون credential.
-- تاریخچه اجراها و audit log.
+- وضعیت اتصال هر سرویس با refresh صریح کاربر.
+- تعداد mapping محصول، آخرین اجرای موفق و نرخ موفقیت اجراهای اخیر.
+- آمار تجمیعی received، created، updated و skipped.
+- نمای کنسولی ۶ اجرای آخر.
+- جزئیات حداکثر ۱۰۰ اجرا شامل جهت، موجودیت، شروع، پایان، مدت و خطا.
+- نمایش checkpoint بدون credential.
 - ورود با password hash و session امن.
+- کارت‌های اختصاصی موبایل و جدول کامل دسکتاپ.
+- نشانه‌گذاری واضح فقط‌خواندنی بودن پنل.
 
-برای جلوگیری از فشار به APIها، dashboard فقط دیتابیس محلی را می‌خواند و عملیات خارجی را به worker تک‌نخی واگذار می‌کند.
+برای جلوگیری از فشار به APIها، dashboard هنگام بازشدن فقط دیتابیس محلی را می‌خواند. این رابط هیچ کنترل sync، retry یا pause ندارد؛ تنها refresh وضعیت اتصال‌ها با درخواست صریح و CSRF معتبر به APIها تماس می‌گیرد.
