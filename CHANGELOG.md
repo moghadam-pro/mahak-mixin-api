@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- استفاده از نسخه self-hosted فونت وزیرمتن در تمام صفحات ورود و داشبورد، بدون وابستگی به CDN.
 - افزودن داشبورد RTL سبک با ورود session/password hash، آمار mapping، checkpoint و تاریخچه اجرای محلی.
 - افزودن retry با exponential backoff برای عملیات امن؛ create محصول و تصویر برای جلوگیری از duplicate retry کور نمی‌شوند.
 - تأیید اجرای production عمومی `run_id=2` و dry-run بدون تغییر `run_id=3` پس از ثبت checkpointها.
