@@ -13,7 +13,7 @@
 - داشبورد فارسی در `https://bridge.sayid.ir/dashboard` فعال است و از فونت محلی وزیرمتن استفاده می‌کند.
 - سرویس در حالت معمول با `SYNC_DRY_RUN=true` ایمن می‌ماند؛ نوشتن عمومی فقط هنگام فعال‌سازی آگاهانه انجام می‌شود.
 
-راهنمای کوتاه قابل ارائه به مشتری: [دانلود فایل PDF](output/pdf/mahak-mixin-customer-guide-fa.pdf)
+راهنمای کوتاه قابل ارائه به مشتری: [دانلود فایل PDF](output/pdf/mahak-mixin-customer-guide-fa.pdf) | [دانلود تصویر PNG](output/images/mahak-mixin-customer-guide-fa.png)
 
 ## روند کار برای مشتری
 
