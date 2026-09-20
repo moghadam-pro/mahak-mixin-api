@@ -22,6 +22,7 @@ $tests['maps Mahak product to Mixin and converts rial to toman'] = static functi
     assertSame(7, $payload['stock']);
     assertSame('limited', $payload['stock_type']);
     assertSame(34, $payload['external_ids']['mahak_product_detail_id']);
+    assertSame('mahak-mixin-bridge', $payload['external_ids']['source']);
 };
 $tests['falls back to detail price when visitor price is zero and trims name'] = static function (): void {
     $payload = (new ProductMapper(10))->toMixin(
@@ -80,6 +81,8 @@ $tests['persists checkpoints mappings and snapshots'] = static function (): void
         $store->saveSnapshot('mahak.products', '10', ['ProductId' => 10, 'Name' => 'Test']);
         assertSame(42, $store->checkpoint('mahak.products'));
         assertSame('20', $store->mapping('product', '10'));
+        $store->deleteMapping('product', '10');
+        assertSame(null, $store->mapping('product', '10'));
         assertSame('Test', $store->snapshots('mahak.products')[0]['Name']);
     } finally {
         @unlink($path);

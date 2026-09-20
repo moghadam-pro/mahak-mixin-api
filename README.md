@@ -71,6 +71,7 @@ php bin/console sync:products
 | `MIXIN_TEST_CATEGORY_ID` | شناسه یک دسته‌بندی موجود Mixin برای محصول تست |
 | `BRIDGE_API_KEY` | کلید مستقل برای حفاظت از endpoint مدیریتی Bridge |
 | `SYNC_DRY_RUN` | جلوگیری از نوشتن در Mixin؛ پیش‌فرض `true` |
+| `SYNC_ALLOW_SINGLE_PRODUCT_WRITE` | مجوز موقت apply/rollback فقط یک ProductDetail؛ پیش‌فرض `false` |
 | `SYNC_PRICE_DIVISOR` | تبدیل واحد پول؛ برای ریال به تومان `10` |
 
 فهرست کامل و نکات امنیتی در [راهنمای تنظیمات](docs/configuration.md) آمده است.
@@ -87,6 +88,9 @@ php bin/console mixin:categories:inspect
 php bin/console mixin:test-product:preview
 php bin/console mixin:test-product:create
 php bin/console mixin:test-product:delete PRODUCT_ID
+php bin/console sync:product:preview PRODUCT_DETAIL_ID MIXIN_CATEGORY_ID
+php bin/console sync:product:apply PRODUCT_DETAIL_ID MIXIN_CATEGORY_ID
+php bin/console sync:product:rollback PRODUCT_DETAIL_ID
 php bin/console sync:products:dry-run
 php bin/console sync:products
 php tests/run.php

@@ -57,6 +57,12 @@ final class StateStore
         $statement->execute(['entity' => $entity, 'source_id' => $sourceId, 'target_id' => $targetId]);
     }
 
+    public function deleteMapping(string $entity, string $sourceId): void
+    {
+        $statement = $this->pdo->prepare('DELETE FROM entity_mappings WHERE entity = :entity AND source_id = :source_id');
+        $statement->execute(['entity' => $entity, 'source_id' => $sourceId]);
+    }
+
     /** @return list<array<string,mixed>> */
     public function snapshots(string $entity): array
     {

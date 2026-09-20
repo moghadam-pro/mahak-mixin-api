@@ -24,6 +24,9 @@ try {
         'mixin:test-product:preview' => TestProductFactory::make('preview', optionalPositiveInt('MIXIN_TEST_CATEGORY_ID')),
         'mixin:test-product:create' => createMixinTestProduct(AppFactory::mixin()),
         'mixin:test-product:delete' => deleteMixinTestProduct(AppFactory::mixin(), $argv[2] ?? null),
+        'sync:product:preview' => syncOneProduct($argv, true),
+        'sync:product:apply' => syncOneProduct($argv, false),
+        'sync:product:rollback' => rollbackOneProduct($argv),
         'sync:products' => AppFactory::productSync()->run(Config::bool('SYNC_DRY_RUN', true)),
         'sync:products:dry-run' => AppFactory::productSync()->run(true),
         default => [
@@ -37,6 +40,9 @@ try {
                 'php bin/console mixin:test-product:preview',
                 'php bin/console mixin:test-product:create',
                 'php bin/console mixin:test-product:delete PRODUCT_ID',
+                'php bin/console sync:product:preview PRODUCT_DETAIL_ID MIXIN_CATEGORY_ID',
+                'php bin/console sync:product:apply PRODUCT_DETAIL_ID MIXIN_CATEGORY_ID',
+                'php bin/console sync:product:rollback PRODUCT_DETAIL_ID',
                 'php bin/console sync:products:dry-run',
                 'php bin/console sync:products',
             ],
@@ -242,5 +248,36 @@ function assertMixinTestWritesAllowed(): void
 {
     if (!Config::bool('MIXIN_ALLOW_TEST_WRITES', false)) {
         throw new RuntimeException('Test writes are disabled. Set MIXIN_ALLOW_TEST_WRITES=true temporarily.');
+    }
+}
+
+function syncOneProduct(array $argv, bool $dryRun): array
+{
+    $sourceId = positiveIdArgument($argv[2] ?? null, 'PRODUCT_DETAIL_ID');
+    $categoryId = positiveIdArgument($argv[3] ?? null, 'MIXIN_CATEGORY_ID');
+    if (!$dryRun) {
+        assertSingleProductWriteAllowed();
+    }
+    return AppFactory::productSync()->runOne($sourceId, (int) $categoryId, $dryRun);
+}
+
+function rollbackOneProduct(array $argv): array
+{
+    assertSingleProductWriteAllowed();
+    return AppFactory::productSync()->rollbackOne(positiveIdArgument($argv[2] ?? null, 'PRODUCT_DETAIL_ID'));
+}
+
+function positiveIdArgument(?string $value, string $name): string
+{
+    if ($value === null || filter_var($value, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]) === false) {
+        throw new InvalidArgumentException("A positive {$name} is required");
+    }
+    return $value;
+}
+
+function assertSingleProductWriteAllowed(): void
+{
+    if (!Config::bool('SYNC_ALLOW_SINGLE_PRODUCT_WRITE', false)) {
+        throw new RuntimeException('Single-product writes are disabled. Set SYNC_ALLOW_SINGLE_PRODUCT_WRITE=true temporarily.');
     }
 }

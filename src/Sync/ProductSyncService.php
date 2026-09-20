@@ -91,6 +91,85 @@ final class ProductSyncService
         return $stats;
     }
 
+    /** @return array<string,mixed> */
+    public function runOne(string $sourceDetailId, int $mainCategoryId, bool $dryRun = true): array
+    {
+        if ($sourceDetailId === '' || $mainCategoryId < 1) {
+            throw new \InvalidArgumentException('A source detail id and positive Mixin category id are required');
+        }
+
+        $response = $this->mahak->getAllData([
+            'currentVisitorId' => $this->visitorId,
+            'fromProductVersion' => 0,
+            'fromProductDetailVersion' => 0,
+            'fromVisitorProductVersion' => 0,
+            'pageSize' => $this->pageSize,
+        ]);
+        $objects = $this->objects($response);
+        $products = $this->index($this->list($objects, 'products'), 'productId');
+        $details = $this->index($this->list($objects, 'productDetails'), 'productDetailId');
+        $visitorProducts = $this->index($this->list($objects, 'visitorProducts'), 'productDetailId');
+
+        $detail = $details[$sourceDetailId] ?? null;
+        if (!is_array($detail)) {
+            throw new RuntimeException("Mahak ProductDetail {$sourceDetailId} was not returned");
+        }
+        $productId = $this->value($detail, 'productId');
+        $product = $products[(string) ($productId ?? '')] ?? null;
+        if (!is_array($product)) {
+            throw new RuntimeException("Mahak Product for detail {$sourceDetailId} was not returned");
+        }
+
+        $payload = $this->mapper->toMixin($product, $detail, $visitorProducts[$sourceDetailId] ?? null);
+        if (($payload['name'] ?? '') === '') {
+            throw new RuntimeException("Mahak ProductDetail {$sourceDetailId} has no usable product name");
+        }
+        $payload['main_category_id'] = $mainCategoryId;
+        $targetId = $this->state->mapping('product', $sourceDetailId);
+        $result = [
+            'dry_run' => $dryRun,
+            'scope' => 'single_product',
+            'action' => $targetId === null ? 'create' : 'update',
+            'source_id' => $sourceDetailId,
+            'target_id' => $targetId,
+            'payload' => $payload,
+        ];
+        if ($dryRun) {
+            return $result;
+        }
+
+        $saved = $targetId === null
+            ? $this->mixin->createProduct($payload)
+            : $this->mixin->updateProduct((int) $targetId, $payload);
+        $savedId = $this->findId($saved) ?? $targetId;
+        if ($savedId === null) {
+            throw new RuntimeException("Mixin product response has no id for Mahak detail {$sourceDetailId}");
+        }
+        $this->state->saveMapping('product', $sourceDetailId, (string) $savedId);
+        $result['target_id'] = (string) $savedId;
+        $result['response'] = $saved;
+        return $result;
+    }
+
+    /** @return array<string,mixed> */
+    public function rollbackOne(string $sourceDetailId): array
+    {
+        $targetId = $this->state->mapping('product', $sourceDetailId);
+        if ($targetId === null || filter_var($targetId, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]) === false) {
+            throw new RuntimeException("No valid Mixin mapping exists for Mahak detail {$sourceDetailId}");
+        }
+
+        $response = $this->mixin->product((int) $targetId);
+        $product = $this->value($response, 'data', $response);
+        if (!is_array($product) || !$this->isOwnedProduct($product, $sourceDetailId)) {
+            throw new RuntimeException('Refusing rollback: Mixin product does not contain the expected Mahak Bridge markers');
+        }
+
+        $deleted = $this->mixin->deleteProduct((int) $targetId);
+        $this->state->deleteMapping('product', $sourceDetailId);
+        return ['ok' => true, 'source_id' => $sourceDetailId, 'target_id' => (int) $targetId, 'response' => $deleted];
+    }
+
     private function objects(array $response): array
     {
         $data = $this->value($response, 'data', []);
@@ -180,6 +259,18 @@ final class ProductSyncService
             }
         }
         return null;
+    }
+
+    /** @param array<string,mixed> $product */
+    private function isOwnedProduct(array $product, string $sourceDetailId): bool
+    {
+        $externalIds = $this->value($product, 'external_ids', []);
+        if (!is_array($externalIds)) {
+            return false;
+        }
+        return $this->value($externalIds, 'source') === 'mahak-mixin-bridge'
+            && (string) $this->value($externalIds, 'mahak_product_detail_id', '') === $sourceDetailId
+            && (string) $this->value($product, 'product_identifier', '') === $sourceDetailId;
     }
 
     private function advanceCheckpoints(array $objects): void

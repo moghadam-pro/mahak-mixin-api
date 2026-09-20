@@ -41,6 +41,7 @@ final class ProductMapper
             'width' => $this->nonNegativeIntOrNull($this->read($product, 'width')),
             'height' => $this->nonNegativeIntOrNull($this->read($product, 'height')),
             'external_ids' => [
+                'source' => 'mahak-mixin-bridge',
                 'mahak_product_id' => $productId,
                 'mahak_product_detail_id' => $productDetailId,
             ],
