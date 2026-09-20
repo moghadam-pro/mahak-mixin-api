@@ -61,7 +61,9 @@ final class ProductMapper
             'ى' => 'ی',
             'ك' => 'ک',
         ]);
-        return preg_replace('/\s+/u', ' ', $normalized) ?? $normalized;
+        $normalized = preg_replace('/\s+/u', ' ', $normalized) ?? $normalized;
+        $normalized = preg_replace('/\(\s+/u', '(', $normalized) ?? $normalized;
+        return preg_replace('/\s+\)/u', ')', $normalized) ?? $normalized;
     }
 
     private function nonNegativeIntOrNull(mixed $value): ?int

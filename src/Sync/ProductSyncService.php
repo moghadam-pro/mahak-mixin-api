@@ -421,7 +421,9 @@ final class ProductSyncService
     private function normalizeText(string $value): string
     {
         $value = strtr(trim($value), ['ي' => 'ی', 'ى' => 'ی', 'ك' => 'ک']);
-        return preg_replace('/\s+/u', ' ', $value) ?? $value;
+        $value = preg_replace('/\s+/u', ' ', $value) ?? $value;
+        $value = preg_replace('/\(\s+/u', '(', $value) ?? $value;
+        return preg_replace('/\s+\)/u', ')', $value) ?? $value;
     }
 
     private function advanceCheckpoints(array $objects): void

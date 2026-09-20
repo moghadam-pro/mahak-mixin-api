@@ -68,11 +68,11 @@ $tests['normalizes numeric Mahak detail IDs as strings'] = static function (): v
 };
 $tests['normalizes Persian product names and repeated whitespace'] = static function (): void {
     $payload = (new ProductMapper(10))->toMixin(
-        ['ProductId' => 12, 'Name' => "  سيم  سيم كالا\nتست  "],
+        ['ProductId' => 12, 'Name' => "  سيم  سيم كالا\nتست ( 126 عددي )  "],
         ['ProductDetailId' => 34, 'ProductId' => 12, 'Price1' => 10000],
         ['Count1' => 1],
     );
-    assertSame('سیم سیم کالا تست', $payload['name']);
+    assertSame('سیم سیم کالا تست (126 عددی)', $payload['name']);
 };
 $tests['detects supported image signatures'] = static function (): void {
     $service = (new ReflectionClass(ProductSyncService::class))->newInstanceWithoutConstructor();
