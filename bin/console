@@ -11,10 +11,12 @@ use MahakMixin\Client\MixinClient;
 use MahakMixin\Config;
 use MahakMixin\Http\HttpException;
 use MahakMixin\Support\TestProductFactory;
+use MahakMixin\Version;
 $command = $argv[1] ?? 'help';
 
 try {
     $result = match ($command) {
+        '--version', '-V', 'version' => ['service' => 'mahak-mixin-bridge', 'version' => Version::current()],
         'mahak:login' => sanitizeLogin(AppFactory::mahak()->login()),
         'mahak:products:inspect' => inspectMahakProducts(AppFactory::mahak(), Config::int('MAHAK_VISITOR_ID')),
         'mahak:products:diagnose' => diagnoseMahakProductFields(AppFactory::mahak(), Config::int('MAHAK_VISITOR_ID')),
@@ -36,6 +38,7 @@ try {
         'sync:products:dry-run' => AppFactory::productSync()->run(true),
         default => [
             'usage' => [
+                'php bin/console --version',
                 'php bin/console mahak:login',
                 'php bin/console mahak:products:inspect',
                 'php bin/console mahak:products:diagnose',
