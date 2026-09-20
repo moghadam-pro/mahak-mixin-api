@@ -30,6 +30,8 @@ Bridge مطابق اعلام پشتیبانی محک از endpointهای بدو�
 
 مسیرهای `/login` و `/dashboard` رابط RTL سبک را نمایش می‌دهند. داشبورد فقط SQLite محلی را می‌خواند و هنگام بازشدن هیچ API خارجی را فراخوانی نمی‌کند. احراز هویت با `DASHBOARD_USERNAME` و `DASHBOARD_PASSWORD_HASH` انجام می‌شود و logout دارای CSRF token است.
 
+مسیر محافظت‌شده `POST /dashboard/refresh-status` فقط با درخواست صریح کاربر و CSRF معتبر، اتصال Mahak و Mixin را جداگانه بررسی می‌کند. نتیجه در session نگهداری می‌شود و هیچ credential یا متن خام خطای خارجی در داشبورد نمایش داده نمی‌شود.
+
 نمونه پاسخ dry-run:
 
 ```json
