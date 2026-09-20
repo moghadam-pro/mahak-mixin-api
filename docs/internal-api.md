@@ -26,6 +26,10 @@ Login محک و health Mixin را بررسی می‌کند. توکن محک در
 
 Bridge مطابق اعلام پشتیبانی محک از endpointهای بدون پسوند V2 استفاده می‌کند.
 
+## داشبورد مشتری
+
+مسیرهای `/login` و `/dashboard` رابط RTL سبک را نمایش می‌دهند. داشبورد فقط SQLite محلی را می‌خواند و هنگام بازشدن هیچ API خارجی را فراخوانی نمی‌کند. احراز هویت با `DASHBOARD_USERNAME` و `DASHBOARD_PASSWORD_HASH` انجام می‌شود و logout دارای CSRF token است.
+
 نمونه پاسخ dry-run:
 
 ```json

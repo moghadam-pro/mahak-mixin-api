@@ -24,7 +24,7 @@
 | Product write | تست API تأییدشده، production غیرفعال | نوشتن تستی موفق بود؛ `SYNC_DRY_RUN=true` است و هیچ کالای واقعی محک نوشته نشده |
 | Customer sync | برنامه‌ریزی‌شده | قواعد Person و duplicate detection باید نهایی شود |
 | Order sync | برنامه‌ریزی‌شده | orderType، settlement، store و payment باید تعیین شوند |
-| Dashboard | برنامه‌ریزی‌شده | پنل سبک server-rendered روی PHP |
+| Dashboard | پیاده‌سازی اولیه | ورود session/hash، آمار محلی، تاریخچه اجرا و checkpoint؛ بدون تماس مستقیم با APIها |
 
 ## تصمیم‌ها و یافته‌های قطعی
 

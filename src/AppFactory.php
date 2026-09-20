@@ -45,7 +45,7 @@ final class AppFactory
         return new ProductSyncService(
             self::mahak(),
             self::mixin(),
-            new StateStore(Config::path('STATE_DB', 'var/bridge.sqlite')),
+            self::state(),
             new ProductMapper(Config::int('SYNC_PRICE_DIVISOR', 10)),
             Config::int('MAHAK_VISITOR_ID'),
             Config::int('SYNC_PAGE_SIZE', 100),
@@ -53,5 +53,10 @@ final class AppFactory
             Config::intMap('SYNC_PRODUCT_CATEGORY_MAP_JSON'),
             Config::path('SYNC_LOCK_FILE', 'var/product-sync.lock'),
         );
+    }
+
+    public static function state(): StateStore
+    {
+        return new StateStore(Config::path('STATE_DB', 'var/bridge.sqlite'));
     }
 }

@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- افزودن داشبورد RTL سبک با ورود session/password hash، آمار mapping، checkpoint و تاریخچه اجرای محلی.
 - افزودن retry با exponential backoff برای عملیات امن؛ create محصول و تصویر برای جلوگیری از duplicate retry کور نمی‌شوند.
 - تأیید اجرای production عمومی `run_id=2` و dry-run بدون تغییر `run_id=3` پس از ثبت checkpointها.
 - افزودن mapping دائمی دسته‌بندی و override تک‌محصولی، flock جلوگیری از هم‌زمانی و ثبت تاریخچه اجرای sync در SQLite.

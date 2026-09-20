@@ -87,6 +87,38 @@ final class StateStore
     }
 
     /** @return list<array<string,mixed>> */
+    public function recentRuns(int $limit = 20): array
+    {
+        $limit = max(1, min(100, $limit));
+        $statement = $this->pdo->query(
+            'SELECT id, direction, entity, status, stats_json, error, started_at, finished_at
+             FROM sync_runs ORDER BY id DESC LIMIT ' . $limit
+        );
+        $rows = $statement->fetchAll();
+        foreach ($rows as &$row) {
+            $decoded = isset($row['stats_json']) ? json_decode((string) $row['stats_json'], true) : null;
+            $row['stats'] = is_array($decoded) ? $decoded : null;
+            unset($row['stats_json']);
+        }
+        return $rows;
+    }
+
+    /** @return list<array<string,mixed>> */
+    public function checkpoints(): array
+    {
+        return $this->pdo->query(
+            'SELECT entity, row_version, updated_at FROM sync_checkpoints ORDER BY entity'
+        )->fetchAll();
+    }
+
+    public function mappingCount(string $entity): int
+    {
+        $statement = $this->pdo->prepare('SELECT COUNT(*) FROM entity_mappings WHERE entity = :entity');
+        $statement->execute(['entity' => $entity]);
+        return (int) $statement->fetchColumn();
+    }
+
+    /** @return list<array<string,mixed>> */
     public function snapshots(string $entity): array
     {
         $statement = $this->pdo->prepare('SELECT payload_json FROM entity_snapshots WHERE entity = :entity');

@@ -17,6 +17,7 @@
 - ذخیره checkpoint و نگاشت شناسه‌ها در SQLite
 - اجرای امن `dry-run` و پیش‌نمایش حداکثر ۱۰ تغییر
 - API مدیریتی محافظت‌شده و CLI مناسب Cron
+- داشبورد RTL سبک با ورود امن، تاریخچه اجرا، checkpoint و آمار mapping بدون تماس مستقیم با APIهای خارجی
 - عدم نمایش توکن محک در خروجی فرمان‌های تشخیصی
 
 ## نیازمندی‌ها
@@ -73,6 +74,8 @@ php bin/console sync:products
 | `MIXIN_ALLOW_TEST_WRITES` | مجوز موقت ایجاد/حذف رکورد تست؛ پیش‌فرض `false` |
 | `MIXIN_TEST_CATEGORY_ID` | شناسه یک دسته‌بندی موجود Mixin برای محصول تست |
 | `BRIDGE_API_KEY` | کلید مستقل برای حفاظت از endpoint مدیریتی Bridge |
+| `DASHBOARD_USERNAME` | نام کاربری داشبورد مشتری |
+| `DASHBOARD_PASSWORD_HASH` | خروجی `password_hash`؛ رمز خام در تنظیمات ذخیره نمی‌شود |
 | `SYNC_DRY_RUN` | جلوگیری از نوشتن در Mixin؛ پیش‌فرض `true` |
 | `SYNC_ALLOW_SINGLE_PRODUCT_WRITE` | مجوز موقت apply/rollback فقط یک ProductDetail؛ پیش‌فرض `false` |
 | `SYNC_CATEGORY_MAP_JSON` | نگاشت JSON دسته محک به دسته Mixin برای کالاهای عمومی |
