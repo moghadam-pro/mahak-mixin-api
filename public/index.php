@@ -17,30 +17,17 @@ try {
         respond(200, ['status' => 'ok', 'service' => 'mahak-mixin-bridge', 'version' => Version::current()]);
     }
 
-    if (in_array($path, ['/login', '/dashboard', '/dashboard/refresh-status', '/logout'], true)) {
+    if ($method === 'GET' && str_starts_with($path, '/assets/')) {
+        serveAsset($path);
+    }
+
+    if ($method === 'GET' && $path === '/dashboard') {
         dashboardSession();
-        if ($method === 'GET' && $path === '/login') {
-            dashboardLoginPage();
-        }
-        if ($method === 'POST' && $path === '/login') {
-            dashboardLogin();
-        }
-        if ($method === 'POST' && $path === '/logout') {
-            dashboardRequireLogin();
-            verifyCsrf();
-            $_SESSION = [];
-            session_destroy();
-            redirect('/login');
-        }
-        if ($method === 'GET' && $path === '/dashboard') {
-            dashboardRequireLogin();
-            dashboardPage();
-        }
-        if ($method === 'POST' && $path === '/dashboard/refresh-status') {
-            dashboardRequireLogin();
-            dashboardRefreshStatus();
-        }
-        htmlResponse(404, '<h1>یافت نشد</h1>');
+        dashboardPage();
+    }
+    if ($method === 'POST' && $path === '/dashboard/refresh-status') {
+        dashboardSession();
+        dashboardRefreshStatus();
     }
 
     authorize();
@@ -83,6 +70,32 @@ function respond(int $status, array $payload): never
 {
     http_response_code($status);
     echo json_encode($payload, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR);
+    exit;
+}
+
+function serveAsset(string $path): never
+{
+    $relative = ltrim(rawurldecode($path), '/');
+    $root = realpath(__DIR__ . '/assets');
+    $file = realpath(__DIR__ . '/' . $relative);
+    if ($root === false || $file === false || !str_starts_with($file, $root . DIRECTORY_SEPARATOR) || !is_file($file)) {
+        respond(404, ['status' => 'error', 'message' => 'Asset not found']);
+    }
+
+    $mime = match (strtolower(pathinfo($file, PATHINFO_EXTENSION))) {
+        'css' => 'text/css; charset=utf-8',
+        'js' => 'application/javascript; charset=utf-8',
+        'svg' => 'image/svg+xml',
+        'webp' => 'image/webp',
+        'woff' => 'font/woff',
+        'woff2' => 'font/woff2',
+        'png' => 'image/png',
+        'jpg', 'jpeg' => 'image/jpeg',
+        default => 'application/octet-stream',
+    };
+    header('Content-Type: ' . $mime);
+    header('Cache-Control: public, max-age=86400');
+    readfile($file);
     exit;
 }
 
@@ -334,7 +347,7 @@ function dashboardPage(): never
             . escapeHtml(dashboardFormatDate((string) $checkpoint['updated_at'])) . '</small></div></article>';
     }
     if ($checkpointRows === '') {
-        $checkpointRows = '<div class="empty-state">' . dashboardIcon('database') . '<strong>checkpoint ثبت نشده است</strong></div>';
+        $checkpointRows = '<div class="empty-state checkpoint-empty">' . dashboardIcon('database') . '<strong>checkpoint ثبت نشده است</strong></div>';
     }
 
     $csrf = escapeHtml((string) $_SESSION['csrf']);
@@ -361,24 +374,21 @@ function dashboardPage(): never
     $terminalIcon = dashboardIcon('terminal');
     $fileIcon = dashboardIcon('file-text');
     $databaseIcon = dashboardIcon('database');
-    $logoutIcon = dashboardIcon('log-out');
     $appVersion = escapeHtml(Version::current());
     $checkpointCount = count($checkpoints);
     htmlResponse(200, dashboardLayout('داشبورد', <<<HTML
       <div class="app-shell">
-        <header class="topbar"><div class="topbar-inner"><div class="brand"><strong>Mahak × Mixin Bridge</strong><small>v{$appVersion}</small></div><form method="post" action="/logout"><input type="hidden" name="csrf" value="{$csrf}"><button class="icon-button" type="submit" title="خروج" aria-label="خروج">{$logoutIcon}</button></form></div></header>
-
         <main class="main-content">
           <section class="page-heading" id="overview">
-            <div><div class="heading-kicker"><span class="live-dot"></span>سرویس فعال · فقط پل</div><h1>مرکز گزارش همگام‌سازی</h1><p>سلامت اتصال‌ها، نتیجه اجراها و آخرین تغییرات ثبت‌شده در Bridge.</p></div>
+            <div><div class="heading-kicker"><span class="live-dot"></span>سرویس فعال · فقط پل</div><h1>مرکز گزارش همگام‌سازی</h1><p>سلامت اتصال‌ها، نتیجه اجراها و آخرین تغییرات ثبت‌شده در Bridge.</p></div><span class="theme-switcher heading-theme" aria-label="انتخاب پوسته"><button type="button" class="theme-button" data-theme="light" title="پوسته روشن" aria-label="پوسته روشن">روشن</button><button type="button" class="theme-button" data-theme="dark" title="پوسته تاریک" aria-label="پوسته تاریک">تاریک</button></span>
           </section>
 
           <section class="connection-panel" aria-label="وضعیت اتصال APIها">
-            <div class="connection-panel-head"><div><span>CONNECTION.STATUS</span><strong>وضعیت ارتباط سرویس‌ها</strong></div><small>آخرین بررسی: {$checkedAtLabel}</small></div>
+            <div class="connection-panel-head"><div><span class="connection-code">CONNECTION.STATUS</span><strong>وضعیت ارتباط سرویس‌ها</strong></div><small>آخرین بررسی: {$checkedAtLabel}</small></div>
             <div class="api-grid">
-              <article class="api-card"><div class="api-card-icon mahak">M</div><div class="api-card-copy"><span>منبع داده</span><strong>API محک</strong><small>احراز هویت و دریافت اطلاعات</small></div>{$mahakBadge}</article>
-              <article class="api-card"><div class="api-card-icon mixin">X</div><div class="api-card-copy"><span>مقصد داده</span><strong>API میکسین</strong><small>سلامت فروشگاه و دسترسی API</small></div>{$mixinBadge}</article>
-              <form method="post" action="/dashboard/refresh-status" class="refresh-card"><input type="hidden" name="csrf" value="{$csrf}"><button type="submit" aria-label="بروزرسانی وضعیت اتصال APIها"><span class="refresh-icon">{$refreshIcon}</span><strong>بررسی دوباره</strong><small>اجرای تست اتصال هر دو API</small></button></form>
+              <article class="api-card"><div class="api-card-icon mahak"><img src="/assets/logos/mahaksoft-logo.webp" alt="لوگوی محک"></div><div class="api-card-copy"><span>منبع داده</span><strong>API محک</strong><small>احراز هویت و دریافت اطلاعات</small></div>{$mahakBadge}</article>
+              <article class="api-card"><div class="api-card-icon mixin"><img src="/assets/logos/mixin-logo.svg" alt="لوگوی میکسین"></div><div class="api-card-copy"><span>مقصد داده</span><strong>API میکسین</strong><small>سلامت فروشگاه و دسترسی API</small></div>{$mixinBadge}</article>
+              <form method="post" action="/dashboard/refresh-status" class="refresh-card"><input type="hidden" name="csrf" value="{$csrf}"><button type="submit" title="بررسی دوباره وضعیت اتصال APIها" aria-label="بررسی دوباره وضعیت اتصال APIها"><span class="refresh-icon" title="بررسی اتصال محک و میکسین">{$refreshIcon}</span></button></form>
             </div>
           </section>
 
@@ -390,7 +400,7 @@ function dashboardPage(): never
           </section>
 
           <section class="workspace-grid" id="activity">
-            <article class="panel console-panel"><div class="panel-header"><div><span class="section-icon dark">{$terminalIcon}</span><div><h2>جریان فعالیت اخیر</h2><p>خلاصه ۶ اجرای آخر به سبک کنسول</p></div></div><span class="panel-chip {$latestStatusClass}">آخرین وضعیت: {$latestStatusLabel}</span></div><div class="console-window"><div class="console-toolbar"><span></span><span></span><span></span><b>bridge@monitor: ~/sync/logs</b></div><div class="console-body">{$consoleLines}</div></div></article>
+            <article class="panel console-panel"><div class="panel-header"><div><span class="section-icon dark">{$terminalIcon}</span><div><h2>جریان فعالیت اخیر</h2><p>خلاصه ۶ اجرای آخر به سبک کنسول</p></div></div><span class="panel-chip {$latestStatusClass}">آخرین وضعیت: {$latestStatusLabel}</span></div><div class="console-window"><div class="console-toolbar"><b>bridge@monitor: ~/sync/logs</b></div><div class="console-body">{$consoleLines}</div></div></article>
             <aside class="panel totals-panel"><div class="panel-header"><div><span class="section-icon">{$layersIcon}</span><div><h2>جمع عملیات</h2><p>بر مبنای {$runCount} اجرای اخیر</p></div></div></div><div class="total-list"><div><span>دریافت‌شده</span><strong>{$totalReceived}</strong></div><div><span>ایجادشده</span><strong>{$totalCreated}</strong></div><div><span>بروزرسانی‌شده</span><strong>{$totalUpdated}</strong></div><div><span>ردشده</span><strong>{$totalSkipped}</strong></div></div></aside>
           </section>
 
@@ -398,7 +408,10 @@ function dashboardPage(): never
 
           <section class="panel checkpoints-panel" id="checkpoints"><div class="panel-header"><div><span class="section-icon">{$databaseIcon}</span><div><h2>نقاط ادامه همگام‌سازی</h2><p>آخرین RowVersion ثبت‌شده برای دریافت افزایشی</p></div></div><span class="panel-chip neutral">{$checkpointCount} موجودیت</span></div><div class="checkpoint-grid">{$checkpointRows}</div></section>
 
-          <footer><span>Mahak × Mixin Bridge · v{$appVersion}</span><span>گزارش سلامت اتصال و تاریخچه همگام‌سازی</span></footer>
+          <footer>
+            <span class="footer-meta">Mahak × Mixin Bridge · v{$appVersion}</span>
+            <span class="footer-credit">توسعه و پیاده‌سازی توسط <a href="https://sayid.ir" target="_blank" rel="noopener noreferrer">سعید</a> و هوش مصنوعی</span>
+          </footer>
         </main>
       </div>
       HTML));
@@ -415,10 +428,11 @@ function verifyCsrf(): void
 
 function dashboardLayout(string $title, string $body): string
 {
+    header('X-Robots-Tag: noindex, nofollow, noarchive, nosnippet');
     $safeTitle = escapeHtml($title);
     $assetVersion = rawurlencode(Version::current());
     return <<<HTML
-<!doctype html><html lang="fa" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>{$safeTitle} | Bridge</title><style>
+<!doctype html><html lang="fa" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex, nofollow, noarchive, nosnippet"><meta name="googlebot" content="noindex, nofollow, noarchive, nosnippet"><meta name="description" content="داشبورد داخلی گزارش همگام‌سازی محک و میکسین"><meta name="theme-color" content="#f5f7fb"><title>{$safeTitle} | Bridge</title><style>
 @font-face{font-family:'Vazirmatn';src:url('/assets/fonts/Vazirmatn.woff2') format('woff2');font-style:normal;font-weight:100 900;font-display:swap}
 :root{font-family:'Vazirmatn',Tahoma,Arial,sans-serif;color:#eef2f8;background:#080c14;font-synthesis:none;--ink:#eef2f8;--muted:#8e9aae;--line:#242d3d;--panel:#111824;--soft:#161e2c;--blue:#6f8cff;--green:#38d39f;--red:#ff7373;--amber:#f4ad4f;--violet:#9c82ff;--nav:#050914}
 *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:radial-gradient(circle at 85% 0,#eef3ff 0,transparent 32%),#f5f7fb;color:var(--ink);line-height:1.55}button,input{font:inherit}button{cursor:pointer}.icon{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex:none}.app-shell{display:grid;grid-template-columns:minmax(0,1fr) 252px;min-height:100vh}.sidebar{grid-column:2;grid-row:1;position:sticky;top:0;height:100vh;padding:25px 18px 20px;background:rgba(255,255,255,.94);border-left:1px solid var(--line);display:flex;flex-direction:column;backdrop-filter:blur(16px);z-index:10}.brand{display:flex;align-items:center;gap:11px}.brand-mark{width:40px;height:40px;border-radius:12px;display:grid;place-items:center;background:var(--nav);color:#fff;box-shadow:0 8px 20px rgba(17,24,39,.18)}.brand-mark .icon{width:22px;height:22px}.brand strong{display:block;font-size:15px;letter-spacing:-.2px}.brand small{display:block;color:#8a94a5;font-size:11px;margin-top:1px}.sidebar nav{display:flex;flex-direction:column;gap:6px;margin-top:38px}.sidebar nav a{display:flex;align-items:center;gap:11px;color:#667085;text-decoration:none;padding:11px 12px;border-radius:10px;font-size:13px;font-weight:600;transition:.2s}.sidebar nav a:hover{color:var(--ink);background:#f4f6fa}.sidebar nav a.active{color:var(--ink);background:#eef2ff;box-shadow:inset -3px 0 var(--blue)}.sidebar nav .icon{width:18px;height:18px}.sidebar-spacer{flex:1}.read-only-note{display:flex;align-items:flex-start;gap:10px;padding:13px;background:#f4f6fa;border:1px solid var(--line);border-radius:12px;color:#475467}.read-only-note .icon{width:18px;margin-top:2px}.read-only-note strong{display:block;font-size:12px;color:#344054}.read-only-note span{display:block;font-size:10px;margin-top:3px;line-height:1.7}.logout-form{margin-top:10px}.ghost-button{width:100%;display:flex;align-items:center;justify-content:center;gap:8px;border:0;background:transparent;color:#667085;padding:10px;border-radius:10px}.ghost-button:hover{background:#fff1f1;color:#b42318}.ghost-button .icon{width:18px}.main-content{grid-column:1;grid-row:1;width:100%;max-width:1540px;margin:0 auto;padding:32px 34px 40px}.mobile-header{display:none}.page-heading{display:flex;align-items:center;justify-content:space-between;gap:24px;margin-bottom:22px}.heading-kicker{display:flex;align-items:center;gap:7px;color:#0b7d59;font-size:12px;font-weight:700}.live-dot{width:8px;height:8px;border-radius:50%;background:#17b57d;box-shadow:0 0 0 5px rgba(23,181,125,.12)}.page-heading h1{font-size:26px;letter-spacing:-.7px;margin:8px 0 3px}.page-heading p{margin:0;color:var(--muted);font-size:13px}.read-only-pill{display:flex;align-items:center;gap:8px;padding:9px 13px;border:1px solid #dce3ed;background:rgba(255,255,255,.7);border-radius:99px;color:#475467;font-size:12px;font-weight:700}.read-only-pill .icon{width:17px}.api-grid{display:grid;grid-template-columns:1fr 1fr .82fr;gap:12px}.api-card,.refresh-card{min-width:0;background:var(--panel);border:1px solid var(--line);border-radius:15px;box-shadow:0 5px 22px rgba(15,23,42,.04)}.api-card{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:12px;padding:15px}.api-card-icon{width:42px;height:42px;border-radius:12px;display:grid;place-items:center;font-size:15px;font-weight:900}.api-card-icon.mahak{color:#3156d3;background:#eef2ff}.api-card-icon.mixin{color:#7759d8;background:#f2efff}.api-card-copy{min-width:0}.api-card-copy>span,.api-card-copy small{display:block;color:#8a94a5;font-size:10px}.api-card-copy strong{display:block;font-size:14px;margin:1px 0}.connection-badge{display:inline-flex;align-items:center;gap:6px;padding:6px 9px;border-radius:99px;font-size:11px;font-weight:700;white-space:nowrap}.connection-badge i{width:7px;height:7px;border-radius:50%;background:currentColor}.connection-badge.connected{color:#087a55;background:#e6f7f0}.connection-badge.disconnected{color:#b42318;background:#feeceb}.connection-badge.unchecked{color:#667085;background:#eef1f5}.refresh-card{overflow:hidden}.refresh-card button{width:100%;height:100%;border:0;background:linear-gradient(135deg,#151c2c,#242f46);color:#fff;display:grid;grid-template-columns:auto 1fr;grid-template-rows:auto auto;text-align:right;column-gap:11px;align-items:center;padding:14px 16px}.refresh-card button:hover .refresh-icon{transform:rotate(45deg)}.refresh-icon{grid-row:1/3;width:39px;height:39px;border-radius:11px;display:grid;place-items:center;background:rgba(255,255,255,.09);transition:.25s}.refresh-icon .icon{width:19px}.refresh-card strong{font-size:12px}.refresh-card small{font-size:10px;color:#aab4c7;margin-top:2px}.metric-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:12px}.metric-card{position:relative;overflow:hidden;background:var(--panel);border:1px solid var(--line);border-radius:15px;padding:17px;box-shadow:0 5px 22px rgba(15,23,42,.04)}.metric-card:after{content:"";position:absolute;bottom:0;right:0;width:100%;height:3px;background:var(--accent)}.metric-card.accent-blue{--accent:#3156d3;--accent-soft:#eef2ff}.metric-card.accent-green{--accent:#0f9f6e;--accent-soft:#e8f8f1}.metric-card.accent-violet{--accent:#7759d8;--accent-soft:#f2efff}.metric-card.accent-amber{--accent:#d97706;--accent-soft:#fff4e6}.metric-icon{width:34px;height:34px;border-radius:10px;display:grid;place-items:center;color:var(--accent);background:var(--accent-soft);margin-bottom:15px}.metric-icon .icon{width:18px}.metric-card>span{display:block;color:#7b8495;font-size:11px}.metric-card>strong{display:block;font-size:25px;margin:2px 0 4px;letter-spacing:-.5px}.metric-card>strong.metric-date{font-size:15px;margin:8px 0 7px;direction:ltr;text-align:right}.metric-card>small{display:block;color:#98a2b3;font-size:10px}.workspace-grid{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(260px,.7fr);gap:12px;margin-top:12px}.panel{background:var(--panel);border:1px solid var(--line);border-radius:16px;box-shadow:0 5px 22px rgba(15,23,42,.04);padding:18px}.panel-header{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:16px}.panel-header>div{display:flex;align-items:center;gap:10px;min-width:0}.panel-header h2{font-size:15px;margin:0;letter-spacing:-.2px}.panel-header p{font-size:10px;color:#8a94a5;margin:2px 0 0}.section-icon{width:36px;height:36px;border-radius:10px;background:#f2f4f7;color:#475467;display:grid;place-items:center}.section-icon.dark{background:#192132;color:#fff}.section-icon .icon{width:18px}.panel-chip{white-space:nowrap;font-size:10px;font-weight:700;border-radius:99px;padding:6px 9px}.panel-chip.success{color:#087a55;background:#e6f7f0}.panel-chip.failed{color:#b42318;background:#feeceb}.panel-chip.running{color:#975a00;background:#fff1d6}.panel-chip.unknown,.panel-chip.neutral{color:#667085;background:#f1f3f6}.console-panel{min-width:0}.console-window{overflow:hidden;border-radius:13px;background:#111827;color:#d7deea;box-shadow:inset 0 0 0 1px rgba(255,255,255,.06)}.console-toolbar{height:39px;display:flex;align-items:center;gap:6px;padding:0 13px;border-bottom:1px solid #293143;direction:ltr}.console-toolbar>span{width:8px;height:8px;border-radius:50%;background:#ef6461}.console-toolbar>span:nth-child(2){background:#eab64d}.console-toolbar>span:nth-child(3){background:#49bc7a}.console-toolbar b{font-family:ui-monospace,SFMono-Regular,Consolas,monospace;font-size:10px;color:#7f8aa1;margin-left:8px;font-weight:500}.console-body{padding:13px 15px;direction:ltr;overflow:auto}.console-line{display:grid;grid-template-columns:12px 132px minmax(180px,1fr) auto;align-items:center;gap:8px;font-family:ui-monospace,SFMono-Regular,Consolas,monospace;font-size:10px;min-width:600px;padding:7px 0;border-bottom:1px solid rgba(255,255,255,.05)}.console-line:last-child{border-bottom:0}.console-prompt{color:#6ee7b7;font-weight:800}.console-time{color:#748098}.console-command{color:#d6dce8}.console-result{font-weight:700}.console-result.success{color:#6ee7b7}.console-result.failed{color:#fca5a5}.console-result.running{color:#fcd34d}.console-result.unknown{color:#aab4c7}.console-empty{direction:ltr;font:11px ui-monospace,SFMono-Regular,Consolas,monospace;color:#8fa0b8;padding:12px}.console-cursor{display:inline-block;width:7px;height:13px;background:#6ee7b7;margin-left:6px;vertical-align:-2px;animation:blink 1.1s infinite}@keyframes blink{50%{opacity:0}}.total-list{display:grid;grid-template-columns:1fr 1fr;gap:8px}.total-list>div{padding:12px;border:1px solid #edf0f4;background:#fafbfc;border-radius:11px}.total-list span{display:block;color:#7b8495;font-size:10px}.total-list strong{font-size:20px}.read-only-banner{display:flex;align-items:flex-start;gap:9px;padding:11px;margin-top:12px;border-radius:11px;background:#eef2ff;color:#475467}.read-only-banner .icon{width:18px;color:#3156d3;margin-top:1px}.read-only-banner p{font-size:10px;line-height:1.8;margin:0}.read-only-banner strong{color:#253b80}.runs-panel,.checkpoints-panel{margin-top:12px}.table-wrap{overflow:auto;margin:0 -18px -18px}.desktop-table table{width:100%;border-collapse:collapse;white-space:nowrap}.desktop-table th,.desktop-table td{text-align:right;padding:12px 11px;border-bottom:1px solid #edf0f5;font-size:11px;vertical-align:middle}.desktop-table th{position:sticky;top:0;color:#7b8495;background:#fafbfc;font-weight:600}.desktop-table tbody tr:hover{background:#fafbff}.desktop-table td:first-child,.desktop-table th:first-child{padding-right:18px}.desktop-table td:last-child,.desktop-table th:last-child{padding-left:18px}.run-id{font-family:ui-monospace,SFMono-Regular,Consolas,monospace;direction:ltr;color:#344054;font-weight:700}.status-badge{display:inline-flex;align-items:center;gap:5px;border-radius:99px;padding:5px 8px;font-size:10px;font-weight:700}.status-badge .icon{width:13px;height:13px}.status-badge.success{color:#087a55;background:#e6f7f0}.status-badge.failed{color:#b42318;background:#feeceb}.status-badge.running{color:#975a00;background:#fff1d6}.status-badge.unknown{color:#667085;background:#eef1f5}.code-value{font-family:ui-monospace,SFMono-Regular,Consolas,monospace;font-size:10px;direction:ltr;display:block}.desktop-table td small{display:block;color:#98a2b3;font-size:9px;margin-top:2px}.date-value{direction:ltr;display:block;text-align:right}.muted{color:#98a2b3}.error-text{display:block;max-width:220px;color:#b42318;white-space:normal;line-height:1.6}.mobile-runs{display:none}.checkpoint-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.checkpoint-card{display:flex;align-items:center;gap:11px;padding:13px;border:1px solid #edf0f4;background:#fafbfc;border-radius:12px;min-width:0}.checkpoint-icon{width:37px;height:37px;display:grid;place-items:center;border-radius:10px;background:#eef2ff;color:#3156d3}.checkpoint-icon .icon{width:18px}.checkpoint-card>div:last-child{min-width:0}.checkpoint-card span,.checkpoint-card small{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.checkpoint-card span{font-family:ui-monospace,SFMono-Regular,Consolas,monospace;font-size:9px;color:#687386;direction:ltr;text-align:right}.checkpoint-card strong{display:block;font-size:16px;margin:2px 0}.checkpoint-card small{color:#98a2b3;font-size:9px}.empty-state{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;padding:30px;color:#98a2b3;text-align:center}.empty-state .icon{width:28px;height:28px}.empty-state strong{color:#667085;font-size:13px}.empty-state span{font-size:10px}footer{display:flex;align-items:center;justify-content:space-between;color:#98a2b3;font-size:10px;padding:24px 3px 0}.login-card{width:min(420px,92%);margin:10vh auto;background:#fff;border:1px solid var(--line);border-radius:18px;box-shadow:0 25px 70px rgba(15,23,42,.12);padding:30px}.login-card:before{content:"$ bridge.login";display:block;direction:ltr;text-align:left;font:11px ui-monospace,SFMono-Regular,Consolas,monospace;color:#6b7a90;background:#111827;margin:-30px -30px 25px;padding:12px 16px;border-radius:18px 18px 0 0}.login-card h1{font-size:22px;margin:0 0 5px}.login-card p{color:#7b8495;font-size:12px}.login-card label{display:block;margin:16px 0;color:#475467;font-size:12px;font-weight:600}.login-card input{display:block;width:100%;margin-top:7px;padding:12px;border:1px solid #d7dde6;border-radius:10px;outline:none;background:#fafbfc}.login-card input:focus{border-color:#7b91e8;box-shadow:0 0 0 3px #eef2ff}.login-card button{width:100%;border:0;border-radius:10px;background:#3156d3;color:#fff;padding:12px;font-weight:700}.alert{padding:10px;border-radius:9px;background:#feeceb;color:#b42318;font-size:11px}
@@ -433,7 +447,76 @@ body{background:radial-gradient(circle at 88% -10%,#18264b 0,transparent 34%),ra
 .api-card,.refresh-card,.metric-card,.panel{background:var(--panel);border-color:var(--line);box-shadow:0 8px 28px rgba(0,0,0,.18)}.api-card-icon.mahak{color:#8ea2ff;background:#1c2743}.api-card-icon.mixin{color:#b19eff;background:#281f43}.api-card-copy>span,.api-card-copy small,.metric-card>span,.metric-card>small,.panel-header p{color:#7f8ba0}.connection-badge.connected{color:#63e4b5;background:#123c32}.connection-badge.disconnected{color:#ff8f8f;background:#412126}.connection-badge.unchecked{color:#a5b0c1;background:#202938}.refresh-card button{background:linear-gradient(135deg,#1b2740,#263653)}.metric-card.accent-blue{--accent:#6f8cff;--accent-soft:#1b2742}.metric-card.accent-green{--accent:#38d39f;--accent-soft:#15382f}.metric-card.accent-violet{--accent:#9c82ff;--accent-soft:#282142}.metric-card.accent-amber{--accent:#f4ad4f;--accent-soft:#3d2c17}.section-icon{background:#1b2433;color:#9aa7ba}.section-icon.dark{background:#050914;color:#e9eef7}.panel-chip.success{color:#63e4b5;background:#123c32}.panel-chip.failed{color:#ff8f8f;background:#412126}.panel-chip.running{color:#f5be69;background:#3f301a}.panel-chip.unknown,.panel-chip.neutral{color:#a5b0c1;background:#202938}.total-list>div{border-color:#273144;background:#0d1420}.total-list span{color:#7f8ba0}.console-window{background:#050914}.console-toolbar{border-color:#1e293b}.desktop-table th,.desktop-table td{border-color:#232d3d}.desktop-table th{color:#8995a8;background:#0d1420}.desktop-table tbody tr:hover{background:#151e2c}.run-id{color:#c3cede}.status-badge.success{color:#63e4b5;background:#123c32}.status-badge.failed{color:#ff8f8f;background:#412126}.status-badge.running{color:#f5be69;background:#3f301a}.status-badge.unknown{color:#a5b0c1;background:#202938}.muted{color:#748196}.error-text{color:#ff8585}.checkpoint-card{border-color:#273144;background:#0d1420}.checkpoint-icon{color:#8ea2ff;background:#1b2743}.checkpoint-card span{color:#8290a5}.checkpoint-card small,footer{color:#6f7b8f}.empty-state strong{color:#aab5c5}.login-card{background:#111824;border-color:#283246;box-shadow:0 25px 70px rgba(0,0,0,.4)}.login-card:before{background:#050914;color:#748197}.login-card p,.login-card label{color:#8d99ad}.login-card input{color:#eef2f8;border-color:#2a3548;background:#0c131e}.login-card input:focus{border-color:#6f8cff;box-shadow:0 0 0 3px rgba(111,140,255,.16)}.alert{color:#ff9494;background:#412126}
 @media(max-width:760px){body{background:radial-gradient(circle at 80% -5%,#18264b 0,transparent 30%),#080c14}.topbar-inner{width:calc(100% - 24px);height:auto;display:grid;grid-template-columns:1fr auto;gap:9px;padding:10px 0 0}.topbar .brand{grid-column:1}.topbar form{grid-column:2;grid-row:1;margin:0}.topbar nav{grid-column:1/-1;grid-row:2;margin:0;overflow-x:auto;padding-bottom:9px;scrollbar-width:none}.topbar nav::-webkit-scrollbar{display:none}.topbar nav a{padding:8px 9px}.main-content{padding:20px 14px 28px}.page-heading{margin-bottom:18px}.run-card{border-color:#273144;background:#0d1420}.run-card-source .code-value{background:#1b2433}.run-card-stats{border-color:#273144}.run-card-stats>div{background:#111824;border-color:#273144}.run-card-error{color:#ff9494;background:#412126}}
 @media(max-width:420px){.main-content{padding-left:10px;padding-right:10px}.topbar-inner{width:calc(100% - 20px)}.topbar .brand-mark{width:36px;height:36px}.topbar .brand strong{font-size:13px}.topbar nav{justify-content:space-between;gap:2px}.topbar nav a{gap:5px;font-size:10px;padding:8px 7px}}
-</style><link rel="stylesheet" href="/assets/dashboard.css?v={$assetVersion}"></head><body>{$body}</body></html>
+
+/* Public internal report defaults to the light theme. */
+body.light-theme{background:radial-gradient(circle at 85% 0,#eef3ff 0,transparent 32%),#f5f7fb;color:#101828}
+body.light-theme .main-content{color:#101828}
+body.light-theme .page-heading h1{color:#101828}
+body.light-theme .page-heading p{color:#667085}
+body.light-theme .heading-kicker{color:#0b7d59}
+body.light-theme .api-card-icon.mahak{color:#3156d3;background:#eef2ff}
+body.light-theme .api-card-icon.mixin{color:#7759d8;background:#f2efff}
+body.light-theme .section-icon,body.light-theme .section-icon.dark{color:#475467;background:#f2f4f7}
+body.light-theme .metric-card.accent-blue .metric-icon{color:#3156d3;background:#eef2ff}
+body.light-theme .metric-card.accent-green .metric-icon{color:#0f9f6e;background:#e8f8f1}
+body.light-theme .metric-card.accent-violet .metric-icon{color:#7759d8;background:#f2efff}
+body.light-theme .metric-card.accent-amber .metric-icon{color:#d97706;background:#fff4e6}
+body.light-theme .api-card,body.light-theme .metric-card,body.light-theme .panel{background:#fff;border-color:#e5e9f0;box-shadow:0 5px 22px rgba(15,23,42,.04)}
+body.light-theme .api-card-copy>span,body.light-theme .api-card-copy small,body.light-theme .metric-card>span,body.light-theme .metric-card>small,body.light-theme .panel-header p{color:#7b8495}
+body.light-theme .connection-badge.unchecked,body.light-theme .panel-chip.unknown,body.light-theme .panel-chip.neutral,body.light-theme .status-badge.unknown{color:#667085;background:#eef1f5}
+body.light-theme .refresh-card button{background:linear-gradient(135deg,#e9efff,#dce6ff);color:#1e2d55}
+body.light-theme .refresh-card small{color:#5d6c8e}
+body.light-theme .console-window{background:#fff;color:#344054;box-shadow:inset 0 0 0 1px #e5e9f0}
+body.light-theme .console-toolbar{border-color:#e5e9f0}
+body.light-theme .console-toolbar b{color:#7b8495}
+body.light-theme .console-line{border-color:#edf0f5}
+body.light-theme .console-command{color:#344054}
+body.light-theme .console-time{color:#98a2b3}
+body.light-theme .console-empty{color:#7b8495}
+body.light-theme .total-list>div,body.light-theme .checkpoint-card{border-color:#edf0f4;background:#fafbfc}
+body.light-theme .desktop-table th{color:#7b8495;background:#fafbfc}
+body.light-theme .desktop-table th,body.light-theme .desktop-table td{border-color:#edf0f5}
+body.light-theme .desktop-table tbody tr:hover{background:#fafbff}
+body.light-theme .run-id{color:#344054}
+body.light-theme .footer-meta,body.light-theme footer{color:#98a2b3}
+body.light-theme .footer-credit a{color:#3156d3}
+body.light-theme .theme-button{color:#667085;background:#fff;border-color:#dfe5ee}
+body.light-theme .theme-button[data-theme="light"]{color:#3156d3;background:#eef2ff;border-color:#cbd6ff}
+body.dark-theme .theme-button[data-theme="dark"]{color:#fff;background:#273653;border-color:#3f527a}
+body.dark-theme .api-card-icon.mahak{color:#8ea2ff;background:#1c2743}
+body.dark-theme .api-card-icon.mixin{color:#b19eff;background:#281f43}
+body.dark-theme .section-icon,body.dark-theme .section-icon.dark{color:#9aa7ba;background:#1b2433}
+body.dark-theme .metric-card.accent-blue .metric-icon{color:#6f8cff;background:#1b2742}
+body.dark-theme .metric-card.accent-green .metric-icon{color:#38d39f;background:#15382f}
+body.dark-theme .metric-card.accent-violet .metric-icon{color:#9c82ff;background:#282142}
+body.dark-theme .metric-card.accent-amber .metric-icon{color:#f4ad4f;background:#3d2c17}
+body.dark-theme .console-window{background:#050914;color:#d7deea}
+.checkpoint-empty{grid-column:1/-1;min-height:180px;justify-content:center;align-items:center}
+.api-card-icon img{display:block;max-width:27px;max-height:27px;width:auto;height:auto;object-fit:contain}
+.api-card-icon.mahak img{max-width:31px}.api-card-icon.mixin img{max-width:25px;max-height:25px}
+.connection-code{display:block;direction:ltr;unicode-bidi:isolate;font:10px ui-monospace,SFMono-Regular,Consolas,monospace;color:#7b8495;letter-spacing:.04em}
+.heading-theme{margin-inline-start:auto;align-self:flex-start}
+.refresh-card{display:flex;align-items:center;justify-content:center;background:transparent!important;border:0!important;box-shadow:none!important}
+.refresh-card button{width:42px;height:42px;min-height:0!important;padding:0;border:0;background:transparent!important;color:#667085;display:grid;place-items:center}
+.refresh-card button:hover{color:#3156d3;background:transparent!important}.refresh-icon{width:42px;height:42px;background:transparent!important;border:0;display:grid;place-items:center}.refresh-icon .icon{width:24px;height:24px}
+body.dark-theme .refresh-card button{color:#aab4c7}body.dark-theme .refresh-card button:hover{color:#8ea2ff}
+footer{align-items:center;justify-content:space-between;gap:32px;flex-wrap:wrap}
+.footer-credit{margin-inline:0;color:#98a2b3}.footer-credit a{font-weight:700;text-decoration:none}.footer-credit a:hover{text-decoration:underline}
+.theme-switcher{display:inline-flex;gap:6px;direction:rtl}.theme-button{display:inline-flex;align-items:center;justify-content:center;min-width:42px;height:30px;padding:0 9px;border:1px solid #2a3548;border-radius:8px;background:#121a27;color:#9ca8ba;font-size:10px}
+@media(max-width:760px){footer{gap:9px;justify-content:space-between;text-align:right}.footer-credit{order:3;flex-basis:100%}.heading-theme{margin-inline-start:0}}
+ </style></head><body class="light-theme">{$body}<script>
+(() => {
+  const body = document.body;
+  const saved = localStorage.getItem('mahak-mixin-theme');
+  if (saved === 'dark') body.classList.replace('light-theme', 'dark-theme');
+  document.querySelectorAll('.theme-button').forEach((button) => button.addEventListener('click', () => {
+    const theme = button.dataset.theme === 'dark' ? 'dark' : 'light';
+    body.classList.toggle('dark-theme', theme === 'dark');
+    body.classList.toggle('light-theme', theme === 'light');
+    localStorage.setItem('mahak-mixin-theme', theme);
+  }));
+})();
+</script></body></html>
 HTML;
 }
 
