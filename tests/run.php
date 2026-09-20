@@ -7,6 +7,7 @@ require dirname(__DIR__) . '/bootstrap.php';
 use MahakMixin\Mapper\ProductMapper;
 use MahakMixin\Persistence\StateStore;
 use MahakMixin\Sync\ProductSyncService;
+use MahakMixin\Support\TestProductFactory;
 
 final class SkippedTest extends RuntimeException {}
 
@@ -83,6 +84,19 @@ $tests['persists checkpoints mappings and snapshots'] = static function (): void
     } finally {
         @unlink($path);
     }
+};
+$tests['creates a safe and recognizable Mixin test product'] = static function (): void {
+    $payload = TestProductFactory::make('unit-test');
+    assertSame(false, $payload['available']);
+    assertSame(0, $payload['stock']);
+    assertSame('out_of_stock', $payload['stock_type']);
+    assertSame(true, TestProductFactory::isMarked($payload));
+};
+$tests['does not mark ordinary products as Bridge tests'] = static function (): void {
+    assertSame(false, TestProductFactory::isMarked([
+        'name' => 'محصول واقعی',
+        'product_identifier' => '123',
+    ]));
 };
 
 $failed = 0;

@@ -20,10 +20,12 @@ final class MixinClient
 
     /** @param array<string, scalar|null> $query */
     public function products(array $query = []): array { return $this->request('GET', '/api/v4/products/', null, $query); }
+    public function product(int $id): array { return $this->request('GET', "/api/v4/products/{$id}/"); }
     /** @param array<string, mixed> $product */
     public function createProduct(array $product): array { return $this->request('POST', '/api/v4/products/', $product); }
     /** @param array<string, mixed> $product */
     public function updateProduct(int $id, array $product): array { return $this->request('PATCH', "/api/v4/products/{$id}/", $product); }
+    public function deleteProduct(int $id): array { return $this->request('DELETE', "/api/v4/products/{$id}/"); }
     /** @param array<string, scalar|null> $query */
     public function orders(array $query = []): array { return $this->request('GET', '/api/v4/orders/', null, $query); }
     /** @param array<string, scalar|null> $query */

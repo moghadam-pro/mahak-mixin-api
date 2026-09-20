@@ -11,9 +11,10 @@
 | Bridge health | تأییدشده | `GET /health` پاسخ سالم می‌دهد |
 | Mahak Login | تأییدشده | `/Sync/Login` موفق و token در CLI مخفی می‌شود |
 | Mixin health/info | تأییدشده | نسخه `4.0.0`، عنوان `Mixin API v4` و احراز هویت Session/API Key مشاهده شد |
+| Mixin write smoke test | آماده اجرا | محصول غیرفعال با stock صفر، مجوز مستقل و حذف محافظت‌شده |
 | Mahak GetAllData | تأییدشده با داده واقعی | ۴ Product، ۲ ProductCategory، ۴ ProductDetail و ۴ VisitorProduct دریافت شد |
 | Product dry-run | تأییدشده | ۴ رکورد دریافت و هر ۴ مورد برای create پیش‌نمایش شدند؛ خطا صفر |
-| Automated tests | تأییدشده | ۶ تست، صفر skipped و صفر failure |
+| Automated tests | تأییدشده در توسعه | ۸ تست، صفر failure؛ تست SQLite محلی به‌علت نبود driver skip شد و روی سرور دارای pdo_sqlite باید دوباره اجرا شود |
 | Product write | پیاده‌سازی‌شده ولی غیرفعال | `SYNC_DRY_RUN=true` است و تاکنون هیچ نوشتن production انجام نشده |
 | Customer sync | برنامه‌ریزی‌شده | قواعد Person و duplicate detection باید نهایی شود |
 | Order sync | برنامه‌ریزی‌شده | orderType، settlement، store و payment باید تعیین شوند |
@@ -31,6 +32,8 @@
 8. نام محصول از ابتدا و انتها trim می‌شود؛ یکسان‌سازی فاصله داخلی و حروف عربی/فارسی هنوز تصمیم‌گیری نشده است.
 9. عملیات نوشتن تا بررسی دستی قیمت، موجودی و اولین آزمایش تک‌محصولی فعال نمی‌شود.
 10. PHP ساده، PHP-FPM کم‌مصرف و SQLite برای فاز اول حفظ می‌شوند.
+11. داشبورد نباید هنگام باز شدن مستقیماً APIهای خارجی را فراخوانی کند؛ فقط state محلی را نمایش می‌دهد.
+12. نوشتن تستی Mixin فقط با `MIXIN_ALLOW_TEST_WRITES=true` و marker اختصاصی مجاز است.
 
 ## نتیجه اجرای واقعی خواندن و dry-run
 

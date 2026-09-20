@@ -67,6 +67,7 @@ php bin/console sync:products
 | `MAHAK_VISITOR_ID` | شناسه سایت/ویزیتور برگشتی از Login |
 | `MIXIN_BASE_URL` | دامنه فروشگاه، بدون `/api/v4` |
 | `MIXIN_API_KEY` | توکن API فروشگاه |
+| `MIXIN_ALLOW_TEST_WRITES` | مجوز موقت ایجاد/حذف رکورد تست؛ پیش‌فرض `false` |
 | `BRIDGE_API_KEY` | کلید مستقل برای حفاظت از endpoint مدیریتی Bridge |
 | `SYNC_DRY_RUN` | جلوگیری از نوشتن در Mixin؛ پیش‌فرض `true` |
 | `SYNC_PRICE_DIVISOR` | تبدیل واحد پول؛ برای ریال به تومان `10` |
@@ -81,6 +82,9 @@ php bin/console mahak:products:inspect
 php bin/console mahak:products:diagnose
 php bin/console mixin:health
 php bin/console mixin:info
+php bin/console mixin:test-product:preview
+php bin/console mixin:test-product:create
+php bin/console mixin:test-product:delete PRODUCT_ID
 php bin/console sync:products:dry-run
 php bin/console sync:products
 php tests/run.php
@@ -144,6 +148,8 @@ curl http://127.0.0.1:8080/connections \
 - [آماده‌سازی بازارا و API محک](docs/mahak-setup.md)
 - [یافته‌های سازگاری APIها](docs/api-compatibility.md)
 - [نسخه کامل OpenAPI هر دو سرویس](docs/reference/README.md)
+- [ماتریس قابل‌انتقال داده‌ها](docs/transfer-matrix.md)
+- [تست کنترل‌شده Mixin](docs/mixin-smoke-test.md)
 - [وضعیت فعلی و ادامه پروژه](docs/project-status.md)
 - [جدول mapping](docs/mapping.md)
 - [Runbook عملیاتی](docs/operations.md)

@@ -22,6 +22,7 @@ MAHAK_PACKAGE_NO=...
 
 MIXIN_BASE_URL=https://your-real-shop.example
 MIXIN_API_KEY=...
+MIXIN_ALLOW_TEST_WRITES=false
 
 SYNC_DRY_RUN=true
 SYNC_PAGE_SIZE=100

@@ -7,7 +7,9 @@ require dirname(__DIR__) . '/bootstrap.php';
 
 use MahakMixin\AppFactory;
 use MahakMixin\Client\MahakClient;
+use MahakMixin\Client\MixinClient;
 use MahakMixin\Config;
+use MahakMixin\Support\TestProductFactory;
 $command = $argv[1] ?? 'help';
 
 try {
@@ -17,6 +19,9 @@ try {
         'mahak:products:diagnose' => diagnoseMahakProductFields(AppFactory::mahak(), Config::int('MAHAK_VISITOR_ID')),
         'mixin:health' => AppFactory::mixin()->health(),
         'mixin:info' => AppFactory::mixin()->info(),
+        'mixin:test-product:preview' => TestProductFactory::make('preview'),
+        'mixin:test-product:create' => createMixinTestProduct(AppFactory::mixin()),
+        'mixin:test-product:delete' => deleteMixinTestProduct(AppFactory::mixin(), $argv[2] ?? null),
         'sync:products' => AppFactory::productSync()->run(Config::bool('SYNC_DRY_RUN', true)),
         'sync:products:dry-run' => AppFactory::productSync()->run(true),
         default => [
@@ -26,6 +31,9 @@ try {
                 'php bin/console mahak:products:diagnose',
                 'php bin/console mixin:health',
                 'php bin/console mixin:info',
+                'php bin/console mixin:test-product:preview',
+                'php bin/console mixin:test-product:create',
+                'php bin/console mixin:test-product:delete PRODUCT_ID',
                 'php bin/console sync:products:dry-run',
                 'php bin/console sync:products',
             ],
@@ -157,4 +165,43 @@ function ciValue(array $data, string $key, mixed $default = null): mixed
         }
     }
     return $default;
+}
+
+function createMixinTestProduct(MixinClient $client): array
+{
+    assertMixinTestWritesAllowed();
+    $payload = TestProductFactory::make();
+    $response = $client->createProduct($payload);
+
+    return [
+        'ok' => true,
+        'safety' => ['available' => false, 'stock' => 0],
+        'request_identifier' => $payload['product_identifier'],
+        'response' => $response,
+        'next' => 'Record the returned product id, verify it in Mixin, then delete with mixin:test-product:delete PRODUCT_ID.',
+    ];
+}
+
+function deleteMixinTestProduct(MixinClient $client, ?string $rawId): array
+{
+    assertMixinTestWritesAllowed();
+    $id = filter_var($rawId, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]);
+    if ($id === false) {
+        throw new InvalidArgumentException('A positive PRODUCT_ID is required');
+    }
+
+    $response = $client->product((int) $id);
+    $product = ciValue($response, 'data', $response);
+    if (!is_array($product) || !TestProductFactory::isMarked($product)) {
+        throw new RuntimeException('Refusing to delete: product does not contain the Bridge test marker');
+    }
+
+    return ['ok' => true, 'product_id' => (int) $id, 'response' => $client->deleteProduct((int) $id)];
+}
+
+function assertMixinTestWritesAllowed(): void
+{
+    if (!Config::bool('MIXIN_ALLOW_TEST_WRITES', false)) {
+        throw new RuntimeException('Test writes are disabled. Set MIXIN_ALLOW_TEST_WRITES=true temporarily.');
+    }
 }
