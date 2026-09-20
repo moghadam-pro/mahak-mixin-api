@@ -1,6 +1,6 @@
 # وضعیت فعلی پروژه
 
-آخرین بروزرسانی: `2026-09-19`
+آخرین بروزرسانی: `2026-09-20`
 
 ## وضعیت پیاده‌سازی
 
@@ -11,11 +11,11 @@
 | Bridge health | تأییدشده | `GET /health` پاسخ سالم می‌دهد |
 | Mahak Login | تأییدشده | `/Sync/Login` موفق و token در CLI مخفی می‌شود |
 | Mixin health/info | تأییدشده | نسخه `4.0.0`، عنوان `Mixin API v4` و احراز هویت Session/API Key مشاهده شد |
-| Mixin write smoke test | آماده اجرا | محصول غیرفعال با stock صفر، مجوز مستقل و حذف محافظت‌شده |
+| Mixin write smoke test | تأییدشده | محصول تست `222` با stock صفر و `available=false` ایجاد، خوانده و با marker محافظت‌شده حذف شد |
 | Mahak GetAllData | تأییدشده با داده واقعی | ۴ Product، ۲ ProductCategory، ۴ ProductDetail و ۴ VisitorProduct دریافت شد |
 | Product dry-run | تأییدشده | ۴ رکورد دریافت و هر ۴ مورد برای create پیش‌نمایش شدند؛ خطا صفر |
 | Automated tests | تأییدشده در توسعه | ۸ تست، صفر failure؛ تست SQLite محلی به‌علت نبود driver skip شد و روی سرور دارای pdo_sqlite باید دوباره اجرا شود |
-| Product write | پیاده‌سازی‌شده ولی غیرفعال | `SYNC_DRY_RUN=true` است و تاکنون هیچ نوشتن production انجام نشده |
+| Product write | تست API تأییدشده، production غیرفعال | نوشتن تستی موفق بود؛ `SYNC_DRY_RUN=true` است و هیچ کالای واقعی محک نوشته نشده |
 | Customer sync | برنامه‌ریزی‌شده | قواعد Person و duplicate detection باید نهایی شود |
 | Order sync | برنامه‌ریزی‌شده | orderType، settlement، store و payment باید تعیین شوند |
 | Dashboard | برنامه‌ریزی‌شده | پنل سبک server-rendered روی PHP |
@@ -30,10 +30,22 @@
 6. اگر `VisitorProduct.Price` صفر یا نامعتبر باشد، قیمت از `ProductDetail.Price1` خوانده می‌شود.
 7. `DefaultSellPriceLevel=1` در داده آزمایش مشاهده شد و با fallback به `Price1` سازگار است.
 8. نام محصول از ابتدا و انتها trim می‌شود؛ یکسان‌سازی فاصله داخلی و حروف عربی/فارسی هنوز تصمیم‌گیری نشده است.
-9. عملیات نوشتن تا بررسی دستی قیمت، موجودی و اولین آزمایش تک‌محصولی فعال نمی‌شود.
+9. مسیر نوشتن Mixin با محصول تست تأیید شد؛ production تا بررسی دستی قیمت، موجودی و اولین کالای واقعی فعال نمی‌شود.
 10. PHP ساده، PHP-FPM کم‌مصرف و SQLite برای فاز اول حفظ می‌شوند.
 11. داشبورد نباید هنگام باز شدن مستقیماً APIهای خارجی را فراخوانی کند؛ فقط state محلی را نمایش می‌دهد.
 12. نوشتن تستی Mixin فقط با `MIXIN_ALLOW_TEST_WRITES=true` و marker اختصاصی مجاز است.
+13. پیاده‌سازی واقعی Mixin برخلاف schema ثبت‌شده، `main_category_id` یا `main_category_name` را هنگام ایجاد محصول اجباری می‌کند.
+
+## نتیجه smoke test نوشتن Mixin
+
+در `2026-09-20` محصول تست شماره `222` با ویژگی‌های زیر ایجاد شد:
+
+- دسته‌بندی موجود `مراقبت پوست` با شناسه `6`
+- `available=false` و `show_price=false`
+- موجودی صفر و `stock_type=out_of_stock`
+- شناسه و `external_ids` اختصاصی Bridge
+
+Bridge پیش از حذف، محصول را دوباره خواند و markerها را کنترل کرد. حذف با پیام `Object deleted successfully` انجام شد و دسته‌بندی جدیدی ساخته نشد.
 
 ## نتیجه اجرای واقعی خواندن و dry-run
 
@@ -74,7 +86,7 @@ php8.3 bin/console sync:products:dry-run
 - تأیید دستی واحد قیمت با حداقل سه کالای نمونه.
 - تأیید اینکه موجودی کسب‌وکار واقعاً `Count1` است؛ معنای `Count2` هنوز قطعی نیست.
 - تصمیم درباره نرمال‌سازی فاصله‌های داخلی و تبدیل `ي/ك` عربی به `ی/ک` فارسی.
-- اجرای واقعی فقط برای یک محصول و کنترل نتیجه در Mixin.
+- اجرای کنترل‌شده فقط برای یک کالای واقعی محک و کنترل نتیجه در Mixin.
 - تأیید رفتار چند ProductDetail به‌عنوان محصول مستقل یا variant.
 - تعیین mapping دسته‌بندی.
 - افزودن lock برای جلوگیری از اجرای هم‌زمان Cron.

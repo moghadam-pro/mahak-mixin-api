@@ -2,7 +2,7 @@
 
 سرویس همگام‌سازی امن و افزایشی بین **Mahak API v3** و **Mixin API v4 (Evya)**، نوشته‌شده با PHP 8.2 و بدون وابستگی اجرایی خارجی.
 
-> وضعیت فعلی: اتصال هر دو API و dry-run واقعی ۴ کالا تأیید شده است. ۶ تست خودکار پاس می‌شوند. همگام‌سازی نوشتنی همچنان با `SYNC_DRY_RUN=true` خاموش است تا قیمت، موجودی و اولین اجرای تک‌محصولی دستی تأیید شوند.
+> وضعیت فعلی: اتصال هر دو API، dry-run واقعی ۴ کالا و چرخه ایجاد/خواندن/حذف یک محصول تست غیرفعال در Mixin تأیید شده است. ۸ تست خودکار پاس می‌شوند. همگام‌سازی production همچنان با `SYNC_DRY_RUN=true` خاموش است تا قیمت، موجودی و اولین اجرای کنترل‌شده کالای واقعی محک تأیید شوند.
 
 ## قابلیت‌ها
 
@@ -68,6 +68,7 @@ php bin/console sync:products
 | `MIXIN_BASE_URL` | دامنه فروشگاه، بدون `/api/v4` |
 | `MIXIN_API_KEY` | توکن API فروشگاه |
 | `MIXIN_ALLOW_TEST_WRITES` | مجوز موقت ایجاد/حذف رکورد تست؛ پیش‌فرض `false` |
+| `MIXIN_TEST_CATEGORY_ID` | شناسه یک دسته‌بندی موجود Mixin برای محصول تست |
 | `BRIDGE_API_KEY` | کلید مستقل برای حفاظت از endpoint مدیریتی Bridge |
 | `SYNC_DRY_RUN` | جلوگیری از نوشتن در Mixin؛ پیش‌فرض `true` |
 | `SYNC_PRICE_DIVISOR` | تبدیل واحد پول؛ برای ریال به تومان `10` |
@@ -82,6 +83,7 @@ php bin/console mahak:products:inspect
 php bin/console mahak:products:diagnose
 php bin/console mixin:health
 php bin/console mixin:info
+php bin/console mixin:categories:inspect
 php bin/console mixin:test-product:preview
 php bin/console mixin:test-product:create
 php bin/console mixin:test-product:delete PRODUCT_ID
@@ -96,14 +98,15 @@ php tests/run.php
 
 ## نتیجه آخرین آزمایش واقعی
 
-در `2026-09-19`:
+در `2026-09-20`:
 
 - Mahak GetAllData چهار کالا و چهار ProductDetail/VisitorProduct برگرداند.
 - Mixin health و info نسخه `4.0.0` را تأیید کردند.
-- هر ۶ تست خودکار پاس شد.
+- هر ۸ تست خودکار روی سرور پاس شد.
 - dry-run نتیجه `received=4`، `created=4`، `updated=0` و `skipped=0` داشت.
 - به‌دلیل صفر بودن VisitorProduct.Price، قیمت از ProductDetail.Price1 خوانده شد.
-- هیچ درخواست ایجاد یا ویرایش محصول به Mixin ارسال نشد.
+- محصول تست غیرفعال شماره `222` با stock صفر در دسته‌بندی موجود شماره `6` ایجاد، خوانده و با کنترل marker حذف شد.
+- هیچ کالای production از محک هنوز در Mixin ایجاد یا ویرایش نشده است.
 
 جزئیات و موارد باز در [وضعیت فعلی پروژه](docs/project-status.md) و [یافته‌های سازگاری](docs/api-compatibility.md) ثبت شده‌اند.
 
