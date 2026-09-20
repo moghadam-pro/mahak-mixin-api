@@ -40,6 +40,7 @@ php bin/console mahak:login
 php bin/console mahak:products:inspect
 php bin/console mahak:products:diagnose
 php bin/console mahak:products:candidates
+php bin/console mahak:images:diagnose
 php bin/console mixin:health
 php bin/console mixin:info
 php tests/run.php

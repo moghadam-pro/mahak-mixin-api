@@ -19,6 +19,7 @@ try {
         'mahak:products:inspect' => inspectMahakProducts(AppFactory::mahak(), Config::int('MAHAK_VISITOR_ID')),
         'mahak:products:diagnose' => diagnoseMahakProductFields(AppFactory::mahak(), Config::int('MAHAK_VISITOR_ID')),
         'mahak:products:candidates' => listMahakProductCandidates(AppFactory::mahak(), Config::int('MAHAK_VISITOR_ID')),
+        'mahak:images:diagnose' => diagnoseMahakImages(AppFactory::mahak(), Config::int('MAHAK_VISITOR_ID')),
         'mixin:health' => AppFactory::mixin()->health(),
         'mixin:info' => AppFactory::mixin()->info(),
         'mixin:categories:inspect' => AppFactory::mixin()->categories(['page' => 1, 'page_size' => 50]),
@@ -36,6 +37,7 @@ try {
                 'php bin/console mahak:products:inspect',
                 'php bin/console mahak:products:diagnose',
                 'php bin/console mahak:products:candidates',
+                'php bin/console mahak:images:diagnose',
                 'php bin/console mixin:health',
                 'php bin/console mixin:info',
                 'php bin/console mixin:categories:inspect',
@@ -235,6 +237,59 @@ function indexDiagnosticRows(mixed $items, string $idKey): array
         }
     }
     return $indexed;
+}
+
+function diagnoseMahakImages(MahakClient $client, int $visitorId): array
+{
+    $response = $client->getAllData([
+        'currentVisitorId' => $visitorId,
+        'fromProductVersion' => 0,
+        'fromProductDetailVersion' => 0,
+        'fromPictureVersion' => 0,
+        'fromPhotoGalleryVersion' => 0,
+        'pageSize' => Config::int('SYNC_PAGE_SIZE', 100),
+    ]);
+    $data = ciValue($response, 'Data', []);
+    $objects = is_array($data) ? ciValue($data, 'Objects', []) : [];
+    if (!is_array($objects)) {
+        return ['pictures' => [], 'photo_galleries' => []];
+    }
+    return [
+        'pictures' => summarizeMediaRows(ciValue($objects, 'Pictures', [])),
+        'photo_galleries' => summarizeMediaRows(ciValue($objects, 'PhotoGalleries', [])),
+    ];
+}
+
+function summarizeMediaRows(mixed $items): array
+{
+    if (!is_array($items)) {
+        return ['count' => 0, 'rows' => []];
+    }
+    $rows = [];
+    foreach (array_slice($items, 0, 20) as $item) {
+        if (!is_array($item)) {
+            continue;
+        }
+        $fields = [];
+        foreach ($item as $key => $value) {
+            $field = (string) $key;
+            if (is_string($value) && strlen($value) > 256) {
+                $fields[$field] = [
+                    'type' => 'large_string',
+                    'length' => strlen($value),
+                    'prefix' => substr($value, 0, 24),
+                ];
+            } elseif (is_scalar($value) || $value === null) {
+                $fields[$field] = $value;
+            } elseif (is_array($value)) {
+                $fields[$field] = ['type' => 'array', 'count' => count($value)];
+            } else {
+                $fields[$field] = ['type' => get_debug_type($value)];
+            }
+        }
+        $rows[] = $fields;
+    }
+    return ['count' => count($items), 'rows' => $rows];
 }
 
 function diagnosticRows(mixed $items, string $idKey): array
