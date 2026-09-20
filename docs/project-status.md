@@ -6,7 +6,7 @@
 
 | بخش | وضعیت | توضیح |
 |---|---|---|
-| استقرار CloudPanel | تأییدشده | PHP 8.3، مسیر پروژه `/home/sayid-bridge/htdocs/bridge.sayid.ir/app` و Document Root روی `app/public` |
+| استقرار لینوکس | تأییدشده | PHP 8.3 و Document Root روی پوشه `public` پروژه |
 | PHP extensions | تأییدشده | curl، json، PDO و pdo_sqlite |
 | Bridge health | تأییدشده | `GET /health` پاسخ سالم می‌دهد |
 | Mahak Login | تأییدشده | `/Sync/Login` موفق و token در CLI مخفی می‌شود |

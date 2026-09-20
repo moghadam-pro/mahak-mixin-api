@@ -1,6 +1,6 @@
 # پل ارتباطی محک و میکسین
 
-این پروژه یک سرویس سبک و کم‌مصرف برای انتقال افزایشی کالاها از **نرم‌افزار حسابداری محک** به **فروشگاه میکسین (Evya)** است. سرویس با PHP 8.2+ و SQLite پیاده‌سازی شده و برای اجرا روی سرورهای کم‌منبع و CloudPanel به سرویس دائمی Node.js، Redis یا MySQL نیاز ندارد.
+این پروژه یک سرویس سبک و کم‌مصرف برای انتقال افزایشی کالاها از **نرم‌افزار حسابداری محک** به **فروشگاه میکسین** است. سرویس با PHP 8.2+ و SQLite پیاده‌سازی شده و برای اجرا روی یک سرور لینوکسی کم‌منبع به سرویس دائمی Node.js، Redis یا MySQL نیاز ندارد.
 
 ## وضعیت فعلی پروژه
 
@@ -10,10 +10,10 @@
 - همگام‌سازی افزایشی عمومی و به‌روزرسانی کالاهای نگاشت‌شده با موفقیت آزمایش شده است.
 - اجرای تکراری از ساخت محصول و تصویر تکراری جلوگیری می‌کند.
 - ۱۰ تست خودکار روی سرور اصلی بدون خطا اجرا شده‌اند.
-- داشبورد فارسی در `https://bridge.sayid.ir/dashboard` فعال است و از فونت محلی وزیرمتن استفاده می‌کند.
+- داشبورد فارسی فعال است و از فونت محلی وزیرمتن استفاده می‌کند.
 - سرویس در حالت معمول با `SYNC_DRY_RUN=true` ایمن می‌ماند؛ نوشتن عمومی فقط هنگام فعال‌سازی آگاهانه انجام می‌شود.
 
-راهنمای کوتاه قابل ارائه به مشتری: [دانلود فایل PDF](output/pdf/mahak-mixin-customer-guide-fa.pdf) | [دانلود تصویر PNG](output/images/mahak-mixin-customer-guide-fa.png)
+راهنمای کوتاه قابل ارائه به مشتری: [دانلود فایل PDF](https://github.com/moghadam-pro/mahak-mixin-api/blob/main/output/pdf/mahak-mixin-customer-guide-fa.pdf)
 
 ## روند کار برای مشتری
 
@@ -69,28 +69,27 @@ MahakClient → ProductSyncService → ProductMapper → MixinClient
 - Document Root وب‌سایت روی پوشه `public/`.
 - یک کاربر مستقل سیستم‌عامل برای PHP-FPM و Cron.
 
-## نصب روی CloudPanel
+## نصب روی سرور لینوکسی
 
-در CloudPanel یک PHP Site از نوع Generic بسازید و Root Directory را روی مسیر `public` پروژه قرار دهید. نمونه استقرار فعلی:
+پروژه را با یک کاربر سرویس مستقل روی سرور لینوکسی دریافت کنید. مسیر پیشنهادی عمومی:
 
 ```text
-/home/sayid-bridge/htdocs/bridge.sayid.ir/app/public
+/var/www/mahak-mixin-bridge
 ```
 
-سپس با کاربر همان سایت وارد SSH شوید:
+دستورهای نصب:
 
 ```bash
-sudo -iu sayid-bridge
-cd /home/sayid-bridge/htdocs/bridge.sayid.ir
-git clone https://github.com/moghadam-pro/mahak-mixin-api.git app
-cd app
+cd /var/www
+git clone https://github.com/moghadam-pro/mahak-mixin-api.git mahak-mixin-bridge
+cd /var/www/mahak-mixin-bridge
 cp .env.example .env
 mkdir -p var/log
 chmod 600 .env
 chmod -R 770 var
 ```
 
-فایل `.env` را با اطلاعات واقعی تکمیل کنید. این فایل و دیتابیس SQLite نباید وارد Git شوند.
+Document Root وب‌سرور باید روی `/var/www/mahak-mixin-bridge/public` قرار بگیرد. فایل `.env` را با اطلاعات واقعی تکمیل کنید؛ این فایل و دیتابیس SQLite نباید وارد Git شوند. PHP-FPM و Cron باید با یک کاربر لینوکسی یکسان اجرا شوند.
 
 ## تنظیمات مهم
 
@@ -137,7 +136,7 @@ php8.3 bin/console mahak:login
 php8.3 bin/console mahak:products:inspect
 php8.3 bin/console mixin:health
 php8.3 bin/console mixin:info
-curl https://bridge.sayid.ir/health
+curl https://YOUR_DOMAIN/health
 ```
 
 خروجی Login توکن را با `[REDACTED]` مخفی می‌کند. دستورهای تشخیصی نیز نباید credentialها را چاپ کنند.
@@ -190,14 +189,13 @@ php8.3 bin/console sync:product:image:apply PRODUCT_DETAIL_ID
 بعد از تأیید نهایی قواعد انتقال و فعال‌سازی نوشتن عمومی، فقط یک Cron تعریف کنید:
 
 ```cron
-*/10 * * * * cd /home/sayid-bridge/htdocs/bridge.sayid.ir/app && /usr/bin/php8.3 bin/console sync:products >> var/log/cron.log 2>&1
+*/10 * * * * cd /var/www/mahak-mixin-bridge && /usr/bin/php8.3 bin/console sync:products >> var/log/cron.log 2>&1
 ```
 
 Bridge با فایل lock از اجرای هم‌زمان جلوگیری می‌کند، اما همچنان تنها یک Scheduler توصیه می‌شود.
 
 ## داشبورد مشتری
 
-- نشانی: `https://bridge.sayid.ir/dashboard`
 - نمایش حالت سرویس به‌صورت «فعال (فقط پل)».
 - نمایش وضعیت ارتباط API محک و میکسین با بروزرسانی دستی و بدون درخواست خودکار هنگام بازشدن صفحه.
 - نمایش تعداد محصولات نگاشت‌شده.
@@ -208,10 +206,12 @@ Bridge با فایل lock از اجرای هم‌زمان جلوگیری می‌
 
 داشبورد فعلی فقط برای مشاهده وضعیت است و دکمه اجرای sync یا تغییر تنظیمات ندارد.
 
+![نمای داشبورد فارسی Bridge](docs/images/dashboard-fa.png)
+
 ## به‌روزرسانی نسخه روی سرور
 
 ```bash
-cd /home/sayid-bridge/htdocs/bridge.sayid.ir/app
+cd /var/www/mahak-mixin-bridge
 /usr/bin/git pull --ff-only origin main
 php8.3 tests/run.php
 ```
@@ -279,7 +279,7 @@ Endpointهای مدیریتی را فقط پشت HTTPS، فایروال و rate 
 
 - [معماری و جریان داده](docs/architecture.md)
 - [تنظیمات و استقرار](docs/configuration.md)
-- [استقرار روی CloudPanel](docs/cloudpanel-deployment.md)
+- [استقرار روی سرور لینوکسی](docs/linux-deployment.md)
 - [آماده‌سازی بازارا و API محک](docs/mahak-setup.md)
 - [سازگاری APIها](docs/api-compatibility.md)
 - [ماتریس انتقال اطلاعات](docs/transfer-matrix.md)
