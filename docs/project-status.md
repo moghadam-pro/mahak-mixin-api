@@ -15,7 +15,7 @@
 | Mahak GetAllData | تأییدشده با داده واقعی | ۴ Product، ۲ ProductCategory، ۴ ProductDetail و ۴ VisitorProduct دریافت شد |
 | Product dry-run | تأییدشده | ۴ رکورد دریافت و هر ۴ مورد برای create پیش‌نمایش شدند؛ خطا صفر |
 | Single product write | تأییدشده | `11629315` به محصول `223` نگاشت و نمایش قیمت، موجودی، وضعیت و دسته‌بندی در پنل تأیید شد |
-| Product image | آماده smoke test | ارتباط Product→PhotoGallery→Picture تأیید و preview/apply/rollback محدود با کنترل نوع، حجم و duplicate پیاده‌سازی شد |
+| Product image | تأییدشده | تصویر Picture `1846444` با حجم ۷۸۹۷۴ بایت به تصویر اصلی Mixin `248` متصل شد و duplicate guard تأیید شد |
 | Automated tests | تأییدشده در توسعه | ۸ تست، صفر failure؛ تست SQLite محلی به‌علت نبود driver skip شد و روی سرور دارای pdo_sqlite باید دوباره اجرا شود |
 | Product write | تست API تأییدشده، production غیرفعال | نوشتن تستی موفق بود؛ `SYNC_DRY_RUN=true` است و هیچ کالای واقعی محک نوشته نشده |
 | Customer sync | برنامه‌ریزی‌شده | قواعد Person و duplicate detection باید نهایی شود |
@@ -63,6 +63,8 @@ Bridge پیش از حذف، محصول را دوباره خواند و markerه�
 - دسته‌بندی: مراقبت پوست، شناسه `6`
 
 preview بعدی به‌درستی `action=update` و `target_id=223` نشان داد؛ بنابراین نگاشت SQLite ثبت شده و اجرای مجدد create تکراری ایجاد نمی‌کند.
+
+تصویر JPEG مرتبط نیز از مسیر `Product→PhotoGallery→Picture` دریافت و به تصویر اصلی شماره `248` در Mixin تبدیل شد. اجرای مجدد preview مقدار `existing_image_count=1` و `action=skip_existing` برگرداند. پس از بسته‌شدن مجوز، rollback آزمایشی بدون هیچ تغییر خارجی رد شد.
 
 ## نتیجه اجرای واقعی خواندن و dry-run
 

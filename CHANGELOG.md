@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- تأیید انتقال تصویر واقعی پد الکلی به Mixin image شماره `248` و عملکرد duplicate/permission guards.
 - افزودن انتقال محدود تصویر محصول از URL محک به Base64 میکسین با preview، جلوگیری از duplicate و rollback مالکیت‌سنجی‌شده.
 - افزودن فرمان امن `mahak:images:diagnose` برای بررسی ارتباط Picture/PhotoGallery بدون چاپ محتوای کامل تصویر.
 - افزودن نرمال‌سازی حروف فارسی و فاصله‌های نام محصول و فرمان خلاصه `mahak:products:candidates`.
