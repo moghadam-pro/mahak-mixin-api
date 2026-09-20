@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- تأیید تصویری قیمت و موجودی سه کالای باقی‌مانده و استفاده از نام محصول برای alt تصویر به‌جای عنوان قدیمی Picture.
 - تأیید انتقال تصویر واقعی پد الکلی به Mixin image شماره `248` و عملکرد duplicate/permission guards.
 - افزودن انتقال محدود تصویر محصول از URL محک به Base64 میکسین با preview، جلوگیری از duplicate و rollback مالکیت‌سنجی‌شده.
 - افزودن فرمان امن `mahak:images:diagnose` برای بررسی ارتباط Picture/PhotoGallery بدون چاپ محتوای کامل تصویر.

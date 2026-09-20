@@ -364,6 +364,7 @@ final class ProductSyncService
             'pageSize' => $this->pageSize,
         ]);
         $objects = $this->objects($response);
+        $products = $this->index($this->list($objects, 'products'), 'productId');
         $details = $this->index($this->list($objects, 'productDetails'), 'productDetailId');
         $pictures = $this->index($this->list($objects, 'pictures'), 'pictureId');
         $detail = $details[$sourceDetailId] ?? null;
@@ -371,6 +372,7 @@ final class ProductSyncService
             throw new RuntimeException("Mahak ProductDetail {$sourceDetailId} was not returned");
         }
         $productId = (string) $this->value($detail, 'productId', '');
+        $product = $products[$productId] ?? [];
         $galleryRows = $this->list($objects, 'photoGalleries');
         usort($galleryRows, fn (array $a, array $b): int => (int) $this->value($a, 'photoGalleryId', 0) <=> (int) $this->value($b, 'photoGalleryId', 0));
         foreach ($galleryRows as $gallery) {
@@ -390,7 +392,11 @@ final class ProductSyncService
                 'picture_id' => (int) $pictureId,
                 'gallery_id' => (int) $this->value($gallery, 'photoGalleryId', 0),
                 'url' => $url,
-                'title' => $this->normalizeText((string) $this->value($picture, 'title', '')),
+                'title' => $this->normalizeText((string) $this->value(
+                    is_array($product) ? $product : [],
+                    'name',
+                    $this->value($picture, 'title', '')
+                )),
                 'file_name' => $this->value($picture, 'fileName'),
                 'file_size' => $this->value($picture, 'fileSize'),
                 'width' => $this->value($picture, 'width'),
