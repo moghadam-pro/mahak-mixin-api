@@ -20,7 +20,8 @@ try {
         'mahak:products:diagnose' => diagnoseMahakProductFields(AppFactory::mahak(), Config::int('MAHAK_VISITOR_ID')),
         'mixin:health' => AppFactory::mixin()->health(),
         'mixin:info' => AppFactory::mixin()->info(),
-        'mixin:test-product:preview' => TestProductFactory::make('preview'),
+        'mixin:categories:inspect' => AppFactory::mixin()->categories(['page' => 1, 'page_size' => 50]),
+        'mixin:test-product:preview' => TestProductFactory::make('preview', optionalPositiveInt('MIXIN_TEST_CATEGORY_ID')),
         'mixin:test-product:create' => createMixinTestProduct(AppFactory::mixin()),
         'mixin:test-product:delete' => deleteMixinTestProduct(AppFactory::mixin(), $argv[2] ?? null),
         'sync:products' => AppFactory::productSync()->run(Config::bool('SYNC_DRY_RUN', true)),
@@ -32,6 +33,7 @@ try {
                 'php bin/console mahak:products:diagnose',
                 'php bin/console mixin:health',
                 'php bin/console mixin:info',
+                'php bin/console mixin:categories:inspect',
                 'php bin/console mixin:test-product:preview',
                 'php bin/console mixin:test-product:create',
                 'php bin/console mixin:test-product:delete PRODUCT_ID',
@@ -194,7 +196,7 @@ function ciValue(array $data, string $key, mixed $default = null): mixed
 function createMixinTestProduct(MixinClient $client): array
 {
     assertMixinTestWritesAllowed();
-    $payload = TestProductFactory::make();
+    $payload = TestProductFactory::make(null, Config::int('MIXIN_TEST_CATEGORY_ID'));
     $response = $client->createProduct($payload);
 
     return [
@@ -204,6 +206,19 @@ function createMixinTestProduct(MixinClient $client): array
         'response' => $response,
         'next' => 'Record the returned product id, verify it in Mixin, then delete with mixin:test-product:delete PRODUCT_ID.',
     ];
+}
+
+function optionalPositiveInt(string $name): ?int
+{
+    $value = getenv($name);
+    if ($value === false || trim($value) === '') {
+        return null;
+    }
+    $parsed = filter_var($value, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]);
+    if ($parsed === false) {
+        throw new InvalidArgumentException("Environment variable {$name} must be a positive integer");
+    }
+    return (int) $parsed;
 }
 
 function deleteMixinTestProduct(MixinClient $client, ?string $rawId): array

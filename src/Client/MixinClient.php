@@ -19,6 +19,8 @@ final class MixinClient
     public function info(): array { return $this->request('GET', '/api/v4/info/'); }
 
     /** @param array<string, scalar|null> $query */
+    public function categories(array $query = []): array { return $this->request('GET', '/api/v4/categories/', null, $query); }
+    /** @param array<string, scalar|null> $query */
     public function products(array $query = []): array { return $this->request('GET', '/api/v4/products/', null, $query); }
     public function product(int $id): array { return $this->request('GET', "/api/v4/products/{$id}/"); }
     /** @param array<string, mixed> $product */

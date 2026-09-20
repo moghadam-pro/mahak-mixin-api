@@ -7,6 +7,7 @@
 ```bash
 php8.3 bin/console mixin:health
 php8.3 bin/console mixin:info
+php8.3 bin/console mixin:categories:inspect
 php8.3 bin/console mixin:test-product:preview
 ```
 
@@ -18,9 +19,11 @@ php8.3 bin/console mixin:test-product:preview
 
 ```dotenv
 MIXIN_ALLOW_TEST_WRITES=true
+MIXIN_TEST_CATEGORY_ID=123
 ```
 
 این فلگ مستقل از `SYNC_DRY_RUN` است و فقط فرمان‌های test-product را فعال می‌کند.
+شناسه دسته‌بندی باید از خروجی `mixin:categories:inspect` انتخاب شود؛ Bridge برای تست دسته‌بندی جدید ایجاد نمی‌کند.
 
 ## ۳. ایجاد محصول تست
 

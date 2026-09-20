@@ -10,11 +10,11 @@ final class TestProductFactory
     public const IDENTIFIER_PREFIX = 'bridge-test-';
 
     /** @return array<string,mixed> */
-    public static function make(?string $runId = null): array
+    public static function make(?string $runId = null, ?int $mainCategoryId = null): array
     {
         $runId ??= gmdate('YmdHis') . '-' . bin2hex(random_bytes(3));
 
-        return [
+        $payload = [
             'name' => self::NAME_PREFIX . ' اتصال Mixin - قابل حذف',
             'description' => 'رکورد کنترل‌شده برای آزمایش API؛ قابل فروش نیست.',
             'price' => 1000,
@@ -28,6 +28,12 @@ final class TestProductFactory
                 'run_id' => $runId,
             ],
         ];
+
+        if ($mainCategoryId !== null && $mainCategoryId > 0) {
+            $payload['main_category_id'] = $mainCategoryId;
+        }
+
+        return $payload;
     }
 
     /** @param array<string,mixed> $product */
