@@ -43,7 +43,7 @@ final class MixinClient
     {
         $response = $this->http->request($method, rtrim($this->baseUrl, '/') . '/' . ltrim($path, '/'), [
             'Authorization' => 'Api-Key ' . $this->apiKey,
-        ], $body, $query);
+        ], $body, $query, in_array(strtoupper($method), ['GET', 'PATCH'], true));
 
         return is_array($response['data']) ? $response['data'] : ['raw' => $response['data']];
     }

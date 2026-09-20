@@ -78,6 +78,7 @@ php bin/console sync:products
 | `SYNC_CATEGORY_MAP_JSON` | نگاشت JSON دسته محک به دسته Mixin برای کالاهای عمومی |
 | `SYNC_PRODUCT_CATEGORY_MAP_JSON` | override دسته‌بندی بر اساس ProductDetail برای موارد خاص |
 | `SYNC_LOCK_FILE` | فایل lock برای جلوگیری از اجرای هم‌زمان sync |
+| `SYNC_HTTP_MAX_RETRIES` | retry محدود درخواست‌های امن برای خطاهای موقت؛ پیش‌فرض `2` |
 | `SYNC_PRICE_DIVISOR` | تبدیل واحد پول؛ برای ریال به تومان `10` |
 
 فهرست کامل و نکات امنیتی در [راهنمای تنظیمات](docs/configuration.md) آمده است.

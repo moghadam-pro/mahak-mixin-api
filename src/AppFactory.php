@@ -15,7 +15,11 @@ final class AppFactory
 {
     public static function http(): HttpClient
     {
-        return new HttpClient(Config::int('SYNC_TIMEOUT_SECONDS', 30), Config::bool('SYNC_VERIFY_TLS', true));
+        return new HttpClient(
+            Config::int('SYNC_TIMEOUT_SECONDS', 30),
+            Config::bool('SYNC_VERIFY_TLS', true),
+            Config::int('SYNC_HTTP_MAX_RETRIES', 2),
+        );
     }
 
     public static function mahak(): MahakClient

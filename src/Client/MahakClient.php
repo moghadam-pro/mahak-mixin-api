@@ -29,7 +29,7 @@ final class MahakClient
             'password' => $this->password,
         ];
 
-        $response = $this->http->request('POST', $this->url($this->loginPath), [], $body)['data'];
+        $response = $this->http->request('POST', $this->url($this->loginPath), [], $body, [], true)['data'];
         if (!is_array($response)) {
             throw new RuntimeException('Mahak login returned a non-JSON response');
         }
@@ -81,7 +81,7 @@ final class MahakClient
 
         $response = $this->http->request('POST', $this->url($path), [
             'Authorization' => 'Bearer ' . $this->token,
-        ], $body)['data'];
+        ], $body, [], true)['data'];
 
         if (!is_array($response)) {
             throw new RuntimeException('Mahak returned a non-JSON response');

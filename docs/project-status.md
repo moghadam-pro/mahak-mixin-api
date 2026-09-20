@@ -19,6 +19,7 @@
 | Four-product pilot | تأییدشده | چهار ProductDetail به محصولات `223–226` و چهار Picture به تصاویر `248–251` منتقل شدند |
 | Category mapping | پیاده‌سازی‌شده | mapping عمومی دسته و override تک‌محصولی از JSON محیط خوانده می‌شود |
 | Sync lock/history | پیاده‌سازی‌شده | flock غیرمسدودکننده و ثبت success/failed هر اجرا در SQLite |
+| HTTP retry | پیاده‌سازی‌شده | backoff محدود برای read/PATCH و درخواست‌های خواندنی محک؛ createها عمداً retry کور ندارند |
 | Automated tests | تأییدشده در توسعه | ۸ تست، صفر failure؛ تست SQLite محلی به‌علت نبود driver skip شد و روی سرور دارای pdo_sqlite باید دوباره اجرا شود |
 | Product write | تست API تأییدشده، production غیرفعال | نوشتن تستی موفق بود؛ `SYNC_DRY_RUN=true` است و هیچ کالای واقعی محک نوشته نشده |
 | Customer sync | برنامه‌ریزی‌شده | قواعد Person و duplicate detection باید نهایی شود |
@@ -83,6 +84,8 @@ preview بعدی به‌درستی `action=update` و `target_id=223` نشان �
 هر چهار محصول با نام فارسی نرمال‌شده، قیمت تومان، موجودی `VisitorProduct.Count1`، وضعیت فعال، شناسه خارجی محک و تصویر اصلی ایجاد شدند. مقادیر قیمت و موجودی پیش از نوشتن با رابط نرم‌افزار محک تطبیق داده شدند.
 
 نمایش پنل Mixin نیز هر چهار محصول را با تصویر، قیمت، موجودی، دسته‌بندی و وضعیت فعال تأیید کرد.
+
+اولین اجرای عمومی production با `run_id=2` هر چهار mapping را update کرد. اجرای بعدی dry-run با `run_id=3` مقدار `received=0` برگرداند و صحت checkpoint افزایشی را تأیید کرد.
 
 ## نتیجه اجرای واقعی خواندن و dry-run
 
