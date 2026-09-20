@@ -28,7 +28,7 @@ final class ProductMapper
         $productDetailId = $this->read($detail, 'productDetailId');
 
         return array_filter([
-            'name' => trim((string) $this->read($product, 'name', '')),
+            'name' => $this->normalizeName($this->read($product, 'name', '')),
             'description' => $this->nullableString($this->read($product, 'description')),
             'price' => max(0, (int) round($price / $this->priceDivisor)),
             'barcode' => $this->nullableString($this->read($detail, 'barcode')),
@@ -52,6 +52,16 @@ final class ProductMapper
     {
         $value = trim((string) $value);
         return $value === '' ? null : $value;
+    }
+
+    private function normalizeName(mixed $value): string
+    {
+        $normalized = strtr(trim((string) $value), [
+            'ي' => 'ی',
+            'ى' => 'ی',
+            'ك' => 'ک',
+        ]);
+        return preg_replace('/\s+/u', ' ', $normalized) ?? $normalized;
     }
 
     private function nonNegativeIntOrNull(mixed $value): ?int

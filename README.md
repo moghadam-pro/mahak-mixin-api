@@ -11,6 +11,7 @@
 - احراز هویت Mixin با `Authorization: Api-Key ...`
 - خواندن افزایشی کالا، جزئیات و موجودی واسط `VisitorProduct`
 - fallback قیمت از VisitorProduct صفر به `ProductDetail.Price1`
+- نرمال‌سازی حروف عربی `ي/ى/ك` و فاصله‌های تکراری در نام کالا
 - تبدیل قیمت ریال محک به تومان Mixin با ضریب قابل تنظیم
 - ایجاد و به‌روزرسانی کالای Mixin
 - ذخیره checkpoint و نگاشت شناسه‌ها در SQLite
@@ -38,6 +39,7 @@ cp .env.example .env
 php bin/console mahak:login
 php bin/console mahak:products:inspect
 php bin/console mahak:products:diagnose
+php bin/console mahak:products:candidates
 php bin/console mixin:health
 php bin/console mixin:info
 php tests/run.php

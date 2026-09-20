@@ -18,6 +18,7 @@ try {
         'mahak:login' => sanitizeLogin(AppFactory::mahak()->login()),
         'mahak:products:inspect' => inspectMahakProducts(AppFactory::mahak(), Config::int('MAHAK_VISITOR_ID')),
         'mahak:products:diagnose' => diagnoseMahakProductFields(AppFactory::mahak(), Config::int('MAHAK_VISITOR_ID')),
+        'mahak:products:candidates' => listMahakProductCandidates(AppFactory::mahak(), Config::int('MAHAK_VISITOR_ID')),
         'mixin:health' => AppFactory::mixin()->health(),
         'mixin:info' => AppFactory::mixin()->info(),
         'mixin:categories:inspect' => AppFactory::mixin()->categories(['page' => 1, 'page_size' => 50]),
@@ -34,6 +35,7 @@ try {
                 'php bin/console mahak:login',
                 'php bin/console mahak:products:inspect',
                 'php bin/console mahak:products:diagnose',
+                'php bin/console mahak:products:candidates',
                 'php bin/console mixin:health',
                 'php bin/console mixin:info',
                 'php bin/console mixin:categories:inspect',
@@ -161,6 +163,78 @@ function diagnoseMahakProductFields(MahakClient $client, int $visitorId): array
         'product_details' => diagnosticRows(ciValue($objects, 'ProductDetails', []), 'ProductDetailId'),
         'visitor_products' => diagnosticRows(ciValue($objects, 'VisitorProducts', []), 'ProductDetailId'),
     ];
+}
+
+function listMahakProductCandidates(MahakClient $client, int $visitorId): array
+{
+    $response = $client->getAllData([
+        'currentVisitorId' => $visitorId,
+        'fromProductVersion' => 0,
+        'fromProductDetailVersion' => 0,
+        'fromVisitorProductVersion' => 0,
+        'fromProductCategoryVersion' => 0,
+        'pageSize' => Config::int('SYNC_PAGE_SIZE', 100),
+    ]);
+    $data = ciValue($response, 'Data', []);
+    $objects = is_array($data) ? ciValue($data, 'Objects', []) : [];
+    if (!is_array($objects)) {
+        return ['count' => 0, 'items' => []];
+    }
+
+    $products = indexDiagnosticRows(ciValue($objects, 'Products', []), 'ProductId');
+    $visitorProducts = indexDiagnosticRows(ciValue($objects, 'VisitorProducts', []), 'ProductDetailId');
+    $categories = indexDiagnosticRows(ciValue($objects, 'ProductCategories', []), 'ProductCategoryId');
+    $items = [];
+    foreach ((array) ciValue($objects, 'ProductDetails', []) as $detail) {
+        if (!is_array($detail)) {
+            continue;
+        }
+        $detailId = (string) ciValue($detail, 'ProductDetailId', '');
+        $productId = (string) ciValue($detail, 'ProductId', '');
+        $product = $products[$productId] ?? [];
+        $visitor = $visitorProducts[$detailId] ?? [];
+        $categoryId = (string) ciValue($product, 'ProductCategoryId', '');
+        $visitorPrice = (float) ciValue($visitor, 'Price', 0);
+        $rawPrice = $visitorPrice > 0 ? $visitorPrice : (float) ciValue($detail, 'Price1', 0);
+        $items[] = [
+            'product_detail_id' => $detailId,
+            'product_id' => $productId,
+            'product_code' => ciValue($product, 'ProductCode'),
+            'product_detail_code' => ciValue($detail, 'ProductDetailCode'),
+            'name' => ciValue($product, 'Name'),
+            'mahak_category_id' => $categoryId,
+            'mahak_category_name' => ciValue($categories[$categoryId] ?? [], 'Name'),
+            'unit_name' => ciValue($product, 'UnitName'),
+            'unit_name_2' => ciValue($product, 'UnitName2'),
+            'unit_ratio' => ciValue($product, 'UnitRatio'),
+            'properties' => ciValue($detail, 'Properties'),
+            'barcode' => ciValue($detail, 'Barcode'),
+            'price_source' => $visitorPrice > 0 ? 'VisitorProduct.Price' : 'ProductDetail.Price1',
+            'price_raw' => $rawPrice,
+            'price_mixin' => (int) round($rawPrice / Config::int('SYNC_PRICE_DIVISOR', 10)),
+            'stock_source' => 'VisitorProduct.Count1',
+            'stock' => ciValue($visitor, 'Count1'),
+            'count_2' => ciValue($visitor, 'Count2'),
+        ];
+    }
+    return ['count' => count($items), 'items' => $items];
+}
+
+function indexDiagnosticRows(mixed $items, string $idKey): array
+{
+    $indexed = [];
+    if (!is_array($items)) {
+        return $indexed;
+    }
+    foreach ($items as $item) {
+        if (is_array($item)) {
+            $id = ciValue($item, $idKey);
+            if ($id !== null) {
+                $indexed[(string) $id] = $item;
+            }
+        }
+    }
+    return $indexed;
 }
 
 function diagnosticRows(mixed $items, string $idKey): array

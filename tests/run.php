@@ -66,6 +66,14 @@ $tests['normalizes numeric Mahak detail IDs as strings'] = static function (): v
     );
     assertSame(['10'], $ids);
 };
+$tests['normalizes Persian product names and repeated whitespace'] = static function (): void {
+    $payload = (new ProductMapper(10))->toMixin(
+        ['ProductId' => 12, 'Name' => "  سيم  سيم كالا\nتست  "],
+        ['ProductDetailId' => 34, 'ProductId' => 12, 'Price1' => 10000],
+        ['Count1' => 1],
+    );
+    assertSame('سیم سیم کالا تست', $payload['name']);
+};
 $tests['persists checkpoints mappings and snapshots'] = static function (): void {
     if (!in_array('sqlite', PDO::getAvailableDrivers(), true)) {
         throw new SkippedTest('pdo_sqlite is not installed');
