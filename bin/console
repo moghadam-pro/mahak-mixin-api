@@ -29,6 +29,9 @@ try {
         'sync:product:preview' => syncOneProduct($argv, true),
         'sync:product:apply' => syncOneProduct($argv, false),
         'sync:product:rollback' => rollbackOneProduct($argv),
+        'sync:product:image:preview' => previewOneProductImage($argv),
+        'sync:product:image:apply' => applyOneProductImage($argv),
+        'sync:product:image:rollback' => rollbackOneProductImage($argv),
         'sync:products' => AppFactory::productSync()->run(Config::bool('SYNC_DRY_RUN', true)),
         'sync:products:dry-run' => AppFactory::productSync()->run(true),
         default => [
@@ -47,6 +50,9 @@ try {
                 'php bin/console sync:product:preview PRODUCT_DETAIL_ID MIXIN_CATEGORY_ID',
                 'php bin/console sync:product:apply PRODUCT_DETAIL_ID MIXIN_CATEGORY_ID',
                 'php bin/console sync:product:rollback PRODUCT_DETAIL_ID',
+                'php bin/console sync:product:image:preview PRODUCT_DETAIL_ID',
+                'php bin/console sync:product:image:apply PRODUCT_DETAIL_ID',
+                'php bin/console sync:product:image:rollback PRODUCT_DETAIL_ID IMAGE_ID',
                 'php bin/console sync:products:dry-run',
                 'php bin/console sync:products',
             ],
@@ -409,4 +415,23 @@ function assertSingleProductWriteAllowed(): void
     if (!Config::bool('SYNC_ALLOW_SINGLE_PRODUCT_WRITE', false)) {
         throw new RuntimeException('Single-product writes are disabled. Set SYNC_ALLOW_SINGLE_PRODUCT_WRITE=true temporarily.');
     }
+}
+
+function previewOneProductImage(array $argv): array
+{
+    return AppFactory::productSync()->previewImage(positiveIdArgument($argv[2] ?? null, 'PRODUCT_DETAIL_ID'));
+}
+
+function applyOneProductImage(array $argv): array
+{
+    assertSingleProductWriteAllowed();
+    return AppFactory::productSync()->applyImage(positiveIdArgument($argv[2] ?? null, 'PRODUCT_DETAIL_ID'));
+}
+
+function rollbackOneProductImage(array $argv): array
+{
+    assertSingleProductWriteAllowed();
+    $sourceId = positiveIdArgument($argv[2] ?? null, 'PRODUCT_DETAIL_ID');
+    $imageId = positiveIdArgument($argv[3] ?? null, 'IMAGE_ID');
+    return AppFactory::productSync()->rollbackImage($sourceId, (int) $imageId);
 }

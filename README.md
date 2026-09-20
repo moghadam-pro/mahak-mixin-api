@@ -94,6 +94,9 @@ php bin/console mixin:test-product:delete PRODUCT_ID
 php bin/console sync:product:preview PRODUCT_DETAIL_ID MIXIN_CATEGORY_ID
 php bin/console sync:product:apply PRODUCT_DETAIL_ID MIXIN_CATEGORY_ID
 php bin/console sync:product:rollback PRODUCT_DETAIL_ID
+php bin/console sync:product:image:preview PRODUCT_DETAIL_ID
+php bin/console sync:product:image:apply PRODUCT_DETAIL_ID
+php bin/console sync:product:image:rollback PRODUCT_DETAIL_ID IMAGE_ID
 php bin/console sync:products:dry-run
 php bin/console sync:products
 php tests/run.php

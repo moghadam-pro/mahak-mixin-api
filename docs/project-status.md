@@ -15,7 +15,7 @@
 | Mahak GetAllData | تأییدشده با داده واقعی | ۴ Product، ۲ ProductCategory، ۴ ProductDetail و ۴ VisitorProduct دریافت شد |
 | Product dry-run | تأییدشده | ۴ رکورد دریافت و هر ۴ مورد برای create پیش‌نمایش شدند؛ خطا صفر |
 | Single product write | تأییدشده | `11629315` به محصول `223` نگاشت و نمایش قیمت، موجودی، وضعیت و دسته‌بندی در پنل تأیید شد |
-| Product image | در حال بررسی | تصویر پد الکلی در محک موجود است ولی محصول `223` فعلاً بدون تصویر ساخته شد؛ diagnostic امن اضافه شد |
+| Product image | آماده smoke test | ارتباط Product→PhotoGallery→Picture تأیید و preview/apply/rollback محدود با کنترل نوع، حجم و duplicate پیاده‌سازی شد |
 | Automated tests | تأییدشده در توسعه | ۸ تست، صفر failure؛ تست SQLite محلی به‌علت نبود driver skip شد و روی سرور دارای pdo_sqlite باید دوباره اجرا شود |
 | Product write | تست API تأییدشده، production غیرفعال | نوشتن تستی موفق بود؛ `SYNC_DRY_RUN=true` است و هیچ کالای واقعی محک نوشته نشده |
 | Customer sync | برنامه‌ریزی‌شده | قواعد Person و duplicate detection باید نهایی شود |

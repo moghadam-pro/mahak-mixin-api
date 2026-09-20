@@ -59,6 +59,20 @@ final class MahakClient
         return $this->authenticatedPost($this->saveAllDataPath, $objects);
     }
 
+    public function downloadContent(string $path): string
+    {
+        if ($this->token === null) {
+            $this->login();
+        }
+        $response = $this->http->request('GET', $this->contentUrl($path), [
+            'Authorization' => 'Bearer ' . $this->token,
+        ]);
+        if (!is_string($response['data'])) {
+            throw new RuntimeException('Mahak content endpoint returned a non-binary response');
+        }
+        return $response['data'];
+    }
+
     private function authenticatedPost(string $path, array $body): array
     {
         if ($this->token === null) {
@@ -83,6 +97,22 @@ final class MahakClient
     private function url(string $path): string
     {
         return rtrim($this->baseUrl, '/') . '/' . ltrim($path, '/');
+    }
+
+    private function contentUrl(string $path): string
+    {
+        if (preg_match('#^https?://#i', $path) === 1) {
+            return $path;
+        }
+        $parts = parse_url($this->baseUrl);
+        if (!is_array($parts) || !isset($parts['scheme'], $parts['host'])) {
+            throw new RuntimeException('Invalid Mahak base URL');
+        }
+        $origin = $parts['scheme'] . '://' . $parts['host'];
+        if (isset($parts['port'])) {
+            $origin .= ':' . $parts['port'];
+        }
+        return $origin . '/' . ltrim($path, '/');
     }
 
     private function read(array $data, string $key, mixed $default = null): mixed

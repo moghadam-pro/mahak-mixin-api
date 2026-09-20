@@ -170,6 +170,85 @@ final class ProductSyncService
         return ['ok' => true, 'source_id' => $sourceDetailId, 'target_id' => (int) $targetId, 'response' => $deleted];
     }
 
+    /** @return array<string,mixed> */
+    public function previewImage(string $sourceDetailId): array
+    {
+        $targetId = $this->state->mapping('product', $sourceDetailId);
+        if ($targetId === null || filter_var($targetId, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]) === false) {
+            throw new RuntimeException("No valid Mixin mapping exists for Mahak detail {$sourceDetailId}");
+        }
+        $source = $this->findImageSource($sourceDetailId);
+        $existing = $this->mixin->productImages(['product_id' => (int) $targetId, 'page_size' => 20]);
+        $existingItems = $this->value($existing, 'data', []);
+        return [
+            'dry_run' => true,
+            'source_id' => $sourceDetailId,
+            'target_id' => (int) $targetId,
+            'source_image' => $source,
+            'existing_image_count' => is_array($existingItems) ? count($existingItems) : 0,
+            'action' => is_array($existingItems) && count($existingItems) > 0 ? 'skip_existing' : 'create',
+        ];
+    }
+
+    /** @return array<string,mixed> */
+    public function applyImage(string $sourceDetailId): array
+    {
+        $preview = $this->previewImage($sourceDetailId);
+        if ($preview['action'] !== 'create') {
+            throw new RuntimeException('Refusing image upload: target product already has an image');
+        }
+        $source = $preview['source_image'];
+        if (!is_array($source) || !is_string($source['url'] ?? null)) {
+            throw new RuntimeException('Mahak image source is invalid');
+        }
+        $binary = $this->mahak->downloadContent($source['url']);
+        $length = strlen($binary);
+        if ($length < 1 || $length > 5 * 1024 * 1024) {
+            throw new RuntimeException("Mahak image size {$length} is outside the allowed range");
+        }
+        $mime = $this->detectImageMime($binary);
+        if ($mime === null) {
+            throw new RuntimeException('Mahak image format is not JPEG, PNG, GIF, or WebP');
+        }
+        $saved = $this->mixin->createProductImage([
+            'product_id' => $preview['target_id'],
+            'image_base64' => 'data:' . $mime . ';base64,' . base64_encode($binary),
+            'image_alt' => $source['title'],
+            'default' => true,
+            'order' => 0,
+        ]);
+        return [
+            'ok' => true,
+            'source_id' => $sourceDetailId,
+            'target_id' => $preview['target_id'],
+            'source_picture_id' => $source['picture_id'],
+            'downloaded_bytes' => $length,
+            'mime' => $mime,
+            'response' => $saved,
+        ];
+    }
+
+    /** @return array<string,mixed> */
+    public function rollbackImage(string $sourceDetailId, int $imageId): array
+    {
+        $targetId = $this->state->mapping('product', $sourceDetailId);
+        if ($targetId === null) {
+            throw new RuntimeException("No Mixin mapping exists for Mahak detail {$sourceDetailId}");
+        }
+        $response = $this->mixin->productImage($imageId);
+        $image = $this->value($response, 'data', $response);
+        if (!is_array($image) || (string) $this->value($image, 'product_id', '') !== (string) $targetId) {
+            throw new RuntimeException('Refusing image rollback: image does not belong to the mapped Mixin product');
+        }
+        return [
+            'ok' => true,
+            'source_id' => $sourceDetailId,
+            'target_id' => (int) $targetId,
+            'image_id' => $imageId,
+            'response' => $this->mixin->deleteProductImage($imageId),
+        ];
+    }
+
     private function objects(array $response): array
     {
         $data = $this->value($response, 'data', []);
@@ -271,6 +350,72 @@ final class ProductSyncService
         return $this->value($externalIds, 'source') === 'mahak-mixin-bridge'
             && (string) $this->value($externalIds, 'mahak_product_detail_id', '') === $sourceDetailId
             && (string) $this->value($product, 'product_identifier', '') === $sourceDetailId;
+    }
+
+    /** @return array<string,mixed> */
+    private function findImageSource(string $sourceDetailId): array
+    {
+        $response = $this->mahak->getAllData([
+            'currentVisitorId' => $this->visitorId,
+            'fromProductVersion' => 0,
+            'fromProductDetailVersion' => 0,
+            'fromPictureVersion' => 0,
+            'fromPhotoGalleryVersion' => 0,
+            'pageSize' => $this->pageSize,
+        ]);
+        $objects = $this->objects($response);
+        $details = $this->index($this->list($objects, 'productDetails'), 'productDetailId');
+        $pictures = $this->index($this->list($objects, 'pictures'), 'pictureId');
+        $detail = $details[$sourceDetailId] ?? null;
+        if (!is_array($detail)) {
+            throw new RuntimeException("Mahak ProductDetail {$sourceDetailId} was not returned");
+        }
+        $productId = (string) $this->value($detail, 'productId', '');
+        $galleryRows = $this->list($objects, 'photoGalleries');
+        usort($galleryRows, fn (array $a, array $b): int => (int) $this->value($a, 'photoGalleryId', 0) <=> (int) $this->value($b, 'photoGalleryId', 0));
+        foreach ($galleryRows as $gallery) {
+            if ((string) $this->value($gallery, 'itemCode', '') !== $productId || (bool) $this->value($gallery, 'deleted', false)) {
+                continue;
+            }
+            $pictureId = (string) $this->value($gallery, 'pictureId', '');
+            $picture = $pictures[$pictureId] ?? null;
+            if (!is_array($picture) || (bool) $this->value($picture, 'deleted', false)) {
+                continue;
+            }
+            $url = $this->value($picture, 'url');
+            if (!is_string($url) || $url === '') {
+                continue;
+            }
+            return [
+                'picture_id' => (int) $pictureId,
+                'gallery_id' => (int) $this->value($gallery, 'photoGalleryId', 0),
+                'url' => $url,
+                'title' => $this->normalizeText((string) $this->value($picture, 'title', '')),
+                'file_name' => $this->value($picture, 'fileName'),
+                'file_size' => $this->value($picture, 'fileSize'),
+                'width' => $this->value($picture, 'width'),
+                'height' => $this->value($picture, 'height'),
+                'format' => $this->value($picture, 'format'),
+            ];
+        }
+        throw new RuntimeException("No Mahak picture was found for ProductDetail {$sourceDetailId}");
+    }
+
+    private function detectImageMime(string $binary): ?string
+    {
+        return match (true) {
+            str_starts_with($binary, "\xFF\xD8\xFF") => 'image/jpeg',
+            str_starts_with($binary, "\x89PNG\r\n\x1A\n") => 'image/png',
+            str_starts_with($binary, 'GIF87a'), str_starts_with($binary, 'GIF89a') => 'image/gif',
+            strlen($binary) >= 12 && substr($binary, 0, 4) === 'RIFF' && substr($binary, 8, 4) === 'WEBP' => 'image/webp',
+            default => null,
+        };
+    }
+
+    private function normalizeText(string $value): string
+    {
+        $value = strtr(trim($value), ['ي' => 'ی', 'ى' => 'ی', 'ك' => 'ک']);
+        return preg_replace('/\s+/u', ' ', $value) ?? $value;
     }
 
     private function advanceCheckpoints(array $objects): void

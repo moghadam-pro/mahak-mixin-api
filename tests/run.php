@@ -74,6 +74,14 @@ $tests['normalizes Persian product names and repeated whitespace'] = static func
     );
     assertSame('سیم سیم کالا تست', $payload['name']);
 };
+$tests['detects supported image signatures'] = static function (): void {
+    $service = (new ReflectionClass(ProductSyncService::class))->newInstanceWithoutConstructor();
+    $method = new ReflectionMethod(ProductSyncService::class, 'detectImageMime');
+    $method->setAccessible(true);
+    assertSame('image/jpeg', $method->invoke($service, "\xFF\xD8\xFFexample"));
+    assertSame('image/png', $method->invoke($service, "\x89PNG\r\n\x1A\nexample"));
+    assertSame(null, $method->invoke($service, 'not-an-image'));
+};
 $tests['persists checkpoints mappings and snapshots'] = static function (): void {
     if (!in_array('sqlite', PDO::getAvailableDrivers(), true)) {
         throw new SkippedTest('pdo_sqlite is not installed');
