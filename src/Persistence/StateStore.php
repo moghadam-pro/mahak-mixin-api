@@ -63,6 +63,29 @@ final class StateStore
         $statement->execute(['entity' => $entity, 'source_id' => $sourceId]);
     }
 
+    public function startRun(string $direction, string $entity): int
+    {
+        $statement = $this->pdo->prepare(
+            'INSERT INTO sync_runs(direction, entity, status) VALUES(:direction, :entity, :status)'
+        );
+        $statement->execute(['direction' => $direction, 'entity' => $entity, 'status' => 'running']);
+        return (int) $this->pdo->lastInsertId();
+    }
+
+    /** @param array<string,mixed>|null $stats */
+    public function finishRun(int $runId, string $status, ?array $stats = null, ?string $error = null): void
+    {
+        $statement = $this->pdo->prepare(
+            'UPDATE sync_runs SET status = :status, stats_json = :stats, error = :error, finished_at = CURRENT_TIMESTAMP WHERE id = :id'
+        );
+        $statement->execute([
+            'id' => $runId,
+            'status' => $status,
+            'stats' => $stats === null ? null : json_encode($stats, JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES),
+            'error' => $error,
+        ]);
+    }
+
     /** @return list<array<string,mixed>> */
     public function snapshots(string $entity): array
     {

@@ -76,6 +76,31 @@ final class Config
         return $parsed;
     }
 
+    /** @return array<string,int> */
+    public static function intMap(string $name, array $default = []): array
+    {
+        $value = getenv($name);
+        if ($value === false || trim($value) === '') {
+            return $default;
+        }
+        try {
+            $decoded = json_decode($value, true, 512, JSON_THROW_ON_ERROR);
+        } catch (\JsonException $exception) {
+            throw new InvalidArgumentException("Environment variable {$name} must be valid JSON: {$exception->getMessage()}");
+        }
+        if (!is_array($decoded)) {
+            throw new InvalidArgumentException("Environment variable {$name} must be a JSON object");
+        }
+        $map = [];
+        foreach ($decoded as $sourceId => $targetId) {
+            if (!is_scalar($sourceId) || filter_var($targetId, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]) === false) {
+                throw new InvalidArgumentException("Environment variable {$name} must map IDs to positive integers");
+            }
+            $map[(string) $sourceId] = (int) $targetId;
+        }
+        return $map;
+    }
+
     public static function path(string $name, string $default): string
     {
         $path = self::string($name, $default);

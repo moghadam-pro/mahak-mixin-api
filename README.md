@@ -75,6 +75,9 @@ php bin/console sync:products
 | `BRIDGE_API_KEY` | کلید مستقل برای حفاظت از endpoint مدیریتی Bridge |
 | `SYNC_DRY_RUN` | جلوگیری از نوشتن در Mixin؛ پیش‌فرض `true` |
 | `SYNC_ALLOW_SINGLE_PRODUCT_WRITE` | مجوز موقت apply/rollback فقط یک ProductDetail؛ پیش‌فرض `false` |
+| `SYNC_CATEGORY_MAP_JSON` | نگاشت JSON دسته محک به دسته Mixin برای کالاهای عمومی |
+| `SYNC_PRODUCT_CATEGORY_MAP_JSON` | override دسته‌بندی بر اساس ProductDetail برای موارد خاص |
+| `SYNC_LOCK_FILE` | فایل lock برای جلوگیری از اجرای هم‌زمان sync |
 | `SYNC_PRICE_DIVISOR` | تبدیل واحد پول؛ برای ریال به تومان `10` |
 
 فهرست کامل و نکات امنیتی در [راهنمای تنظیمات](docs/configuration.md) آمده است.

@@ -19,11 +19,31 @@ final class ProductSyncService
         private readonly ProductMapper $mapper,
         private readonly int $visitorId,
         private readonly int $pageSize = 100,
+        /** @var array<string,int> */
+        private readonly array $categoryMap = [],
+        /** @var array<string,int> */
+        private readonly array $productCategoryMap = [],
+        private readonly string $lockPath = 'var/product-sync.lock',
     ) {
     }
 
     /** @return array<string,mixed> */
     public function run(bool $dryRun = true): array
+    {
+        $runId = $this->state->startRun('mahak_to_mixin', 'products');
+        try {
+            $stats = $this->withLock(fn (): array => $this->runInternal($dryRun));
+            $stats['run_id'] = $runId;
+            $this->state->finishRun($runId, 'success', $stats);
+            return $stats;
+        } catch (\Throwable $exception) {
+            $this->state->finishRun($runId, 'failed', null, $exception->getMessage());
+            throw $exception;
+        }
+    }
+
+    /** @return array<string,mixed> */
+    private function runInternal(bool $dryRun): array
     {
         $request = [
             'currentVisitorId' => $this->visitorId,
@@ -57,7 +77,21 @@ final class ProductSyncService
                 $stats['skipped']++;
                 continue;
             }
+            $categoryId = $this->resolveCategoryId($sourceId, $product);
+            if ($categoryId === null) {
+                $stats['skipped']++;
+                if (count($stats['preview']) < 10) {
+                    $stats['preview'][] = [
+                        'action' => 'skip',
+                        'source_id' => $sourceId,
+                        'reason' => 'missing_category_mapping',
+                        'mahak_category_id' => $this->value($product, 'productCategoryId'),
+                    ];
+                }
+                continue;
+            }
             $payload = $this->mapper->toMixin($product, $detail, $visitorProducts[$sourceId] ?? null);
+            $payload['main_category_id'] = $categoryId;
             if ($payload['name'] === '') {
                 $stats['skipped']++;
                 continue;
@@ -89,6 +123,38 @@ final class ProductSyncService
         }
 
         return $stats;
+    }
+
+    private function resolveCategoryId(string $sourceDetailId, array $product): ?int
+    {
+        if (isset($this->productCategoryMap[$sourceDetailId])) {
+            return $this->productCategoryMap[$sourceDetailId];
+        }
+        $sourceCategoryId = (string) $this->value($product, 'productCategoryId', '');
+        return $this->categoryMap[$sourceCategoryId] ?? null;
+    }
+
+    /** @template T @param callable():T $callback @return T */
+    private function withLock(callable $callback): mixed
+    {
+        $directory = dirname($this->lockPath);
+        if (!is_dir($directory) && !mkdir($directory, 0770, true) && !is_dir($directory)) {
+            throw new RuntimeException("Unable to create sync lock directory: {$directory}");
+        }
+        $handle = fopen($this->lockPath, 'c+');
+        if ($handle === false) {
+            throw new RuntimeException("Unable to open sync lock: {$this->lockPath}");
+        }
+        if (!flock($handle, LOCK_EX | LOCK_NB)) {
+            fclose($handle);
+            throw new RuntimeException('Another product sync is already running');
+        }
+        try {
+            return $callback();
+        } finally {
+            flock($handle, LOCK_UN);
+            fclose($handle);
+        }
     }
 
     /** @return array<string,mixed> */

@@ -99,6 +99,9 @@ $tests['persists checkpoints mappings and snapshots'] = static function (): void
         assertSame('20', $store->mapping('product', '10'));
         $store->deleteMapping('product', '10');
         assertSame(null, $store->mapping('product', '10'));
+        $runId = $store->startRun('mahak_to_mixin', 'products');
+        assertSame(true, $runId > 0);
+        $store->finishRun($runId, 'success', ['created' => 1]);
         assertSame('Test', $store->snapshots('mahak.products')[0]['Name']);
     } finally {
         @unlink($path);
