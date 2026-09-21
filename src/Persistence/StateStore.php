@@ -63,6 +63,30 @@ final class StateStore
         $statement->execute(['entity' => $entity, 'source_id' => $sourceId]);
     }
 
+    /** Clears local product sync state after a confirmed full target purge. */
+    public function resetProductSyncState(): void
+    {
+        $this->pdo->beginTransaction();
+        try {
+            $statement = $this->pdo->prepare('DELETE FROM entity_mappings WHERE entity = :entity');
+            $statement->execute(['entity' => 'product']);
+            $entities = [
+                'mahak.products',
+                'mahak.product_details',
+                'mahak.visitor_products',
+                'mahak.pictures',
+                'mahak.photo_galleries',
+            ];
+            $placeholders = implode(',', array_fill(0, count($entities), '?'));
+            $this->pdo->prepare("DELETE FROM entity_snapshots WHERE entity IN ({$placeholders})")->execute($entities);
+            $this->pdo->prepare("DELETE FROM sync_checkpoints WHERE entity IN ({$placeholders})")->execute($entities);
+            $this->pdo->commit();
+        } catch (\Throwable $exception) {
+            $this->pdo->rollBack();
+            throw $exception;
+        }
+    }
+
     public function startRun(string $direction, string $entity): int
     {
         $statement = $this->pdo->prepare(

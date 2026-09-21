@@ -39,6 +39,8 @@ final class MixinClient
     /** @param array<string, mixed> $product */
     public function updateProduct(int $id, array $product): array { return $this->request('PATCH', "/api/v4/products/{$id}/", $product); }
     public function deleteProduct(int $id): array { return $this->request('DELETE', "/api/v4/products/{$id}/"); }
+    /** @param array<string,mixed> $rules */
+    public function bulkUpdateProducts(array $rules): array { return $this->request('POST', '/api/v4/products/bulk-update/', $rules); }
     /** @param array<string, scalar|null> $query */
     public function productImages(array $query = []): array { return $this->request('GET', '/api/v4/product-images/', null, $query); }
     public function productImage(int $id): array { return $this->request('GET', "/api/v4/product-images/{$id}/"); }

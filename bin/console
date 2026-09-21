@@ -25,6 +25,7 @@ try {
         'mixin:health' => AppFactory::mixin()->health(),
         'mixin:info' => AppFactory::mixin()->info(),
         'mixin:categories:inspect' => AppFactory::mixin()->categories(['page' => 1, 'page_size' => 50]),
+        'mixin:products:delete-all' => purgeAllMixinProducts($argv),
         'mixin:fallback-category:ensure' => ensureFallbackCategory(AppFactory::mixin()),
         'mixin:test-product:preview' => TestProductFactory::make('preview', optionalPositiveInt('MIXIN_TEST_CATEGORY_ID')),
         'mixin:test-product:create' => createMixinTestProduct(AppFactory::mixin()),
@@ -50,6 +51,7 @@ try {
                 'php bin/console mixin:health',
                 'php bin/console mixin:info',
                 'php bin/console mixin:categories:inspect',
+                'php bin/console mixin:products:delete-all DELETE-ALL-PRODUCTS',
                 'php bin/console mixin:fallback-category:ensure',
                 'php bin/console mixin:test-product:preview',
                 'php bin/console mixin:test-product:create',
@@ -456,6 +458,48 @@ function assertFullCatalogWriteAllowed(): void
 {
     if (!Config::bool('SYNC_ALLOW_FULL_CATALOG_WRITE', false)) {
         throw new RuntimeException('Full catalogue writes are disabled. Set SYNC_ALLOW_FULL_CATALOG_WRITE=true temporarily.');
+    }
+}
+
+function purgeAllMixinProducts(array $argv): array
+{
+    if (!Config::bool('MIXIN_ALLOW_PRODUCT_PURGE', false)) {
+        throw new RuntimeException('Product purge is disabled. Set MIXIN_ALLOW_PRODUCT_PURGE=true temporarily.');
+    }
+    if (($argv[2] ?? '') !== 'DELETE-ALL-PRODUCTS') {
+        throw new InvalidArgumentException('Exact confirmation argument DELETE-ALL-PRODUCTS is required');
+    }
+
+    $lockPath = Config::path('SYNC_LOCK_FILE', 'var/product-sync.lock');
+    $directory = dirname($lockPath);
+    if (!is_dir($directory) && !mkdir($directory, 0770, true) && !is_dir($directory)) {
+        throw new RuntimeException("Unable to create sync lock directory: {$directory}");
+    }
+    $handle = fopen($lockPath, 'c+');
+    if ($handle === false || !flock($handle, LOCK_EX | LOCK_NB)) {
+        if (is_resource($handle)) {
+            fclose($handle);
+        }
+        throw new RuntimeException('Refusing purge: a product sync is currently running');
+    }
+    try {
+        $response = AppFactory::mixin()->bulkUpdateProducts([
+            'items' => [[
+                'all_products' => true,
+                'action' => 'delete',
+            ]],
+        ]);
+        AppFactory::state()->resetProductSyncState();
+        return [
+            'ok' => true,
+            'scope' => 'all_mixin_products',
+            'local_product_state_reset' => true,
+            'response' => $response,
+            'next' => 'Set MIXIN_ALLOW_PRODUCT_PURGE=false immediately.',
+        ];
+    } finally {
+        flock($handle, LOCK_UN);
+        fclose($handle);
     }
 }
 

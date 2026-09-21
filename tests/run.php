@@ -14,7 +14,7 @@ final class SkippedTest extends RuntimeException {}
 
 $tests = [];
 $tests['reads a valid semantic application version'] = static function (): void {
-    assertSame('0.2.1', Version::current());
+    assertSame('0.2.2', Version::current());
 };
 $tests['maps Mahak product to Mixin and converts rial to toman'] = static function (): void {
     $payload = (new ProductMapper(10))->toMixin(
@@ -124,6 +124,10 @@ $tests['persists checkpoints mappings and snapshots'] = static function (): void
         assertSame(true, $runId > 0);
         $store->finishRun($runId, 'success', ['created' => 1]);
         assertSame('Test', $store->snapshots('mahak.products')[0]['Name']);
+        $store->resetProductSyncState();
+        assertSame(0, $store->checkpoint('mahak.products'));
+        assertSame(0, $store->mappingCount('product'));
+        assertSame([], $store->snapshots('mahak.products'));
     } finally {
         @unlink($path);
     }

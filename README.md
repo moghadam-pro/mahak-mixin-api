@@ -216,6 +216,20 @@ php8.3 bin/console sync:catalog:full
 
 در حالت کاتالوگ کامل، وضعیت حذف خود Product محک مرجع است؛ فلگ‌های `Deleted` در ProductDetail و VisitorProduct به‌دلیل رفتار مشاهده‌شده API نادیده گرفته می‌شوند. موجودی ابتدا از VisitorProduct و در نبود آن از ProductDetail خوانده می‌شود.
 
+### پاک‌سازی کامل محصولات مقصد
+
+فرمان زیر همه محصولات Mixin را حذف می‌کند، اما دسته‌ها و تاریخچه اجرا را نگه می‌دارد. پس از موفقیت API، mapping، snapshot و checkpointهای محصول نیز تراکنشی پاک می‌شوند تا ورود بعدی از صفر شروع شود. فرمان هنگام اجرای sync فعال، به‌دلیل lock مشترک، از حذف خودداری می‌کند.
+
+```dotenv
+MIXIN_ALLOW_PRODUCT_PURGE=true
+```
+
+```bash
+php8.3 bin/console mixin:products:delete-all DELETE-ALL-PRODUCTS
+```
+
+بلافاصله پس از اجرا `MIXIN_ALLOW_PRODUCT_PURGE=false` را برگردانید.
+
 ## زمان‌بندی Cron
 
 بعد از تأیید نهایی قواعد انتقال و فعال‌سازی نوشتن عمومی، فقط یک Cron تعریف کنید:
