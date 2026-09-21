@@ -228,7 +228,7 @@ final class ProductSyncService
             throw new RuntimeException("Mahak Product for detail {$sourceDetailId} was not returned");
         }
 
-        $payload = $this->mapper->toMixin($product, $detail, $visitorProducts[$sourceDetailId] ?? null);
+        $payload = $this->mapper->toMixinCatalog($product, $detail, $visitorProducts[$sourceDetailId] ?? null);
         if (($payload['name'] ?? '') === '') {
             throw new RuntimeException("Mahak ProductDetail {$sourceDetailId} has no usable product name");
         }

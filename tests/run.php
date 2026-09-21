@@ -14,7 +14,7 @@ final class SkippedTest extends RuntimeException {}
 
 $tests = [];
 $tests['reads a valid semantic application version'] = static function (): void {
-    assertSame('0.3.0', Version::current());
+    assertSame('0.3.1', Version::current());
 };
 $tests['maps Mahak product to Mixin and converts rial to toman'] = static function (): void {
     $payload = (new ProductMapper(10))->toMixin(
