@@ -30,6 +30,7 @@ SYNC_ALLOW_FULL_CATALOG_WRITE=false
 SYNC_FALLBACK_CATEGORY_NAME=بدون دسته‌بندی
 SYNC_FALLBACK_CATEGORY_ID=
 SYNC_PAGE_SIZE=100
+SYNC_INCREMENTAL_PAGE_SIZE=5000
 SYNC_FULL_PAGE_SIZE=5000
 SYNC_FULL_MAX_PAGES=100
 SYNC_WRITE_DELAY_MS=150
@@ -46,6 +47,7 @@ STATE_DB=var/bridge.sqlite
 - `SYNC_FALLBACK_CATEGORY_ID`: شناسه مثبت دسته نگهدارنده؛ برای dry-run و اجرای واقعی الزامی است.
 - `SYNC_FULL_MAX_PAGES`: سقف ایمنی صفحه‌بندی کامل محک.
 - `SYNC_FULL_PAGE_SIZE=5000`: اندازه صفحه مستقل ورود کامل؛ باید از بزرگ‌ترین گروه رکوردهای هم‌RowVersion بزرگ‌تر باشد.
+- `SYNC_INCREMENTAL_PAGE_SIZE=5000`: سقف دریافت هر batch دستی بازارا؛ برای جلوگیری از جاافتادن ردیف‌های هم‌RowVersion کوچک نشود.
 - `SYNC_WRITE_DELAY_MS`: مکث بین نوشتن کالاها برای کاهش فشار روی دو API.
 
 ورود کامل عمداً از `SYNC_CATEGORY_MAP_JSON` و `SYNC_PRODUCT_CATEGORY_MAP_JSON` استفاده نمی‌کند و همه کالاها را به دسته موقت می‌فرستد. این رفتار تا زمان طراحی طبقه‌بندی نهایی است.

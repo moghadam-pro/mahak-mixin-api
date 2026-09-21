@@ -14,7 +14,7 @@ final class SkippedTest extends RuntimeException {}
 
 $tests = [];
 $tests['reads a valid semantic application version'] = static function (): void {
-    assertSame('0.2.3', Version::current());
+    assertSame('0.3.0', Version::current());
 };
 $tests['maps Mahak product to Mixin and converts rial to toman'] = static function (): void {
     $payload = (new ProductMapper(10))->toMixin(
@@ -102,6 +102,19 @@ $tests['detects supported image signatures'] = static function (): void {
     assertSame('image/jpeg', $method->invoke($service, "\xFF\xD8\xFFexample"));
     assertSame('image/png', $method->invoke($service, "\x89PNG\r\n\x1A\nexample"));
     assertSame(null, $method->invoke($service, 'not-an-image'));
+};
+$tests['matches a cached Mahak image to its product'] = static function (): void {
+    $service = (new ReflectionClass(ProductSyncService::class))->newInstanceWithoutConstructor();
+    $method = new ReflectionMethod(ProductSyncService::class, 'imageSourceForProduct');
+    $method->setAccessible(true);
+    $source = $method->invoke(
+        $service,
+        ['ProductId' => 12, 'Name' => '  كالای تست  '],
+        [['PhotoGalleryId' => 1, 'ItemCode' => 12, 'PictureId' => 99, 'Deleted' => false]],
+        ['99' => ['PictureId' => 99, 'Url' => '/image.jpg', 'Deleted' => false]],
+    );
+    assertSame('/image.jpg', $source['url']);
+    assertSame('کالای تست', $source['title']);
 };
 $tests['persists checkpoints mappings and snapshots'] = static function (): void {
     if (!in_array('sqlite', PDO::getAvailableDrivers(), true)) {

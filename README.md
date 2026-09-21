@@ -177,6 +177,16 @@ php8.3 bin/console sync:products
 
 پس از عملیات کنترل‌شده، برای جلوگیری از نوشتن ناخواسته می‌توان `SYNC_DRY_RUN=true` را دوباره فعال کرد.
 
+### حالت دائمی ارسال دستی از بازارا
+
+Bridge webhook نیست؛ دکمه «ارسال و دریافت اطلاعات» در بازارا داده را به سرور محک می‌فرستد و worker باید آن را از API محک دریافت کند. برای شروع روی فروشگاه خالی، ابتدا فقط یک‌بار baseline بگیرید؛ این فرمان  Product، ProductDetail، VisitorProduct و اطلاعات تصویر را در SQLite ثبت می‌کند، checkpointها را جلو می‌برد و هیچ نوشتنی در Mixin ندارد:
+
+```bash
+php8.3 bin/console sync:products:baseline
+```
+
+پس از baseline، `SYNC_DRY_RUN=false` را برای worker دائمی نگه دارید و یک Cron یک‌دقیقه‌ای فعال کنید. از آن پس کاربر فقط کالا را در «کالاهای ارسالی» بازارا انتخاب و «ارسال و دریافت اطلاعات» را اجرا می‌کند؛ Bridge در اجرای بعدی محصول و نخستین تصویر معتبر را به دسته fallback می‌فرستد. قفل مشترک از اجرای هم‌زمان جلوگیری می‌کند و mapping باعث update به‌جای duplicate می‌شود.
+
 ### انتقال کنترل‌شده یک کالا
 
 ```bash
@@ -206,7 +216,7 @@ php8.3 bin/console sync:catalog:full:dry-run
 
 این dry-run همه صفحات Product، ProductDetail، VisitorProduct، Picture و PhotoGallery را از ابتدا می‌خواند، تعداد واقعی کالا و تصویر را گزارش می‌کند و چیزی در مقصد نمی‌نویسد. پس از بررسی خروجی و تهیه backup از SQLite، برای اجرای واقعی فقط در همان بازه عملیات `SYNC_DRY_RUN=false` و `SYNC_ALLOW_FULL_CATALOG_WRITE=true` را تنظیم کنید:
 
-ورود کامل از `SYNC_FULL_PAGE_SIZE` مستقل استفاده می‌کند. مقدار پیش‌فرض `5000` برای جلوگیری از جاافتادن ردیف‌هایی انتخاب شده که در API محک RowVersion یکسان دارند؛ `SYNC_PAGE_SIZE=100` برای worker افزایشی بدون تغییر باقی می‌ماند.
+ورود کامل از `SYNC_FULL_PAGE_SIZE` و worker دائمی از `SYNC_INCREMENTAL_PAGE_SIZE` استفاده می‌کند. مقدار پیش‌فرض هر دو `5000` است تا ردیف‌هایی که در API محک RowVersion یکسان دارند جا نیفتند؛ `SYNC_PAGE_SIZE` فقط برای فرمان‌های تشخیصی قدیمی باقی مانده است.
 
 ```bash
 php8.3 bin/console sync:catalog:full
@@ -235,7 +245,7 @@ php8.3 bin/console mixin:products:delete-all DELETE-ALL-PRODUCTS
 بعد از تأیید نهایی قواعد انتقال و فعال‌سازی نوشتن عمومی، فقط یک Cron تعریف کنید:
 
 ```cron
-*/10 * * * * cd /var/www/mahak-mixin-bridge && /usr/bin/php8.3 bin/console sync:products >> var/log/cron.log 2>&1
+* * * * * cd /var/www/mahak-mixin-bridge && /usr/bin/php8.3 bin/console sync:products >> var/log/cron.log 2>&1
 ```
 
 Bridge با فایل lock از اجرای هم‌زمان جلوگیری می‌کند، اما همچنان تنها یک Scheduler توصیه می‌شود.

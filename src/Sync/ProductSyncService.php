@@ -6,6 +6,7 @@ namespace MahakMixin\Sync;
 
 use MahakMixin\Client\MahakClient;
 use MahakMixin\Client\MixinClient;
+use MahakMixin\Http\HttpException;
 use MahakMixin\Mapper\ProductMapper;
 use MahakMixin\Persistence\StateStore;
 use RuntimeException;
@@ -23,6 +24,7 @@ final class ProductSyncService
         private readonly array $categoryMap = [],
         /** @var array<string,int> */
         private readonly array $productCategoryMap = [],
+        private readonly int $fallbackCategoryId = 0,
         private readonly string $lockPath = 'var/product-sync.lock',
     ) {
     }
@@ -50,6 +52,8 @@ final class ProductSyncService
             'fromProductVersion' => $this->state->checkpoint('mahak.products'),
             'fromProductDetailVersion' => $this->state->checkpoint('mahak.product_details'),
             'fromVisitorProductVersion' => $this->state->checkpoint('mahak.visitor_products'),
+            'fromPictureVersion' => $this->state->checkpoint('mahak.pictures'),
+            'fromPhotoGalleryVersion' => $this->state->checkpoint('mahak.photo_galleries'),
             'pageSize' => $this->pageSize,
         ];
         $response = $this->mahak->getAllData($request);
@@ -57,13 +61,28 @@ final class ProductSyncService
         $changedProducts = $this->list($objects, 'products');
         $changedDetails = $this->list($objects, 'productDetails');
         $changedVisitorProducts = $this->list($objects, 'visitorProducts');
+        $changedPictures = $this->list($objects, 'pictures');
+        $changedPhotoGalleries = $this->list($objects, 'photoGalleries');
 
         $products = $this->index(array_merge($this->state->snapshots('mahak.products'), $changedProducts), 'productId');
         $details = $this->index(array_merge($this->state->snapshots('mahak.product_details'), $changedDetails), 'productDetailId');
         $visitorProducts = $this->index(array_merge($this->state->snapshots('mahak.visitor_products'), $changedVisitorProducts), 'productDetailId');
+        $pictures = $this->index(array_merge($this->state->snapshots('mahak.pictures'), $changedPictures), 'pictureId');
+        $photoGalleries = $this->index(array_merge($this->state->snapshots('mahak.photo_galleries'), $changedPhotoGalleries), 'photoGalleryId');
         $affectedDetailIds = $this->affectedDetailIds($changedProducts, $changedDetails, $changedVisitorProducts, $details);
 
-        $stats = ['dry_run' => $dryRun, 'received' => 0, 'created' => 0, 'updated' => 0, 'skipped' => 0, 'preview' => []];
+        $stats = [
+            'dry_run' => $dryRun,
+            'received' => 0,
+            'created' => 0,
+            'updated' => 0,
+            'recreated' => 0,
+            'skipped' => 0,
+            'images_uploaded' => 0,
+            'images_existing' => 0,
+            'images_missing' => 0,
+            'preview' => [],
+        ];
         foreach ($affectedDetailIds as $sourceId) {
             $stats['received']++;
             $detail = $details[$sourceId] ?? null;
@@ -90,7 +109,7 @@ final class ProductSyncService
                 }
                 continue;
             }
-            $payload = $this->mapper->toMixin($product, $detail, $visitorProducts[$sourceId] ?? null);
+            $payload = $this->mapper->toMixinCatalog($product, $detail, $visitorProducts[$sourceId] ?? null);
             $payload['main_category_id'] = $categoryId;
             if ($payload['name'] === '') {
                 $stats['skipped']++;
@@ -106,19 +125,41 @@ final class ProductSyncService
                 continue;
             }
 
-            $saved = $targetId === null ? $this->mixin->createProduct($payload) : $this->mixin->updateProduct((int) $targetId, $payload);
+            $action = $targetId === null ? 'create' : 'update';
+            try {
+                $saved = $targetId === null
+                    ? $this->mixin->createProduct($payload)
+                    : $this->mixin->updateProduct((int) $targetId, $payload);
+            } catch (HttpException $exception) {
+                if ($targetId === null || $exception->statusCode !== 404) {
+                    throw $exception;
+                }
+                $this->state->deleteMapping('product', $sourceId);
+                $saved = $this->mixin->createProduct($payload);
+                $targetId = null;
+                $action = 'recreate';
+            }
             $savedId = $this->findId($saved) ?? $targetId;
             if ($savedId === null) {
                 throw new RuntimeException("Mixin product response has no id for Mahak detail {$sourceId}");
             }
             $this->state->saveMapping('product', $sourceId, (string) $savedId);
-            $stats[$targetId === null ? 'created' : 'updated']++;
+            $stats[$action . 'd']++;
+            $imageAction = $this->syncImageFromData(
+                (int) $savedId,
+                $product,
+                array_values($photoGalleries),
+                $pictures,
+            );
+            $stats['images_' . $imageAction]++;
         }
 
         if (!$dryRun) {
             $this->saveSnapshots('mahak.products', 'productId', $changedProducts);
             $this->saveSnapshots('mahak.product_details', 'productDetailId', $changedDetails);
             $this->saveSnapshots('mahak.visitor_products', 'productDetailId', $changedVisitorProducts);
+            $this->saveSnapshots('mahak.pictures', 'pictureId', $changedPictures);
+            $this->saveSnapshots('mahak.photo_galleries', 'photoGalleryId', $changedPhotoGalleries);
             $this->advanceCheckpoints($objects);
         }
 
@@ -131,7 +172,8 @@ final class ProductSyncService
             return $this->productCategoryMap[$sourceDetailId];
         }
         $sourceCategoryId = (string) $this->value($product, 'productCategoryId', '');
-        return $this->categoryMap[$sourceCategoryId] ?? null;
+        return $this->categoryMap[$sourceCategoryId]
+            ?? ($this->fallbackCategoryId > 0 ? $this->fallbackCategoryId : null);
     }
 
     /** @template T @param callable():T $callback @return T */
@@ -418,6 +460,71 @@ final class ProductSyncService
             && (string) $this->value($product, 'product_identifier', '') === $sourceDetailId;
     }
 
+    /**
+     * @param array<string,mixed> $product
+     * @param list<array<string,mixed>> $galleryRows
+     * @param array<string,array<string,mixed>> $pictures
+     * @return 'uploaded'|'existing'|'missing'
+     */
+    private function syncImageFromData(int $targetId, array $product, array $galleryRows, array $pictures): string
+    {
+        $source = $this->imageSourceForProduct($product, $galleryRows, $pictures);
+        if ($source === null) {
+            return 'missing';
+        }
+        $existing = $this->mixin->productImages(['product_id' => $targetId, 'page_size' => 1]);
+        $existingRows = $this->value($existing, 'data', []);
+        if (is_array($existingRows) && count($existingRows) > 0) {
+            return 'existing';
+        }
+        $binary = $this->mahak->downloadContent($source['url']);
+        $length = strlen($binary);
+        if ($length < 1 || $length > 5 * 1024 * 1024) {
+            throw new RuntimeException("Mahak image size {$length} is outside the allowed range");
+        }
+        $mime = $this->detectImageMime($binary);
+        if ($mime === null) {
+            throw new RuntimeException('Mahak image format is not JPEG, PNG, GIF, or WebP');
+        }
+        $this->mixin->createProductImage([
+            'product_id' => $targetId,
+            'image_base64' => 'data:' . $mime . ';base64,' . base64_encode($binary),
+            'image_alt' => $source['title'],
+            'default' => true,
+            'order' => 0,
+        ]);
+        return 'uploaded';
+    }
+
+    /**
+     * @param array<string,mixed> $product
+     * @param list<array<string,mixed>> $galleryRows
+     * @param array<string,array<string,mixed>> $pictures
+     * @return array{url:string,title:string}|null
+     */
+    private function imageSourceForProduct(array $product, array $galleryRows, array $pictures): ?array
+    {
+        $productId = (string) $this->value($product, 'productId', '');
+        usort($galleryRows, fn (array $a, array $b): int => (int) $this->value($a, 'photoGalleryId', 0) <=> (int) $this->value($b, 'photoGalleryId', 0));
+        foreach ($galleryRows as $gallery) {
+            if ((string) $this->value($gallery, 'itemCode', '') !== $productId || (bool) $this->value($gallery, 'deleted', false)) {
+                continue;
+            }
+            $picture = $pictures[(string) $this->value($gallery, 'pictureId', '')] ?? null;
+            if (!is_array($picture) || (bool) $this->value($picture, 'deleted', false)) {
+                continue;
+            }
+            $url = $this->value($picture, 'url');
+            if (is_string($url) && $url !== '') {
+                return [
+                    'url' => $url,
+                    'title' => $this->normalizeText((string) $this->value($product, 'name', '')),
+                ];
+            }
+        }
+        return null;
+    }
+
     /** @return array<string,mixed> */
     private function findImageSource(string $sourceDetailId): array
     {
@@ -494,7 +601,13 @@ final class ProductSyncService
 
     private function advanceCheckpoints(array $objects): void
     {
-        foreach (['products' => 'mahak.products', 'productDetails' => 'mahak.product_details', 'visitorProducts' => 'mahak.visitor_products'] as $key => $entity) {
+        foreach ([
+            'products' => 'mahak.products',
+            'productDetails' => 'mahak.product_details',
+            'visitorProducts' => 'mahak.visitor_products',
+            'pictures' => 'mahak.pictures',
+            'photoGalleries' => 'mahak.photo_galleries',
+        ] as $key => $entity) {
             $max = $this->state->checkpoint($entity);
             foreach ($this->list($objects, $key) as $item) {
                 $max = max($max, (int) $this->value($item, 'rowVersion', 0));

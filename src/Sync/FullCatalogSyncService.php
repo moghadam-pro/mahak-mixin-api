@@ -53,6 +53,40 @@ final class FullCatalogSyncService
         }
     }
 
+    /**
+     * Captures the current Mahak state without writing to Mixin. Subsequent
+     * incremental runs then react only to changes made after this baseline.
+     *
+     * @return array<string,mixed>
+     */
+    public function baseline(): array
+    {
+        $runId = $this->state->startRun('mahak_to_local', 'product_baseline');
+        try {
+            $result = $this->withLock(function (): array {
+                $catalog = $this->fetchCatalog();
+                $this->persistCatalog($catalog);
+                return [
+                    'ok' => true,
+                    'scope' => 'product_baseline',
+                    'pages_fetched' => $catalog['pages'],
+                    'products' => count($catalog['products']),
+                    'product_details' => count($catalog['productDetails']),
+                    'visitor_products' => count($catalog['visitorProducts']),
+                    'pictures' => count($catalog['pictures']),
+                    'photo_galleries' => count($catalog['photoGalleries']),
+                    'mixin_writes' => 0,
+                ];
+            });
+            $result['run_id'] = $runId;
+            $this->state->finishRun($runId, 'success', $result);
+            return $result;
+        } catch (\Throwable $exception) {
+            $this->state->finishRun($runId, 'failed', null, $exception->getMessage());
+            throw $exception;
+        }
+    }
+
     /** @return array<string,mixed> */
     private function runInternal(bool $dryRun): array
     {

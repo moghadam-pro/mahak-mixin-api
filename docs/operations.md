@@ -29,7 +29,7 @@ php bin/console mixin:info
 | HTTP 401 Mixin | API key یا قالب Authorization اشتباه | `mixin:health` را تست کن |
 | قیمت نادرست | تفاوت ریال و تومان | `SYNC_PRICE_DIVISOR` را بررسی کن |
 | کالا ایجاد ولی آپدیت نمی‌شود | SQLite حذف یا mapping گم شده | `entity_mappings` و external_ids را بررسی کن |
-| timeout | شبکه یا حجم page زیاد | `SYNC_TIMEOUT_SECONDS` را بیشتر و `SYNC_PAGE_SIZE` را کمتر کن |
+| timeout | شبکه یا حجم page زیاد | `SYNC_TIMEOUT_SECONDS` را بیشتر کن؛ page sizeهای full/incremental را فقط با توجه به خطر RowVersion یکسان تغییر بده |
 
 ## بازیابی
 

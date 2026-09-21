@@ -40,6 +40,7 @@ try {
         'sync:products:dry-run' => AppFactory::productSync()->run(true),
         'sync:catalog:full:dry-run' => AppFactory::fullCatalogSync()->run(true),
         'sync:catalog:full' => runFullCatalog(),
+        'sync:products:baseline' => AppFactory::fullCatalogSync()->baseline(),
         default => [
             'usage' => [
                 'php bin/console --version',
@@ -66,6 +67,7 @@ try {
                 'php bin/console sync:products',
                 'php bin/console sync:catalog:full:dry-run',
                 'php bin/console sync:catalog:full',
+                'php bin/console sync:products:baseline',
             ],
         ],
     };

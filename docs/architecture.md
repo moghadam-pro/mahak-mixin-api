@@ -23,6 +23,7 @@ MahakClient ──► ProductSyncService ──► ProductMapper ──► Mixin
 - `ProductMapper`: تبدیل مدل‌های Product، ProductDetail و VisitorProduct محک به ProductCreate/Patch در Mixin.
 - `StateStore`: نگهداری `RowVersion` و نگاشت شناسه مبدأ/مقصد.
 - `ProductSyncService`: orchestration همگام‌سازی و جلوگیری از جلو رفتن checkpoint در dry-run.
+- `ProductSyncService` در حالت دائمی تغییرات بعد از baseline را می‌خواند، دسته fallback را اعمال می‌کند و نخستین تصویر معتبر را از snapshotهای Picture/PhotoGallery منتقل می‌کند.
 
 ## مدل همگام‌سازی افزایشی
 
@@ -31,6 +32,8 @@ MahakClient ──► ProductSyncService ──► ProductMapper ──► Mixin
 ### ورود اولیه کامل
 
 `FullCatalogSyncService` از worker افزایشی جدا است. این سرویس پنج جریان Product، ProductDetail، VisitorProduct، Picture و PhotoGallery را از نسخه صفر و با cursor مستقل صفحه‌بندی می‌کند. هر ProductDetail فعال به یک محصول Mixin تبدیل می‌شود و نخستین تصویر معتبر Product به آن متصل می‌گردد. یک دسته نگهدارنده موقت برای الزام واقعی Mixin استفاده می‌شود. mapping بعد از هر محصول ذخیره می‌شود، بنابراین قطع‌شدن اجرای طولانی با اجرای مجدد قابل بازیابی است؛ mappingهای مقصد حذف‌شده نیز روی 404 بازسازی می‌شوند.
+
+همین سرویس فرمان baseline فقط‌خواندنی را نیز فراهم می‌کند. baseline بدون هیچ درخواست نوشتنی به Mixin، snapshot و checkpoint فعلی را ثبت می‌کند؛ بنابراین worker زمان‌بندی‌شده فقط تغییراتی را می‌بیند که کاربر بعداً از بازارا ارسال کرده است.
 
 نگاشت `productDetailId → Mixin product id` در `entity_mappings` قرار می‌گیرد. وجود mapping به معنای `PATCH` و نبود آن به معنای `POST` است.
 
