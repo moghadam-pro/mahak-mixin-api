@@ -13,12 +13,21 @@ php bin/console mixin:info
 
 ## اولین همگام‌سازی
 
-1. `SYNC_DRY_RUN=true` را نگه دار.
-2. `php bin/console sync:products:dry-run` را اجرا کن.
-3. نام، قیمت، barcode و stock نمونه‌ها را با هر دو پنل مقایسه کن.
-4. اگر قیمت ده برابر یا یک‌دهم است، `SYNC_PRICE_DIVISOR` را اصلاح کن.
-5. از Mixin و `var/bridge.sqlite` پشتیبان بگیر.
-6. `SYNC_DRY_RUN=false` و سپس `php bin/console sync:products` را اجرا کن.
+1. روی فروشگاه خالی، `SYNC_DRY_RUN=true` را نگه دار.
+2. `php bin/console sync:products:baseline` را فقط یک‌بار اجرا کن؛ این فرمان هیچ نوشتنی در Mixin ندارد.
+3. تعداد Product، ProductDetail و VisitorProduct را با فهرست محک مقایسه کن.
+4. `SYNC_DRY_RUN=false` را تنظیم و Cron یک‌دقیقه‌ای `sync:products` را فعال کن.
+5. یک کالای جدید یا واقعاً ویرایش‌شده را از بازارا ارسال کن و نتیجه Cron را در `var/log/cron.log` ببین.
+
+در baseline تأییدشده پروژه، هر سه شمارنده Product، ProductDetail و VisitorProduct برابر `۱۸۲۸` بود. اندازه صفحه incremental نباید آن‌قدر کوچک شود که رکوردهای دارای RowVersion یکسان بین صفحات جا بیفتند.
+
+## ارسال دستی بازارا و RowVersion
+
+- worker یک webhook نیست و فرمان بازارا مستقیماً Bridge را فراخوانی نمی‌کند؛ Cron تغییرات را از API محک pull می‌کند.
+- کالای جدید یا ویرایش‌شده بعد از baseline در اجرای بعدی پردازش می‌شود.
+- ارسال دوباره کالای قدیمی بدون تغییر ممکن است RowVersion تازه نسازد و در نتیجه `received=0` باقی بماند.
+- برای کالای قدیمیِ ارسال‌شده پیش از baseline، از `sync:product:preview` و سپس `sync:product:apply` با گارد موقت `SYNC_ALLOW_SINGLE_PRODUCT_WRITE=true` استفاده کن.
+- پس از پایان انتقال تک‌محصولی، گارد را دوباره `false` کن؛ Cron دائمی باید با `SYNC_DRY_RUN=false` باقی بماند.
 
 ## خطاهای متداول
 
@@ -30,6 +39,7 @@ php bin/console mixin:info
 | قیمت نادرست | تفاوت ریال و تومان | `SYNC_PRICE_DIVISOR` را بررسی کن |
 | کالا ایجاد ولی آپدیت نمی‌شود | SQLite حذف یا mapping گم شده | `entity_mappings` و external_ids را بررسی کن |
 | timeout | شبکه یا حجم page زیاد | `SYNC_TIMEOUT_SECONDS` را بیشتر کن؛ page sizeهای full/incremental را فقط با توجه به خطر RowVersion یکسان تغییر بده |
+| Cron با `received=0` اجرا می‌شود | پس از checkpoint تغییری با RowVersion جدید نرسیده است | یک کالای واقعاً جدید/ویرایش‌شده را تست کن؛ کالای قدیمی پیش از baseline را یک‌بار با فرمان تک‌محصولی منتقل کن |
 
 ## بازیابی
 
