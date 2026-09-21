@@ -483,24 +483,62 @@ function purgeAllMixinProducts(array $argv): array
         throw new RuntimeException('Refusing purge: a product sync is currently running');
     }
     try {
-        $response = AppFactory::mixin()->bulkUpdateProducts([
-            'items' => [[
-                'all_products' => true,
-                'action' => 'delete',
-            ]],
-        ]);
+        $client = AppFactory::mixin();
+        $productIds = listAllMixinProductIds($client);
+        $completedBatches = 0;
+        foreach (array_chunk($productIds, 100) as $batch) {
+            $client->bulkUpdateProducts([
+                'items' => [[
+                    'product_ids' => $batch,
+                    'action' => 'delete',
+                ]],
+            ]);
+            $completedBatches++;
+        }
         AppFactory::state()->resetProductSyncState();
         return [
             'ok' => true,
             'scope' => 'all_mixin_products',
+            'products_found' => count($productIds),
+            'products_deleted' => count($productIds),
+            'batches_completed' => $completedBatches,
             'local_product_state_reset' => true,
-            'response' => $response,
             'next' => 'Set MIXIN_ALLOW_PRODUCT_PURGE=false immediately.',
         ];
     } finally {
         flock($handle, LOCK_UN);
         fclose($handle);
     }
+}
+
+/** @return list<int> */
+function listAllMixinProductIds(MixinClient $client): array
+{
+    $ids = [];
+    for ($page = 1; $page <= 100; $page++) {
+        $response = $client->products([
+            'page' => $page,
+            'page_size' => 1000,
+            'fields' => 'id',
+        ]);
+        $rows = ciValue($response, 'data', []);
+        if (!is_array($rows)) {
+            throw new RuntimeException('Mixin product list response has no data array');
+        }
+        foreach ($rows as $row) {
+            if (!is_array($row)) {
+                continue;
+            }
+            $id = filter_var(ciValue($row, 'id'), FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]);
+            if ($id !== false) {
+                $ids[(int) $id] = (int) $id;
+            }
+        }
+        if (count($rows) < 1000) {
+            return array_values($ids);
+        }
+    }
+    throw new RuntimeException('Mixin product listing exceeded 100 pages; purge was not started');
 }
 
 function syncOneProduct(array $argv, bool $dryRun): array
