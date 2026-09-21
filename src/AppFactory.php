@@ -65,7 +65,7 @@ final class AppFactory
             new ProductMapper(Config::int('SYNC_PRICE_DIVISOR', 10)),
             Config::int('MAHAK_VISITOR_ID'),
             Config::int('SYNC_FALLBACK_CATEGORY_ID', 0),
-            Config::int('SYNC_PAGE_SIZE', 100),
+            Config::int('SYNC_FULL_PAGE_SIZE', 5000),
             Config::int('SYNC_FULL_MAX_PAGES', 100),
             Config::int('SYNC_WRITE_DELAY_MS', 150),
             Config::path('SYNC_LOCK_FILE', 'var/product-sync.lock'),

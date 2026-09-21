@@ -206,6 +206,8 @@ php8.3 bin/console sync:catalog:full:dry-run
 
 این dry-run همه صفحات Product، ProductDetail، VisitorProduct، Picture و PhotoGallery را از ابتدا می‌خواند، تعداد واقعی کالا و تصویر را گزارش می‌کند و چیزی در مقصد نمی‌نویسد. پس از بررسی خروجی و تهیه backup از SQLite، برای اجرای واقعی فقط در همان بازه عملیات `SYNC_DRY_RUN=false` و `SYNC_ALLOW_FULL_CATALOG_WRITE=true` را تنظیم کنید:
 
+ورود کامل از `SYNC_FULL_PAGE_SIZE` مستقل استفاده می‌کند. مقدار پیش‌فرض `5000` برای جلوگیری از جاافتادن ردیف‌هایی انتخاب شده که در API محک RowVersion یکسان دارند؛ `SYNC_PAGE_SIZE=100` برای worker افزایشی بدون تغییر باقی می‌ماند.
+
 ```bash
 php8.3 bin/console sync:catalog:full
 ```
