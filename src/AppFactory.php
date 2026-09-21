@@ -10,6 +10,7 @@ use MahakMixin\Http\HttpClient;
 use MahakMixin\Mapper\ProductMapper;
 use MahakMixin\Persistence\StateStore;
 use MahakMixin\Sync\ProductSyncService;
+use MahakMixin\Sync\FullCatalogSyncService;
 
 final class AppFactory
 {
@@ -51,6 +52,22 @@ final class AppFactory
             Config::int('SYNC_PAGE_SIZE', 100),
             Config::intMap('SYNC_CATEGORY_MAP_JSON'),
             Config::intMap('SYNC_PRODUCT_CATEGORY_MAP_JSON'),
+            Config::path('SYNC_LOCK_FILE', 'var/product-sync.lock'),
+        );
+    }
+
+    public static function fullCatalogSync(): FullCatalogSyncService
+    {
+        return new FullCatalogSyncService(
+            self::mahak(),
+            self::mixin(),
+            self::state(),
+            new ProductMapper(Config::int('SYNC_PRICE_DIVISOR', 10)),
+            Config::int('MAHAK_VISITOR_ID'),
+            Config::int('SYNC_FALLBACK_CATEGORY_ID', 0),
+            Config::int('SYNC_PAGE_SIZE', 100),
+            Config::int('SYNC_FULL_MAX_PAGES', 100),
+            Config::int('SYNC_WRITE_DELAY_MS', 150),
             Config::path('SYNC_LOCK_FILE', 'var/product-sync.lock'),
         );
     }

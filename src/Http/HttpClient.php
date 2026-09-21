@@ -89,4 +89,50 @@ final class HttpClient
 
         return ['status' => $status, 'data' => $decoded, 'attempts' => $attempt + 1];
     }
+
+    /**
+     * Sends scalar multipart form fields. cURL generates the boundary header;
+     * callers must not add Content-Type manually.
+     *
+     * @param array<string,string> $headers
+     * @param array<string,scalar> $form
+     */
+    public function requestMultipart(string $method, string $url, array $headers, array $form): array
+    {
+        $headerLines = ['Accept: application/json'];
+        foreach ($headers as $name => $value) {
+            $headerLines[] = $name . ': ' . $value;
+        }
+        $curl = curl_init($url);
+        if ($curl === false) {
+            throw new HttpException('Unable to initialize cURL');
+        }
+        curl_setopt_array($curl, [
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_CUSTOMREQUEST => strtoupper($method),
+            CURLOPT_CONNECTTIMEOUT => min(10, $this->timeoutSeconds),
+            CURLOPT_TIMEOUT => $this->timeoutSeconds,
+            CURLOPT_HTTPHEADER => $headerLines,
+            CURLOPT_POSTFIELDS => $form,
+            CURLOPT_SSL_VERIFYPEER => $this->verifyTls,
+            CURLOPT_SSL_VERIFYHOST => $this->verifyTls ? 2 : 0,
+            CURLOPT_USERAGENT => 'mahak-mixin-bridge/1.0',
+        ]);
+        $raw = curl_exec($curl);
+        $status = (int) curl_getinfo($curl, CURLINFO_RESPONSE_CODE);
+        $error = curl_error($curl);
+        curl_close($curl);
+        if ($raw === false) {
+            throw new HttpException('Network request failed: ' . $error);
+        }
+        try {
+            $decoded = $raw === '' ? null : json_decode($raw, true, 512, JSON_THROW_ON_ERROR);
+        } catch (JsonException) {
+            $decoded = $raw;
+        }
+        if ($status < 200 || $status >= 300) {
+            throw new HttpException("HTTP {$status} returned by {$url}", $status, $decoded);
+        }
+        return ['status' => $status, 'data' => $decoded, 'attempts' => 1];
+    }
 }

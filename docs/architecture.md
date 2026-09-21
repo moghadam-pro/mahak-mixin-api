@@ -28,6 +28,10 @@ MahakClient ──► ProductSyncService ──► ProductMapper ──► Mixin
 
 برای هر موجودیت محک، بیشترین `rowVersion` موفق در `sync_checkpoints` ذخیره می‌شود. درخواست بعدی فقط تغییرات بعد از آن نسخه را می‌گیرد. checkpoint بعد از پایان عملیات نوشتنی موفق ذخیره می‌شود؛ بنابراین شکست میانی باعث از دست رفتن داده نمی‌شود و اجرای بعدی قابل تکرار است.
 
+### ورود اولیه کامل
+
+`FullCatalogSyncService` از worker افزایشی جدا است. این سرویس پنج جریان Product، ProductDetail، VisitorProduct، Picture و PhotoGallery را از نسخه صفر و با cursor مستقل صفحه‌بندی می‌کند. هر ProductDetail فعال به یک محصول Mixin تبدیل می‌شود و نخستین تصویر معتبر Product به آن متصل می‌گردد. یک دسته نگهدارنده موقت برای الزام واقعی Mixin استفاده می‌شود. mapping بعد از هر محصول ذخیره می‌شود، بنابراین قطع‌شدن اجرای طولانی با اجرای مجدد قابل بازیابی است؛ mappingهای مقصد حذف‌شده نیز روی 404 بازسازی می‌شوند.
+
 نگاشت `productDetailId → Mixin product id` در `entity_mappings` قرار می‌گیرد. وجود mapping به معنای `PATCH` و نبود آن به معنای `POST` است.
 
 چون API محک برای هر موجودیت RowVersion مستقل دارد، ممکن است در یک اجرا فقط `VisitorProduct` تغییر کند و Product/ProductDetail در پاسخ نباشد. آخرین نسخه کامل هر رکورد در `entity_snapshots` cache می‌شود تا تغییر موجودی یا تغییر والد با داده‌های قبلی join شود. dry-run این cache و checkpointها را تغییر نمی‌دهد.

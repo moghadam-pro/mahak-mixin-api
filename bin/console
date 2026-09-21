@@ -25,6 +25,7 @@ try {
         'mixin:health' => AppFactory::mixin()->health(),
         'mixin:info' => AppFactory::mixin()->info(),
         'mixin:categories:inspect' => AppFactory::mixin()->categories(['page' => 1, 'page_size' => 50]),
+        'mixin:fallback-category:ensure' => ensureFallbackCategory(AppFactory::mixin()),
         'mixin:test-product:preview' => TestProductFactory::make('preview', optionalPositiveInt('MIXIN_TEST_CATEGORY_ID')),
         'mixin:test-product:create' => createMixinTestProduct(AppFactory::mixin()),
         'mixin:test-product:delete' => deleteMixinTestProduct(AppFactory::mixin(), $argv[2] ?? null),
@@ -36,6 +37,8 @@ try {
         'sync:product:image:rollback' => rollbackOneProductImage($argv),
         'sync:products' => AppFactory::productSync()->run(Config::bool('SYNC_DRY_RUN', true)),
         'sync:products:dry-run' => AppFactory::productSync()->run(true),
+        'sync:catalog:full:dry-run' => AppFactory::fullCatalogSync()->run(true),
+        'sync:catalog:full' => runFullCatalog(),
         default => [
             'usage' => [
                 'php bin/console --version',
@@ -47,6 +50,7 @@ try {
                 'php bin/console mixin:health',
                 'php bin/console mixin:info',
                 'php bin/console mixin:categories:inspect',
+                'php bin/console mixin:fallback-category:ensure',
                 'php bin/console mixin:test-product:preview',
                 'php bin/console mixin:test-product:create',
                 'php bin/console mixin:test-product:delete PRODUCT_ID',
@@ -58,6 +62,8 @@ try {
                 'php bin/console sync:product:image:rollback PRODUCT_DETAIL_ID IMAGE_ID',
                 'php bin/console sync:products:dry-run',
                 'php bin/console sync:products',
+                'php bin/console sync:catalog:full:dry-run',
+                'php bin/console sync:catalog:full',
             ],
         ],
     };
@@ -386,6 +392,70 @@ function assertMixinTestWritesAllowed(): void
 {
     if (!Config::bool('MIXIN_ALLOW_TEST_WRITES', false)) {
         throw new RuntimeException('Test writes are disabled. Set MIXIN_ALLOW_TEST_WRITES=true temporarily.');
+    }
+}
+
+function ensureFallbackCategory(MixinClient $client): array
+{
+    assertFullCatalogWriteAllowed();
+    $name = Config::string('SYNC_FALLBACK_CATEGORY_NAME', 'بدون دسته‌بندی');
+    $response = $client->categories(['name' => $name, 'page' => 1, 'page_size' => 100]);
+    foreach (nestedRows($response) as $row) {
+        if (trim((string) ciValue($row, 'name', '')) === $name) {
+            return [
+                'ok' => true,
+                'action' => 'existing',
+                'category_id' => ciValue($row, 'id'),
+                'category_name' => $name,
+                'next' => 'Set SYNC_FALLBACK_CATEGORY_ID to category_id.',
+            ];
+        }
+    }
+    $created = $client->createCategory(['name' => $name]);
+    $id = ciValue(is_array(ciValue($created, 'data')) ? ciValue($created, 'data') : $created, 'id');
+    if (filter_var($id, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]) === false) {
+        throw new RuntimeException('Mixin category response did not contain a valid id');
+    }
+    return [
+        'ok' => true,
+        'action' => 'created',
+        'category_id' => (int) $id,
+        'category_name' => $name,
+        'next' => 'Set SYNC_FALLBACK_CATEGORY_ID to category_id.',
+    ];
+}
+
+/** @return list<array<string,mixed>> */
+function nestedRows(array $value): array
+{
+    $rows = [];
+    $walk = static function (array $node) use (&$rows, &$walk): void {
+        if (ciValue($node, 'id') !== null && ciValue($node, 'name') !== null) {
+            $rows[] = $node;
+        }
+        foreach ($node as $child) {
+            if (is_array($child)) {
+                $walk($child);
+            }
+        }
+    };
+    $walk($value);
+    return $rows;
+}
+
+function runFullCatalog(): array
+{
+    assertFullCatalogWriteAllowed();
+    if (Config::bool('SYNC_DRY_RUN', true)) {
+        throw new RuntimeException('Full catalogue write requires SYNC_DRY_RUN=false');
+    }
+    return AppFactory::fullCatalogSync()->run(false);
+}
+
+function assertFullCatalogWriteAllowed(): void
+{
+    if (!Config::bool('SYNC_ALLOW_FULL_CATALOG_WRITE', false)) {
+        throw new RuntimeException('Full catalogue writes are disabled. Set SYNC_ALLOW_FULL_CATALOG_WRITE=true temporarily.');
     }
 }
 

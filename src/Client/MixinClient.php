@@ -20,6 +20,17 @@ final class MixinClient
 
     /** @param array<string, scalar|null> $query */
     public function categories(array $query = []): array { return $this->request('GET', '/api/v4/categories/', null, $query); }
+    /** @param array<string, mixed> $category */
+    public function createCategory(array $category): array
+    {
+        $response = $this->http->requestMultipart(
+            'POST',
+            rtrim($this->baseUrl, '/') . '/api/v4/categories/',
+            ['Authorization' => 'Api-Key ' . $this->apiKey],
+            $category,
+        );
+        return is_array($response['data']) ? $response['data'] : ['raw' => $response['data']];
+    }
     /** @param array<string, scalar|null> $query */
     public function products(array $query = []): array { return $this->request('GET', '/api/v4/products/', null, $query); }
     public function product(int $id): array { return $this->request('GET', "/api/v4/products/{$id}/"); }

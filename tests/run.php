@@ -14,7 +14,7 @@ final class SkippedTest extends RuntimeException {}
 
 $tests = [];
 $tests['reads a valid semantic application version'] = static function (): void {
-    assertSame('0.1.1', Version::current());
+    assertSame('0.2.0', Version::current());
 };
 $tests['maps Mahak product to Mixin and converts rial to toman'] = static function (): void {
     $payload = (new ProductMapper(10))->toMixin(
@@ -46,6 +46,23 @@ $tests['marks unavailable inventory'] = static function (): void {
     assertSame(false, $payload['available']);
     assertSame(0, $payload['stock']);
     assertSame('out_of_stock', $payload['stock_type']);
+};
+$tests['catalog mode ignores unreliable child deleted flags'] = static function (): void {
+    $payload = (new ProductMapper(10))->toMixinCatalog(
+        ['ProductId' => 1, 'Name' => 'کالای فعال', 'Deleted' => false],
+        ['ProductDetailId' => 2, 'ProductId' => 1, 'Price1' => 12000, 'Count1' => 8, 'Deleted' => true],
+        ['ProductDetailId' => 2, 'Count1' => 5, 'Deleted' => true],
+    );
+    assertSame(true, $payload['available']);
+    assertSame(5, $payload['stock']);
+};
+$tests['catalog mode falls back to detail stock without visitor row'] = static function (): void {
+    $payload = (new ProductMapper(10))->toMixinCatalog(
+        ['ProductId' => 1, 'Name' => 'کالای فعال', 'Deleted' => false],
+        ['ProductDetailId' => 2, 'ProductId' => 1, 'Price1' => 12000, 'Count1' => 8, 'Deleted' => true],
+    );
+    assertSame(true, $payload['available']);
+    assertSame(8, $payload['stock']);
 };
 $tests['accepts PascalCase Mahak responses'] = static function (): void {
     $payload = (new ProductMapper(10))->toMixin(

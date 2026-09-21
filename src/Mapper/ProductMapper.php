@@ -16,13 +16,41 @@ final class ProductMapper
     /** @param array<string,mixed> $product @param array<string,mixed> $detail @param array<string,mixed>|null $visitorProduct */
     public function toMixin(array $product, array $detail, ?array $visitorProduct = null): array
     {
+        return $this->map($product, $detail, $visitorProduct, false);
+    }
+
+    /**
+     * Maps the complete Mahak catalogue. Mahak marks ProductDetail and
+     * VisitorProduct rows as deleted even while their parent Product remains
+     * active, so catalogue mode deliberately treats Product.Deleted as the
+     * authoritative lifecycle flag.
+     *
+     * @param array<string,mixed> $product
+     * @param array<string,mixed> $detail
+     * @param array<string,mixed>|null $visitorProduct
+     */
+    public function toMixinCatalog(array $product, array $detail, ?array $visitorProduct = null): array
+    {
+        return $this->map($product, $detail, $visitorProduct, true);
+    }
+
+    /** @param array<string,mixed> $product @param array<string,mixed> $detail @param array<string,mixed>|null $visitorProduct */
+    private function map(array $product, array $detail, ?array $visitorProduct, bool $catalogMode): array
+    {
         $visitorPrice = (float) $this->read($visitorProduct ?? [], 'price', 0);
         $detailPrice = (float) $this->read($detail, 'price1', 0);
         $price = $visitorPrice > 0 ? $visitorPrice : $detailPrice;
-        $stock = max(0, (int) floor((float) $this->read($visitorProduct ?? [], 'count1', 0)));
-        $deleted = (bool) $this->read($product, 'deleted', false)
-            || (bool) $this->read($detail, 'deleted', false)
-            || (bool) $this->read($visitorProduct ?? [], 'deleted', false);
+        $visitorStock = $visitorProduct === null ? null : $this->read($visitorProduct, 'count1');
+        $stockSource = $catalogMode && ($visitorStock === null || $visitorStock === '')
+            ? $this->read($detail, 'count1', 0)
+            : ($visitorStock ?? 0);
+        $stock = max(0, (int) floor((float) $stockSource));
+        $deleted = (bool) $this->read($product, 'deleted', false);
+        if (!$catalogMode) {
+            $deleted = $deleted
+                || (bool) $this->read($detail, 'deleted', false)
+                || (bool) $this->read($visitorProduct ?? [], 'deleted', false);
+        }
 
         $productId = $this->read($product, 'productId');
         $productDetailId = $this->read($detail, 'productDetailId');

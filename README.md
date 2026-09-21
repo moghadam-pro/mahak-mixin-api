@@ -110,6 +110,8 @@ Document Root وب‌سرور باید روی `/var/www/mahak-mixin-bridge/publi
 | `MIXIN_BASE_URL` | دامنه فروشگاه، بدون `/api/v4` |
 | `MIXIN_API_KEY` | کلید API میکسین |
 | `SYNC_DRY_RUN` | اگر `true` باشد، هیچ تغییر عمومی در میکسین نوشته نمی‌شود |
+| `SYNC_ALLOW_FULL_CATALOG_WRITE` | گارد مستقل برای اجازه موقت ورود کامل کاتالوگ |
+| `SYNC_FALLBACK_CATEGORY_ID` | شناسه دسته موقت میکسین برای کالاهای هنوز دسته‌بندی‌نشده |
 | `SYNC_CATEGORY_MAP_JSON` | نگاشت دسته‌های محک به دسته‌های میکسین |
 | `SYNC_PRODUCT_CATEGORY_MAP_JSON` | استثنای دسته‌بندی بر اساس ProductDetail |
 | `SYNC_PRICE_DIVISOR` | ضریب تبدیل واحد پول؛ ریال به تومان برابر `10` |
@@ -185,6 +187,32 @@ php8.3 bin/console sync:product:image:apply PRODUCT_DETAIL_ID
 ```
 
 نوشتن تک‌محصولی فقط وقتی مجاز است که `SYNC_ALLOW_SINGLE_PRODUCT_WRITE=true` باشد. این مجوز باید پس از آزمایش دوباره `false` شود.
+
+### ورود کامل کاتالوگ همراه تصاویر
+
+Mixin ایجاد محصول بدون دسته را نمی‌پذیرد. تا زمان نهایی‌شدن دسته‌بندی‌ها، یک دسته ریشه موقت با نام «بدون دسته‌بندی» ساخته می‌شود و همه کالاها به آن می‌روند؛ بعداً می‌توان محصولات را بدون تغییر شناسه یا mapping به دسته‌های نهایی منتقل کرد.
+
+ابتدا فقط برای ساخت یا یافتن این دسته، `SYNC_ALLOW_FULL_CATALOG_WRITE=true` و `SYNC_FALLBACK_CATEGORY_NAME=بدون دسته‌بندی` را موقتاً تنظیم و اجرا کنید:
+
+```bash
+php8.3 bin/console mixin:fallback-category:ensure
+```
+
+مقدار `category_id` خروجی را در `SYNC_FALLBACK_CATEGORY_ID` قرار دهید، گارد را دوباره `false` کنید و پیش‌نمایش کامل بگیرید:
+
+```bash
+php8.3 bin/console sync:catalog:full:dry-run
+```
+
+این dry-run همه صفحات Product، ProductDetail، VisitorProduct، Picture و PhotoGallery را از ابتدا می‌خواند، تعداد واقعی کالا و تصویر را گزارش می‌کند و چیزی در مقصد نمی‌نویسد. پس از بررسی خروجی و تهیه backup از SQLite، برای اجرای واقعی فقط در همان بازه عملیات `SYNC_DRY_RUN=false` و `SYNC_ALLOW_FULL_CATALOG_WRITE=true` را تنظیم کنید:
+
+```bash
+php8.3 bin/console sync:catalog:full
+```
+
+اجرا قابل تکرار است: mappingهای معتبر update می‌شوند، mapping محصولاتی که از Mixin حذف شده‌اند پس از پاسخ 404 بازسازی می‌شوند و تصویر موجود دوباره بارگذاری نمی‌شود. خطای یک کالا مانع ادامه بقیه نیست و در `errors` ثبت می‌شود. checkpointها فقط در اجرای کاملاً موفق جلو می‌روند. در پایان `SYNC_DRY_RUN=true` و `SYNC_ALLOW_FULL_CATALOG_WRITE=false` را برگردانید.
+
+در حالت کاتالوگ کامل، وضعیت حذف خود Product محک مرجع است؛ فلگ‌های `Deleted` در ProductDetail و VisitorProduct به‌دلیل رفتار مشاهده‌شده API نادیده گرفته می‌شوند. موجودی ابتدا از VisitorProduct و در نبود آن از ProductDetail خوانده می‌شود.
 
 ## زمان‌بندی Cron
 

@@ -25,12 +25,27 @@ MIXIN_API_KEY=...
 MIXIN_ALLOW_TEST_WRITES=false
 
 SYNC_DRY_RUN=true
+SYNC_ALLOW_FULL_CATALOG_WRITE=false
+SYNC_FALLBACK_CATEGORY_NAME=بدون دسته‌بندی
+SYNC_FALLBACK_CATEGORY_ID=
 SYNC_PAGE_SIZE=100
+SYNC_FULL_MAX_PAGES=100
+SYNC_WRITE_DELAY_MS=150
 SYNC_PRICE_DIVISOR=10
 SYNC_TIMEOUT_SECONDS=30
 SYNC_VERIFY_TLS=true
 STATE_DB=var/bridge.sqlite
 ```
+
+## ورود کامل کاتالوگ
+
+- `SYNC_ALLOW_FULL_CATALOG_WRITE=false`: گارد مستقل عملیات انبوه؛ فقط هنگام ساخت دسته موقت یا اجرای واقعی روشن شود.
+- `SYNC_FALLBACK_CATEGORY_NAME`: نام دسته نگهدارنده موقت در Mixin.
+- `SYNC_FALLBACK_CATEGORY_ID`: شناسه مثبت دسته نگهدارنده؛ برای dry-run و اجرای واقعی الزامی است.
+- `SYNC_FULL_MAX_PAGES`: سقف ایمنی صفحه‌بندی کامل محک.
+- `SYNC_WRITE_DELAY_MS`: مکث بین نوشتن کالاها برای کاهش فشار روی دو API.
+
+ورود کامل عمداً از `SYNC_CATEGORY_MAP_JSON` و `SYNC_PRODUCT_CATEGORY_MAP_JSON` استفاده نمی‌کند و همه کالاها را به دسته موقت می‌فرستد. این رفتار تا زمان طراحی طبقه‌بندی نهایی است.
 
 ## انتخاب واحد قیمت
 
