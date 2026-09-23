@@ -9,7 +9,8 @@
 | ProductCategory | Category | قابل پیاده‌سازی | ساخت والد قبل از فرزند و نگاشت شناسه |
 | Product | Product | پیاده‌سازی اولیه | نام، توضیح، ابعاد، وزن |
 | ProductDetail | Product/Variant | نیازمند تصمیم | محصول مستقل یا variant بر اساس properties |
-| VisitorProduct | Product stock/price | پیاده‌سازی اولیه | منبع اصلی موجودی و قیمت سایت |
+| ProductDetail | Product price | پیاده‌سازی‌شده | `Price2` قیمت سایت؛ fallback به `Price1` |
+| VisitorProduct | Product stock | پیاده‌سازی اولیه | منبع اصلی موجودی سایت از `Count1` |
 | Picture/PhotoGallery | ProductImage | قابل پیاده‌سازی | upload، ترتیب و تصویر پیش‌فرض |
 | ProductProperty | Attribute | قابل پیاده‌سازی | تفکیک ویژگی اصلی و ثانویه |
 | Person | Customer | قابل پیاده‌سازی | duplicate بر اساس موبایل/کدملی/شناسه خارجی |

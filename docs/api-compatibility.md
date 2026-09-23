@@ -61,10 +61,10 @@ Authorization: Bearer USER_TOKEN
 
 در داده واقعی آزمایش‌شده:
 
-- `VisitorProduct.Price` برای هر چهار کالا صفر بود.
-- `ProductDetail.Price1` مقدار داشت.
-- `DefaultSellPriceLevel=1` مشاهده شد.
-- Mapper فقط وقتی قیمت VisitorProduct مثبت باشد آن را ترجیح می‌دهد؛ در غیر این صورت از `ProductDetail.Price1` استفاده می‌کند.
+- `ProductDetail` سطح‌های فروش `Price1` تا `Price10` و سطح‌های مصرف‌کننده `ConsumerPrice1` تا `ConsumerPrice10` را برمی‌گرداند.
+- قاعده کسب‌وکار: `Price2` قیمت سایت و `Price1` قیمت عمده است.
+- Mapper در صورت مثبت‌بودن `Price2` همان را انتخاب می‌کند؛ در غیر این صورت به `Price1` برمی‌گردد و اگر هر دو صفر باشند قیمت صفر می‌فرستد.
+- `VisitorProduct.Price` در انتخاب قیمت استفاده نمی‌شود و `VisitorProduct.Count1` همچنان منبع اصلی موجودی است.
 - موجودی فعلی از `VisitorProduct.Count1` خوانده می‌شود.
 - `Count2` نیز مقدار داشت، اما معنای کسب‌وکاری آن هنوز تأیید نشده است.
 

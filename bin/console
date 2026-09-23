@@ -215,8 +215,9 @@ function listMahakProductCandidates(MahakClient $client, int $visitorId): array
         $product = $products[$productId] ?? [];
         $visitor = $visitorProducts[$detailId] ?? [];
         $categoryId = (string) ciValue($product, 'ProductCategoryId', '');
-        $visitorPrice = (float) ciValue($visitor, 'Price', 0);
-        $rawPrice = $visitorPrice > 0 ? $visitorPrice : (float) ciValue($detail, 'Price1', 0);
+        $detailPrice2 = (float) ciValue($detail, 'Price2', 0);
+        $detailPrice1 = (float) ciValue($detail, 'Price1', 0);
+        $rawPrice = $detailPrice2 > 0 ? $detailPrice2 : $detailPrice1;
         $items[] = [
             'product_detail_id' => $detailId,
             'product_id' => $productId,
@@ -230,7 +231,9 @@ function listMahakProductCandidates(MahakClient $client, int $visitorId): array
             'unit_ratio' => ciValue($product, 'UnitRatio'),
             'properties' => ciValue($detail, 'Properties'),
             'barcode' => ciValue($detail, 'Barcode'),
-            'price_source' => $visitorPrice > 0 ? 'VisitorProduct.Price' : 'ProductDetail.Price1',
+            'price_source' => $detailPrice2 > 0 ? 'ProductDetail.Price2' : 'ProductDetail.Price1',
+            'price1_raw' => $detailPrice1,
+            'price2_raw' => $detailPrice2,
             'price_raw' => $rawPrice,
             'price_mixin' => (int) round($rawPrice / Config::int('SYNC_PRICE_DIVISOR', 10)),
             'stock_source' => 'VisitorProduct.Count1',

@@ -35,8 +35,8 @@
 3. `MIXIN_BASE_URL` فقط origin است و `/api/v4` ندارد.
 4. پاسخ‌های واقعی محک PascalCase هستند و Bridge آن‌ها را می‌پذیرد.
 5. شناسه‌های عددی ProductDetail پیش از استفاده در mapping به string نرمال می‌شوند.
-6. اگر `VisitorProduct.Price` صفر یا نامعتبر باشد، قیمت از `ProductDetail.Price1` خوانده می‌شود.
-7. `DefaultSellPriceLevel=1` در داده آزمایش مشاهده شد و با fallback به `Price1` سازگار است.
+6. قیمت سایت از `ProductDetail.Price2` خوانده می‌شود و فقط وقتی خالی یا صفر باشد به `ProductDetail.Price1` برمی‌گردد.
+7. اگر هر دو سطح اول و دوم صفر باشند، قیمت صفر به Mixin ارسال می‌شود؛ `VisitorProduct.Price` منبع قیمت سایت نیست.
 8. نام محصول trim می‌شود، فاصله‌های تکراری به یک فاصله تبدیل می‌شوند و `ي/ى/ك` به `ی/ی/ک` فارسی نرمال می‌شوند.
 9. مسیر نوشتن Mixin با محصول تست تأیید شد؛ production تا بررسی دستی قیمت، موجودی و اولین کالای واقعی فعال نمی‌شود.
 10. PHP ساده، PHP-FPM کم‌مصرف و SQLite برای فاز اول حفظ می‌شوند.
@@ -119,7 +119,7 @@ php8.3 bin/console sync:products:dry-run
 ## اصلاحات انجام‌شده در مسیر آزمایش
 
 - خطای type ناشی از تبدیل کلید عددی آرایه PHP به integer رفع و تست بازگشت اضافه شد.
-- fallback قیمت زمانی که `VisitorProduct.Price=0` است به `ProductDetail.Price1` اضافه شد.
+- در نسخه اولیه fallback از `VisitorProduct.Price` به `ProductDetail.Price1` اضافه شد؛ این قاعده از نسخه `0.3.2` با قاعده نهایی `Price2 → Price1` جایگزین شده است.
 - فاصله ابتدا و انتهای نام محصول حذف شد.
 - فرمان تشخیصی امن `mahak:products:diagnose` برای دیدن فیلدهای لازم بدون چاپ اطلاعات حساس اضافه شد.
 

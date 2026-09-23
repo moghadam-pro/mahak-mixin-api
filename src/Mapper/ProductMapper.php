@@ -37,9 +37,9 @@ final class ProductMapper
     /** @param array<string,mixed> $product @param array<string,mixed> $detail @param array<string,mixed>|null $visitorProduct */
     private function map(array $product, array $detail, ?array $visitorProduct, bool $catalogMode): array
     {
-        $visitorPrice = (float) $this->read($visitorProduct ?? [], 'price', 0);
-        $detailPrice = (float) $this->read($detail, 'price1', 0);
-        $price = $visitorPrice > 0 ? $visitorPrice : $detailPrice;
+        $detailPrice2 = (float) $this->read($detail, 'price2', 0);
+        $detailPrice1 = (float) $this->read($detail, 'price1', 0);
+        $price = $detailPrice2 > 0 ? $detailPrice2 : $detailPrice1;
         $visitorStock = $visitorProduct === null ? null : $this->read($visitorProduct, 'count1');
         $stockSource = $catalogMode && ($visitorStock === null || $visitorStock === '')
             ? $this->read($detail, 'count1', 0)

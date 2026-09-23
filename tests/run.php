@@ -14,28 +14,36 @@ final class SkippedTest extends RuntimeException {}
 
 $tests = [];
 $tests['reads a valid semantic application version'] = static function (): void {
-    assertSame('0.3.1', Version::current());
+    assertSame('0.3.2', Version::current());
 };
-$tests['maps Mahak product to Mixin and converts rial to toman'] = static function (): void {
+$tests['uses Mahak second sell price and converts rial to toman'] = static function (): void {
     $payload = (new ProductMapper(10))->toMixin(
         ['productId' => 12, 'name' => 'کالای تست', 'description' => 'توضیح', 'weight' => 500],
-        ['productDetailId' => 34, 'productId' => 12, 'price1' => 125000, 'barcode' => 'ABC'],
+        ['productDetailId' => 34, 'productId' => 12, 'price1' => 125000, 'price2' => 135000, 'barcode' => 'ABC'],
         ['productDetailId' => 34, 'price' => 130000, 'count1' => 7],
     );
-    assertSame(13000, $payload['price']);
+    assertSame(13500, $payload['price']);
     assertSame(7, $payload['stock']);
     assertSame('limited', $payload['stock_type']);
     assertSame(34, $payload['external_ids']['mahak_product_detail_id']);
     assertSame('mahak-mixin-bridge', $payload['external_ids']['source']);
 };
-$tests['falls back to detail price when visitor price is zero and trims name'] = static function (): void {
+$tests['falls back to first sell price when second sell price is zero and trims name'] = static function (): void {
     $payload = (new ProductMapper(10))->toMixin(
         ['ProductId' => 12, 'Name' => '  کالای تست  '],
-        ['ProductDetailId' => 34, 'ProductId' => 12, 'Price1' => 461100],
-        ['ProductDetailId' => 34, 'Price' => 0, 'Count1' => 5],
+        ['ProductDetailId' => 34, 'ProductId' => 12, 'Price1' => 461100, 'Price2' => 0],
+        ['ProductDetailId' => 34, 'Price' => 999999, 'Count1' => 5],
     );
     assertSame('کالای تست', $payload['name']);
     assertSame(46110, $payload['price']);
+};
+$tests['keeps zero price when both Mahak sell prices are zero'] = static function (): void {
+    $payload = (new ProductMapper(10))->toMixin(
+        ['ProductId' => 12, 'Name' => 'کالای بدون قیمت'],
+        ['ProductDetailId' => 34, 'ProductId' => 12, 'Price1' => 0, 'Price2' => 0],
+        ['ProductDetailId' => 34, 'Price' => 750000, 'Count1' => 5],
+    );
+    assertSame(0, $payload['price']);
 };
 $tests['marks unavailable inventory'] = static function (): void {
     $payload = (new ProductMapper())->toMixin(
@@ -67,11 +75,11 @@ $tests['catalog mode falls back to detail stock without visitor row'] = static f
 $tests['accepts PascalCase Mahak responses'] = static function (): void {
     $payload = (new ProductMapper(10))->toMixin(
         ['ProductId' => 9, 'Name' => 'Pascal', 'Deleted' => false],
-        ['ProductDetailId' => 10, 'ProductId' => 9, 'Price1' => 20000],
+        ['ProductDetailId' => 10, 'ProductId' => 9, 'Price1' => 20000, 'Price2' => 22000],
         ['Price' => 25000, 'Count1' => 2],
     );
     assertSame('Pascal', $payload['name']);
-    assertSame(2500, $payload['price']);
+    assertSame(2200, $payload['price']);
     assertSame('10', $payload['product_identifier']);
 };
 $tests['normalizes numeric Mahak detail IDs as strings'] = static function (): void {
