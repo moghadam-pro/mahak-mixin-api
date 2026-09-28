@@ -24,10 +24,20 @@ php bin/console mixin:info
 ## ارسال دستی بازارا و RowVersion
 
 - worker یک webhook نیست و فرمان بازارا مستقیماً Bridge را فراخوانی نمی‌کند؛ Cron تغییرات را از API محک pull می‌کند.
-- کالای جدید یا ویرایش‌شده بعد از baseline در اجرای بعدی پردازش می‌شود.
+- کالای جدید یا ویرایشی که `RowVersion` تازه داشته باشد بعد از baseline در اجرای بعدی مسیر افزایشی پردازش می‌شود.
 - ارسال دوباره کالای قدیمی بدون تغییر ممکن است RowVersion تازه نسازد و در نتیجه `received=0` باقی بماند.
+- تغییر قیمت یا موجودی کالای ازقبل نگاشت‌شده ممکن است نیز RowVersion تازه نسازد؛ reconciliation پیش‌فرض هر پنج دقیقه وضعیت جاری آن را مقایسه و همان شناسه Mixin را اصلاح می‌کند.
 - برای کالای قدیمیِ ارسال‌شده پیش از baseline، از `sync:product:preview` و سپس `sync:product:apply` با گارد موقت `SYNC_ALLOW_SINGLE_PRODUCT_WRITE=true` استفاده کن.
 - پس از پایان انتقال تک‌محصولی، گارد را دوباره `false` کن؛ Cron دائمی باید با `SYNC_DRY_RUN=false` باقی بماند.
+
+پیش‌نمایش و اجرای دستی reconciliation:
+
+```bash
+php8.3 bin/console sync:products:reconcile:dry-run
+php8.3 bin/console sync:products:reconcile
+```
+
+فرمان دوم از `SYNC_DRY_RUN` تبعیت می‌کند. پیش از اجرای واقعی باید مقدار آن `false` باشد. این عملیات فقط محصولات دارای mapping را update می‌کند و محصول جدیدی از کاتالوگ انتخاب‌نشده نمی‌سازد.
 
 ## خطاهای متداول
 
@@ -37,9 +47,9 @@ php bin/console mixin:info
 | HTTP 401 محک | اطلاعات ورود/DatabaseId یا توکن نامعتبر | `mahak:login` را جداگانه تست کن |
 | HTTP 401 Mixin | API key یا قالب Authorization اشتباه | `mixin:health` را تست کن |
 | قیمت نادرست | تفاوت ریال و تومان | `SYNC_PRICE_DIVISOR` را بررسی کن |
-| کالا ایجاد ولی آپدیت نمی‌شود | SQLite حذف یا mapping گم شده | `entity_mappings` و external_ids را بررسی کن |
+| کالا ایجاد ولی آپدیت نمی‌شود | تغییر بازارا RowVersion تازه نداده یا mapping گم شده | ابتدا `sync:products:reconcile:dry-run`، سپس `entity_mappings` و external_ids را بررسی کن |
 | timeout | شبکه یا حجم page زیاد | `SYNC_TIMEOUT_SECONDS` را بیشتر کن؛ page sizeهای full/incremental را فقط با توجه به خطر RowVersion یکسان تغییر بده |
-| Cron با `received=0` اجرا می‌شود | پس از checkpoint تغییری با RowVersion جدید نرسیده است | یک کالای واقعاً جدید/ویرایش‌شده را تست کن؛ کالای قدیمی پیش از baseline را یک‌بار با فرمان تک‌محصولی منتقل کن |
+| Cron با `received=0` اجرا می‌شود | پس از checkpoint تغییری با RowVersion جدید نرسیده است | بخش `reconcile` خروجی را بررسی کن؛ کالای نگاشت‌شده باید حداکثر در فاصله reconciliation اصلاح شود |
 
 ## بازیابی
 

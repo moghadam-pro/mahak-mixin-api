@@ -33,6 +33,11 @@ SYNC_PAGE_SIZE=100
 SYNC_INCREMENTAL_PAGE_SIZE=5000
 SYNC_FULL_PAGE_SIZE=5000
 SYNC_FULL_MAX_PAGES=100
+SYNC_RECONCILE_ENABLED=true
+SYNC_RECONCILE_INTERVAL_SECONDS=300
+SYNC_RECONCILE_PAGE_SIZE=5000
+SYNC_RECONCILE_MAX_PAGES=100
+SYNC_RECONCILE_MAX_WRITES=50
 SYNC_WRITE_DELAY_MS=150
 SYNC_PRICE_DIVISOR=10
 SYNC_TIMEOUT_SECONDS=30
@@ -51,6 +56,17 @@ STATE_DB=var/bridge.sqlite
 - `SYNC_WRITE_DELAY_MS`: مکث بین نوشتن کالاها برای کاهش فشار روی دو API.
 
 ورود کامل عمداً از `SYNC_CATEGORY_MAP_JSON` و `SYNC_PRODUCT_CATEGORY_MAP_JSON` استفاده نمی‌کند و همه کالاها را به دسته موقت می‌فرستد. این رفتار تا زمان طراحی طبقه‌بندی نهایی است.
+
+## تطبیق دوره‌ای کالاهای موجود
+
+API محک همیشه برای ویرایش قیمت یا موجودی از مسیر بازارا `RowVersion` تازه برنمی‌گرداند. reconciliation این شکاف را بدون ایجاد کالای جدید پوشش می‌دهد:
+
+- `SYNC_RECONCILE_ENABLED=true`: بررسی دوره‌ای را در همان فرمان `sync:products` فعال می‌کند.
+- `SYNC_RECONCILE_INTERVAL_SECONDS=300`: حداکثر هر پنج دقیقه یک بررسی کامل انجام می‌شود؛ Cron همچنان یک‌دقیقه‌ای باقی می‌ماند.
+- `SYNC_RECONCILE_PAGE_SIZE=5000` و `SYNC_RECONCILE_MAX_PAGES=100`: محدوده خواندن کاتالوگ جاری محک.
+- `SYNC_RECONCILE_MAX_WRITES=50`: سقف تغییرات نوشته‌شده در هر نوبت برای کنترل بار API.
+
+این مسیر فقط ProductDetailهایی را بررسی می‌کند که از قبل در SQLite به شناسه Mixin نگاشت شده‌اند. payload فعلی با snapshot آخرین اجرای موفق مقایسه و فقط تغییر واقعی `PATCH` می‌شود؛ بنابراین کالای انتخاب‌نشده ساخته نمی‌شود.
 
 ## انتخاب واحد قیمت
 

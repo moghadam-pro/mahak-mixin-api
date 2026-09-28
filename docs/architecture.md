@@ -24,6 +24,7 @@ MahakClient ──► ProductSyncService ──► ProductMapper ──► Mixin
 - `StateStore`: نگهداری `RowVersion` و نگاشت شناسه مبدأ/مقصد.
 - `ProductSyncService`: orchestration همگام‌سازی و جلوگیری از جلو رفتن checkpoint در dry-run.
 - `ProductSyncService` در حالت دائمی تغییرات بعد از baseline را می‌خواند، دسته fallback را اعمال می‌کند و نخستین تصویر معتبر را از snapshotهای Picture/PhotoGallery منتقل می‌کند.
+- `MappedProductReconcileService`: فقط کالاهای دارای mapping را از وضعیت جاری محک می‌خواند، payload را با snapshot موفق قبلی مقایسه و تغییر واقعی را روی همان شناسه Mixin اصلاح می‌کند.
 
 ## مدل همگام‌سازی افزایشی
 
@@ -38,6 +39,12 @@ MahakClient ──► ProductSyncService ──► ProductMapper ──► Mixin
 نگاشت `productDetailId → Mixin product id` در `entity_mappings` قرار می‌گیرد. وجود mapping به معنای `PATCH` و نبود آن به معنای `POST` است.
 
 چون API محک برای هر موجودیت RowVersion مستقل دارد، ممکن است در یک اجرا فقط `VisitorProduct` تغییر کند و Product/ProductDetail در پاسخ نباشد. آخرین نسخه کامل هر رکورد در `entity_snapshots` cache می‌شود تا تغییر موجودی یا تغییر والد با داده‌های قبلی join شود. dry-run این cache و checkpointها را تغییر نمی‌دهد.
+
+### reconciliation کالاهای نگاشت‌شده
+
+رفتار واقعی بازارا نشان داد که بعضی ویرایش‌های قیمت و موجودی برای کالای موجود، `RowVersion` تازه‌ای در `GetAllData` افزایشی تولید نمی‌کنند. تکیه صرف بر checkpoint در این حالت به `received=0` منجر می‌شود.
+
+فرمان دائمی `sync:products` پس از اجرای مسیر افزایشی، در فاصله تنظیم‌شده (پیش‌فرض پنج دقیقه) `MappedProductReconcileService` را اجرا می‌کند. این سرویس فقط کلیدهای `entity_mappings` نوع `product` را بررسی می‌کند؛ بنابراین واردکردن ناخواسته کل کاتالوگ ممکن نیست. payload فعلی نام، قیمت، موجودی و مشخصات با payload حاصل از snapshot قبلی hash و مقایسه می‌شود. تغییرها با `PATCH` روی target موجود اعمال می‌شوند و تنها در صورت پاسخ 404 همان mapping بازسازی می‌شود. قفل مشترک مانع هم‌زمانی با sync یا purge است.
 
 ## تصمیم variant
 

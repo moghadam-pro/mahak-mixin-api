@@ -20,9 +20,10 @@
 | Product image | تأییدشده | تصویر Picture `1846444` با حجم ۷۸۹۷۴ بایت به تصویر اصلی Mixin `248` متصل شد و duplicate guard تأیید شد |
 | Four-product pilot | تأییدشده | چهار ProductDetail به محصولات `223–226` و چهار Picture به تصاویر `248–251` منتقل شدند |
 | Category mapping | پیاده‌سازی‌شده | mapping عمومی دسته و override تک‌محصولی از JSON محیط خوانده می‌شود |
+| Existing product reconcile | پیاده‌سازی‌شده در `0.4.0` | تغییر قیمت و موجودی کالاهای mapping‌شده مستقل از تولید RowVersion جدید مقایسه و روی همان محصول Mixin اعمال می‌شود |
 | Sync lock/history | پیاده‌سازی‌شده | flock غیرمسدودکننده و ثبت success/failed هر اجرا در SQLite |
 | HTTP retry | پیاده‌سازی‌شده | backoff محدود برای read/PATCH و درخواست‌های خواندنی محک؛ createها عمداً retry کور ندارند |
-| Automated tests | تأییدشده در توسعه | ۸ تست، صفر failure؛ تست SQLite محلی به‌علت نبود driver skip شد و روی سرور دارای pdo_sqlite باید دوباره اجرا شود |
+| Automated tests | تأییدشده در توسعه | ۱۶ تست تعریف‌شده و صفر failure محلی؛ تست SQLite در محیط فاقد driver skip می‌شود و روی سرور دارای pdo_sqlite باید دوباره اجرا شود |
 | Product write | تست API تأییدشده، production غیرفعال | نوشتن تستی موفق بود؛ `SYNC_DRY_RUN=true` است و هیچ کالای واقعی محک نوشته نشده |
 | Customer sync | برنامه‌ریزی‌شده | قواعد Person و duplicate detection باید نهایی شود |
 | Order sync | برنامه‌ریزی‌شده | orderType، settlement، store و payment باید تعیین شوند |

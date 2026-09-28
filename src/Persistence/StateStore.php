@@ -63,6 +63,37 @@ final class StateStore
         $statement->execute(['entity' => $entity, 'source_id' => $sourceId]);
     }
 
+    /** @return array<string,string> source id => target id */
+    public function mappings(string $entity): array
+    {
+        $statement = $this->pdo->prepare(
+            'SELECT source_id, target_id FROM entity_mappings WHERE entity = :entity ORDER BY source_id'
+        );
+        $statement->execute(['entity' => $entity]);
+        $result = [];
+        foreach ($statement->fetchAll() as $row) {
+            $result[(string) $row['source_id']] = (string) $row['target_id'];
+        }
+        return $result;
+    }
+
+    public function metadata(string $key): ?string
+    {
+        $statement = $this->pdo->prepare('SELECT value FROM sync_metadata WHERE key = :key');
+        $statement->execute(['key' => $key]);
+        $value = $statement->fetchColumn();
+        return $value === false ? null : (string) $value;
+    }
+
+    public function saveMetadata(string $key, string $value): void
+    {
+        $statement = $this->pdo->prepare(
+            'INSERT INTO sync_metadata(key, value, updated_at) VALUES(:key, :value, CURRENT_TIMESTAMP)
+             ON CONFLICT(key) DO UPDATE SET value = excluded.value, updated_at = CURRENT_TIMESTAMP'
+        );
+        $statement->execute(['key' => $key, 'value' => $value]);
+    }
+
     /** Clears local product sync state after a confirmed full target purge. */
     public function resetProductSyncState(): void
     {
@@ -80,6 +111,9 @@ final class StateStore
             $placeholders = implode(',', array_fill(0, count($entities), '?'));
             $this->pdo->prepare("DELETE FROM entity_snapshots WHERE entity IN ({$placeholders})")->execute($entities);
             $this->pdo->prepare("DELETE FROM sync_checkpoints WHERE entity IN ({$placeholders})")->execute($entities);
+            $this->pdo->prepare('DELETE FROM sync_metadata WHERE key = :key')->execute([
+                'key' => 'mahak.products.last_reconcile_at',
+            ]);
             $this->pdo->commit();
         } catch (\Throwable $exception) {
             $this->pdo->rollBack();
@@ -202,6 +236,11 @@ final class StateStore
             error TEXT,
             started_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
             finished_at TEXT
+        )');
+        $this->pdo->exec('CREATE TABLE IF NOT EXISTS sync_metadata (
+            key TEXT PRIMARY KEY,
+            value TEXT NOT NULL,
+            updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
         )');
     }
 }

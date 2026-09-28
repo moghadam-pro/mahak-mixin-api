@@ -11,6 +11,7 @@ use MahakMixin\Mapper\ProductMapper;
 use MahakMixin\Persistence\StateStore;
 use MahakMixin\Sync\ProductSyncService;
 use MahakMixin\Sync\FullCatalogSyncService;
+use MahakMixin\Sync\MappedProductReconcileService;
 
 final class AppFactory
 {
@@ -69,6 +70,25 @@ final class AppFactory
             Config::int('SYNC_FULL_PAGE_SIZE', 5000),
             Config::int('SYNC_FULL_MAX_PAGES', 100),
             Config::int('SYNC_WRITE_DELAY_MS', 150),
+            Config::path('SYNC_LOCK_FILE', 'var/product-sync.lock'),
+        );
+    }
+
+    public static function mappedProductReconcile(): MappedProductReconcileService
+    {
+        return new MappedProductReconcileService(
+            self::mahak(),
+            self::mixin(),
+            self::state(),
+            new ProductMapper(Config::int('SYNC_PRICE_DIVISOR', 10)),
+            Config::int('MAHAK_VISITOR_ID'),
+            max(1, Config::int('SYNC_RECONCILE_PAGE_SIZE', 5000)),
+            max(1, Config::int('SYNC_RECONCILE_MAX_PAGES', 100)),
+            max(1, Config::int('SYNC_RECONCILE_MAX_WRITES', 50)),
+            max(0, Config::int('SYNC_WRITE_DELAY_MS', 150)),
+            Config::intMap('SYNC_CATEGORY_MAP_JSON'),
+            Config::intMap('SYNC_PRODUCT_CATEGORY_MAP_JSON'),
+            Config::int('SYNC_FALLBACK_CATEGORY_ID', 0),
             Config::path('SYNC_LOCK_FILE', 'var/product-sync.lock'),
         );
     }

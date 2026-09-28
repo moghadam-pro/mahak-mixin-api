@@ -7,6 +7,7 @@ require dirname(__DIR__) . '/bootstrap.php';
 use MahakMixin\Mapper\ProductMapper;
 use MahakMixin\Persistence\StateStore;
 use MahakMixin\Sync\ProductSyncService;
+use MahakMixin\Sync\MappedProductReconcileService;
 use MahakMixin\Support\TestProductFactory;
 use MahakMixin\Version;
 
@@ -14,7 +15,7 @@ final class SkippedTest extends RuntimeException {}
 
 $tests = [];
 $tests['reads a valid semantic application version'] = static function (): void {
-    assertSame('0.3.2', Version::current());
+    assertSame('0.4.0', Version::current());
 };
 $tests['uses Mahak second sell price and converts rial to toman'] = static function (): void {
     $payload = (new ProductMapper(10))->toMixin(
@@ -136,9 +137,13 @@ $tests['persists checkpoints mappings and snapshots'] = static function (): void
         $store = new StateStore($path);
         $store->saveCheckpoint('mahak.products', 42);
         $store->saveMapping('product', '10', '20');
+        $store->saveMapping('product', '11', '21');
         $store->saveSnapshot('mahak.products', '10', ['ProductId' => 10, 'Name' => 'Test']);
+        $store->saveMetadata(MappedProductReconcileService::LAST_RUN_META_KEY, '123');
         assertSame(42, $store->checkpoint('mahak.products'));
         assertSame('20', $store->mapping('product', '10'));
+        assertSame(['10' => '20', '11' => '21'], $store->mappings('product'));
+        assertSame('123', $store->metadata(MappedProductReconcileService::LAST_RUN_META_KEY));
         $store->deleteMapping('product', '10');
         assertSame(null, $store->mapping('product', '10'));
         $runId = $store->startRun('mahak_to_mixin', 'products');
@@ -149,9 +154,20 @@ $tests['persists checkpoints mappings and snapshots'] = static function (): void
         assertSame(0, $store->checkpoint('mahak.products'));
         assertSame(0, $store->mappingCount('product'));
         assertSame([], $store->snapshots('mahak.products'));
+        assertSame(null, $store->metadata(MappedProductReconcileService::LAST_RUN_META_KEY));
     } finally {
         @unlink($path);
     }
+};
+$tests['mapped reconciliation compares normalized payloads'] = static function (): void {
+    $service = (new ReflectionClass(MappedProductReconcileService::class))->newInstanceWithoutConstructor();
+    $method = new ReflectionMethod(MappedProductReconcileService::class, 'payloadHash');
+    $method->setAccessible(true);
+    $first = $method->invoke($service, ['price' => 100, 'stock' => 2]);
+    $same = $method->invoke($service, ['price' => 100, 'stock' => 2]);
+    $changed = $method->invoke($service, ['price' => 110, 'stock' => 2]);
+    assertSame($first, $same);
+    assertSame(false, $first === $changed);
 };
 $tests['creates a safe and recognizable Mixin test product'] = static function (): void {
     $payload = TestProductFactory::make('unit-test');

@@ -36,8 +36,10 @@ try {
         'sync:product:image:preview' => previewOneProductImage($argv),
         'sync:product:image:apply' => applyOneProductImage($argv),
         'sync:product:image:rollback' => rollbackOneProductImage($argv),
-        'sync:products' => AppFactory::productSync()->run(Config::bool('SYNC_DRY_RUN', true)),
+        'sync:products' => runProductSyncCycle(),
         'sync:products:dry-run' => AppFactory::productSync()->run(true),
+        'sync:products:reconcile' => AppFactory::mappedProductReconcile()->run(Config::bool('SYNC_DRY_RUN', true)),
+        'sync:products:reconcile:dry-run' => AppFactory::mappedProductReconcile()->run(true),
         'sync:catalog:full:dry-run' => AppFactory::fullCatalogSync()->run(true),
         'sync:catalog:full' => runFullCatalog(),
         'sync:products:baseline' => AppFactory::fullCatalogSync()->baseline(),
@@ -65,6 +67,8 @@ try {
                 'php bin/console sync:product:image:rollback PRODUCT_DETAIL_ID IMAGE_ID',
                 'php bin/console sync:products:dry-run',
                 'php bin/console sync:products',
+                'php bin/console sync:products:reconcile:dry-run',
+                'php bin/console sync:products:reconcile',
                 'php bin/console sync:catalog:full:dry-run',
                 'php bin/console sync:catalog:full',
                 'php bin/console sync:products:baseline',
@@ -85,6 +89,32 @@ try {
     }
     fwrite(STDERR, json_encode($error, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) . PHP_EOL);
     exit(1);
+}
+
+/** @return array<string,mixed> */
+function runProductSyncCycle(): array
+{
+    $dryRun = Config::bool('SYNC_DRY_RUN', true);
+    $result = AppFactory::productSync()->run($dryRun);
+    if ($dryRun || !Config::bool('SYNC_RECONCILE_ENABLED', true)) {
+        return $result;
+    }
+
+    $interval = max(60, Config::int('SYNC_RECONCILE_INTERVAL_SECONDS', 300));
+    $lastRun = (int) (AppFactory::state()->metadata(
+        \MahakMixin\Sync\MappedProductReconcileService::LAST_RUN_META_KEY
+    ) ?? 0);
+    $age = time() - $lastRun;
+    if ($lastRun > 0 && $age < $interval) {
+        $result['reconcile'] = [
+            'status' => 'not_due',
+            'next_in_seconds' => $interval - $age,
+        ];
+        return $result;
+    }
+
+    $result['reconcile'] = AppFactory::mappedProductReconcile()->run(false);
+    return $result;
 }
 
 function sanitizeDiagnostic(mixed $value, ?string $key = null): mixed
