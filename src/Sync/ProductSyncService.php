@@ -144,6 +144,10 @@ final class ProductSyncService
                 throw new RuntimeException("Mixin product response has no id for Mahak detail {$sourceId}");
             }
             $this->state->saveMapping('product', $sourceId, (string) $savedId);
+            $this->state->saveMetadata(
+                MappedProductReconcileService::payloadMetaKey($sourceId),
+                MappedProductReconcileService::payloadHash($payload),
+            );
             $stats[$action . 'd']++;
             $imageAction = $this->syncImageFromData(
                 (int) $savedId,
@@ -254,6 +258,10 @@ final class ProductSyncService
             throw new RuntimeException("Mixin product response has no id for Mahak detail {$sourceDetailId}");
         }
         $this->state->saveMapping('product', $sourceDetailId, (string) $savedId);
+        $this->state->saveMetadata(
+            MappedProductReconcileService::payloadMetaKey($sourceDetailId),
+            MappedProductReconcileService::payloadHash($payload),
+        );
         $result['target_id'] = (string) $savedId;
         $result['response'] = $saved;
         return $result;

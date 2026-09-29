@@ -77,6 +77,16 @@ final class StateStore
         return $result;
     }
 
+    /** @return array<string,string> target id => source id */
+    public function reverseMappings(string $entity): array
+    {
+        $result = [];
+        foreach ($this->mappings($entity) as $sourceId => $targetId) {
+            $result[$targetId] = $sourceId;
+        }
+        return $result;
+    }
+
     public function metadata(string $key): ?string
     {
         $statement = $this->pdo->prepare('SELECT value FROM sync_metadata WHERE key = :key');
@@ -114,6 +124,7 @@ final class StateStore
             $this->pdo->prepare('DELETE FROM sync_metadata WHERE key = :key')->execute([
                 'key' => 'mahak.products.last_reconcile_at',
             ]);
+            $this->pdo->exec("DELETE FROM sync_metadata WHERE key LIKE 'mahak.product.payload_hash.%'");
             $this->pdo->commit();
         } catch (\Throwable $exception) {
             $this->pdo->rollBack();

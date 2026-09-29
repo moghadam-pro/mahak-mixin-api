@@ -8,10 +8,12 @@ use MahakMixin\Client\MahakClient;
 use MahakMixin\Client\MixinClient;
 use MahakMixin\Http\HttpClient;
 use MahakMixin\Mapper\ProductMapper;
+use MahakMixin\Mapper\OrderMapper;
 use MahakMixin\Persistence\StateStore;
 use MahakMixin\Sync\ProductSyncService;
 use MahakMixin\Sync\FullCatalogSyncService;
 use MahakMixin\Sync\MappedProductReconcileService;
+use MahakMixin\Sync\SingleOrderSyncService;
 
 final class AppFactory
 {
@@ -90,6 +92,23 @@ final class AppFactory
             Config::intMap('SYNC_PRODUCT_CATEGORY_MAP_JSON'),
             Config::int('SYNC_FALLBACK_CATEGORY_ID', 0),
             Config::path('SYNC_LOCK_FILE', 'var/product-sync.lock'),
+        );
+    }
+
+    public static function singleOrderSync(): SingleOrderSyncService
+    {
+        return new SingleOrderSyncService(
+            self::mixin(),
+            self::mahak(),
+            self::state(),
+            new OrderMapper(
+                Config::int('MAHAK_VISITOR_ID'),
+                Config::int('MAHAK_ORDER_PERSON_ID'),
+                Config::int('MAHAK_ORDER_STORE_ID', 1),
+                Config::int('MAHAK_ORDER_TYPE', 201),
+                Config::int('MAHAK_ORDER_SETTLEMENT_TYPE', 1),
+                Config::int('SYNC_ORDER_MONEY_MULTIPLIER', 10),
+            ),
         );
     }
 

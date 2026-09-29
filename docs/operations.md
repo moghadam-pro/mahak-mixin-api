@@ -50,6 +50,25 @@ php8.3 bin/console sync:products:reconcile
 | کالا ایجاد ولی آپدیت نمی‌شود | تغییر بازارا RowVersion تازه نداده یا mapping گم شده | ابتدا `sync:products:reconcile:dry-run`، سپس `entity_mappings` و external_ids را بررسی کن |
 | timeout | شبکه یا حجم page زیاد | `SYNC_TIMEOUT_SECONDS` را بیشتر کن؛ page sizeهای full/incremental را فقط با توجه به خطر RowVersion یکسان تغییر بده |
 | Cron با `received=0` اجرا می‌شود | پس از checkpoint تغییری با RowVersion جدید نرسیده است | بخش `reconcile` خروجی را بررسی کن؛ کالای نگاشت‌شده باید حداکثر در فاصله reconciliation اصلاح شود |
+| فاکتور preview نمی‌شود | یک کالای سفارش mapping ندارد یا PersonId تنظیم نشده | mapping محصولات و `MAHAK_ORDER_PERSON_ID` را بررسی کن |
+| `financial_check.balanced=false` | جمع اقلام/تخفیف/ارسال با مبلغ نهایی یکسان نیست | فاکتور را ثبت نکن؛ خروجی inspect را برای اصلاح قاعده نگاشت بررسی کن |
+
+## تست یک فاکتور سایت
+
+```bash
+php8.3 bin/console mixin:orders:inspect
+php8.3 bin/console mixin:order:inspect ORDER_ID
+php8.3 bin/console mahak:people:find CUSTOMER_PHONE_OR_NAME
+php8.3 bin/console sync:order:preview ORDER_ID
+```
+
+پس از کنترل `financial_check` و payload، backup بگیرید، گارد را موقتاً روشن و فقط همان سفارش را ثبت کنید:
+
+```bash
+php8.3 bin/console sync:order:apply ORDER_ID CONFIRM-MAHAK-INVOICE
+```
+
+پس از بررسی فاکتور در نرم‌افزار محک، `SYNC_ALLOW_SINGLE_ORDER_WRITE=false` شود. اجرای مجدد سفارش mapping‌شده با `skip_existing` پاسخ می‌دهد.
 
 ## بازیابی
 

@@ -50,13 +50,13 @@ final class MahakClient
     /** @param array<string, mixed> $request */
     public function getAllData(array $request): array
     {
-        return $this->authenticatedPost($this->getAllDataPath, $request);
+        return $this->authenticatedPost($this->getAllDataPath, $request, true);
     }
 
     /** @param array<string, mixed> $objects */
     public function saveAllData(array $objects): array
     {
-        return $this->authenticatedPost($this->saveAllDataPath, $objects);
+        return $this->authenticatedPost($this->saveAllDataPath, $objects, false);
     }
 
     public function downloadContent(string $path): string
@@ -73,7 +73,7 @@ final class MahakClient
         return $response['data'];
     }
 
-    private function authenticatedPost(string $path, array $body): array
+    private function authenticatedPost(string $path, array $body, bool $safeToRetry): array
     {
         if ($this->token === null) {
             $this->login();
@@ -81,7 +81,7 @@ final class MahakClient
 
         $response = $this->http->request('POST', $this->url($path), [
             'Authorization' => 'Bearer ' . $this->token,
-        ], $body, [], true)['data'];
+        ], $body, [], $safeToRetry)['data'];
 
         if (!is_array($response)) {
             throw new RuntimeException('Mahak returned a non-JSON response');

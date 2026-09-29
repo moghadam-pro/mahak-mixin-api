@@ -16,7 +16,8 @@ use RuntimeException;
  *
  * Mahak/Bazara does not consistently expose edits to existing products through
  * a newer RowVersion. This service reads the current catalogue, compares the
- * mapped payload with the last local snapshot, and PATCHes only real changes.
+ * mapped payload with the fingerprint of the last payload successfully written
+ * to Mixin, and PATCHes only real changes.
  */
 final class MappedProductReconcileService
 {
@@ -90,9 +91,6 @@ final class MappedProductReconcileService
         $products = $this->index($catalog['products'], 'productId');
         $details = $this->index($catalog['productDetails'], 'productDetailId');
         $visitorProducts = $this->index($catalog['visitorProducts'], 'productDetailId');
-        $previousProducts = $this->index($this->state->snapshots('mahak.products'), 'productId');
-        $previousDetails = $this->index($this->state->snapshots('mahak.product_details'), 'productDetailId');
-        $previousVisitorProducts = $this->index($this->state->snapshots('mahak.visitor_products'), 'productDetailId');
         $writes = 0;
 
         foreach ($mappings as $sourceId => $targetId) {
@@ -122,20 +120,15 @@ final class MappedProductReconcileService
             }
             try {
                 $payload = $this->payload($sourceId, $product, $detail, $visitorProducts[$sourceId] ?? null, $categoryId);
-                $previousPayload = $this->previousPayload(
-                    $sourceId,
-                    $previousProducts,
-                    $previousDetails,
-                    $previousVisitorProducts,
-                    $categoryId,
-                );
             } catch (\Throwable $exception) {
                 $stats['failed']++;
                 $this->addError($stats, $sourceId, $exception->getMessage());
                 continue;
             }
             $stats['compared']++;
-            if ($previousPayload !== null && $this->payloadHash($previousPayload) === $this->payloadHash($payload)) {
+            $payloadHash = self::payloadHash($payload);
+            $writtenHash = $this->state->metadata(self::payloadMetaKey($sourceId));
+            if ($writtenHash !== null && hash_equals($writtenHash, $payloadHash)) {
                 $stats['unchanged']++;
                 if (!$dryRun) {
                     $this->persistCurrentSnapshots($sourceId, $productId, $product, $detail, $visitorProducts[$sourceId] ?? null);
@@ -179,6 +172,7 @@ final class MappedProductReconcileService
                 }
                 $stats[$action]++;
                 $writes++;
+                $this->state->saveMetadata(self::payloadMetaKey($sourceId), $payloadHash);
                 $this->persistCurrentSnapshots($sourceId, $productId, $product, $detail, $visitorProducts[$sourceId] ?? null);
                 $this->delay();
             } catch (\Throwable $exception) {
@@ -260,25 +254,6 @@ final class MappedProductReconcileService
         return $payload;
     }
 
-    /**
-     * @param array<string,array<string,mixed>> $products
-     * @param array<string,array<string,mixed>> $details
-     * @param array<string,array<string,mixed>> $visitorProducts
-     * @return array<string,mixed>|null
-     */
-    private function previousPayload(string $sourceId, array $products, array $details, array $visitorProducts, int $categoryId): ?array
-    {
-        $detail = $details[$sourceId] ?? null;
-        if (!is_array($detail)) {
-            return null;
-        }
-        $product = $products[(string) $this->value($detail, 'productId', '')] ?? null;
-        if (!is_array($product)) {
-            return null;
-        }
-        return $this->payload($sourceId, $product, $detail, $visitorProducts[$sourceId] ?? null, $categoryId);
-    }
-
     private function persistCurrentSnapshots(
         string $sourceId,
         string $productId,
@@ -294,9 +269,14 @@ final class MappedProductReconcileService
     }
 
     /** @param array<string,mixed> $payload */
-    private function payloadHash(array $payload): string
+    public static function payloadHash(array $payload): string
     {
         return hash('sha256', json_encode($payload, JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
+    }
+
+    public static function payloadMetaKey(string $sourceId): string
+    {
+        return 'mahak.product.payload_hash.' . $sourceId;
     }
 
     private function objects(array $response): array

@@ -49,6 +49,9 @@ final class MixinClient
     public function deleteProductImage(int $id): array { return $this->request('DELETE', "/api/v4/product-images/{$id}/"); }
     /** @param array<string, scalar|null> $query */
     public function orders(array $query = []): array { return $this->request('GET', '/api/v4/orders/', null, $query); }
+    public function order(int $id): array { return $this->request('GET', "/api/v4/orders/{$id}/"); }
+    /** @param array<string, scalar|null> $query */
+    public function orderPayments(array $query = []): array { return $this->request('GET', '/api/v4/order-payments/', null, $query); }
     /** @param array<string, scalar|null> $query */
     public function customers(array $query = []): array { return $this->request('GET', '/api/v4/customers/', null, $query); }
 

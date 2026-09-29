@@ -38,6 +38,13 @@ SYNC_RECONCILE_INTERVAL_SECONDS=300
 SYNC_RECONCILE_PAGE_SIZE=5000
 SYNC_RECONCILE_MAX_PAGES=100
 SYNC_RECONCILE_MAX_WRITES=50
+SYNC_ALLOW_SINGLE_ORDER_WRITE=false
+SYNC_ORDER_INSPECT_PAGE_SIZE=20
+SYNC_ORDER_MONEY_MULTIPLIER=10
+MAHAK_ORDER_STORE_ID=1
+MAHAK_ORDER_SETTLEMENT_TYPE=1
+MAHAK_ORDER_TYPE=201
+MAHAK_ORDER_PERSON_ID=
 SYNC_WRITE_DELAY_MS=150
 SYNC_PRICE_DIVISOR=10
 SYNC_TIMEOUT_SECONDS=30
@@ -66,7 +73,18 @@ API محک همیشه برای ویرایش قیمت یا موجودی از مس
 - `SYNC_RECONCILE_PAGE_SIZE=5000` و `SYNC_RECONCILE_MAX_PAGES=100`: محدوده خواندن کاتالوگ جاری محک.
 - `SYNC_RECONCILE_MAX_WRITES=50`: سقف تغییرات نوشته‌شده در هر نوبت برای کنترل بار API.
 
-این مسیر فقط ProductDetailهایی را بررسی می‌کند که از قبل در SQLite به شناسه Mixin نگاشت شده‌اند. payload فعلی با snapshot آخرین اجرای موفق مقایسه و فقط تغییر واقعی `PATCH` می‌شود؛ بنابراین کالای انتخاب‌نشده ساخته نمی‌شود.
+این مسیر فقط ProductDetailهایی را بررسی می‌کند که از قبل در SQLite به شناسه Mixin نگاشت شده‌اند. payload فعلی با fingerprint آخرین payload موفق نوشته‌شده در Mixin مقایسه و فقط تغییر واقعی `PATCH` می‌شود؛ بنابراین کالای انتخاب‌نشده ساخته نمی‌شود. snapshotهای خام محک برای join موجودیت‌ها هستند و جای وضعیت آخرین write مقصد را نمی‌گیرند.
+
+## تست کنترل‌شده فاکتور
+
+- `SYNC_ALLOW_SINGLE_ORDER_WRITE=false`: گارد ثبت فاکتور؛ فقط در بازه تست یک سفارش `true` شود.
+- `SYNC_ORDER_MONEY_MULTIPLIER=10`: همه مبالغ سفارش سایت را از تومان به ریال محک تبدیل می‌کند.
+- `MAHAK_ORDER_STORE_ID=1`: شناسه انبار هر ردیف.
+- `MAHAK_ORDER_SETTLEMENT_TYPE=1`: تسویه نقدی.
+- `MAHAK_ORDER_TYPE=201`: فاکتور فروش.
+- `MAHAK_ORDER_PERSON_ID`: شناسه مثبت یک شخص موجود در محک؛ تا پیاده‌سازی تشخیص/ساخت مشتری الزامی است.
+
+مسیر تست فقط یک سفارش مشخص را با تأیید صریح ثبت می‌کند، retry خودکار `SaveAllData` ندارد و در صورت نبود mapping کالا یا عدم تراز مبالغ متوقف می‌شود.
 
 ## انتخاب واحد قیمت
 

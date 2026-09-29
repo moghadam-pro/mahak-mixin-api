@@ -23,10 +23,11 @@
 | Existing product reconcile | پیاده‌سازی‌شده در `0.4.0` | تغییر قیمت و موجودی کالاهای mapping‌شده مستقل از تولید RowVersion جدید مقایسه و روی همان محصول Mixin اعمال می‌شود |
 | Sync lock/history | پیاده‌سازی‌شده | flock غیرمسدودکننده و ثبت success/failed هر اجرا در SQLite |
 | HTTP retry | پیاده‌سازی‌شده | backoff محدود برای read/PATCH و درخواست‌های خواندنی محک؛ createها عمداً retry کور ندارند |
-| Automated tests | تأییدشده در توسعه | ۱۶ تست تعریف‌شده و صفر failure محلی؛ تست SQLite در محیط فاقد driver skip می‌شود و روی سرور دارای pdo_sqlite باید دوباره اجرا شود |
-| Product write | تست API تأییدشده، production غیرفعال | نوشتن تستی موفق بود؛ `SYNC_DRY_RUN=true` است و هیچ کالای واقعی محک نوشته نشده |
+| Automated tests | تأییدشده در توسعه | ۱۹ تست تعریف‌شده و صفر failure محلی؛ تست SQLite در محیط فاقد driver skip می‌شود و روی سرور دارای pdo_sqlite باید دوباره اجرا شود |
+| Product sync | عملیاتی | انتقال و بروزرسانی کالا و تصویر در محیط واقعی تأیید شده است؛ مسیر دائمی فقط کالاهای انتخاب‌شده/نگاشت‌شده را پردازش می‌کند |
 | Customer sync | برنامه‌ریزی‌شده | قواعد Person و duplicate detection باید نهایی شود |
-| Order sync | برنامه‌ریزی‌شده | orderType، settlement، store و payment باید تعیین شوند |
+| Single order sync | آماده تست در `0.5.0` | فاکتور فروش، انبار ۱، نقدی و تبدیل تومان به ریال؛ دارای preview، گارد، کنترل تراز و جلوگیری از تکرار |
+| Scheduled order/payment sync | برنامه‌ریزی‌شده | پس از تأیید فاکتور واقعی، تشخیص مشتری و ثبت Receipt/Payment تکمیل می‌شود |
 | Dashboard | پیاده‌سازی اولیه | ورود session/hash، آمار محلی، تاریخچه اجرا و checkpoint؛ بدون تماس مستقیم با APIها |
 
 ## تصمیم‌ها و یافته‌های قطعی

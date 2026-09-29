@@ -5,6 +5,7 @@ declare(strict_types=1);
 require dirname(__DIR__) . '/bootstrap.php';
 
 use MahakMixin\Mapper\ProductMapper;
+use MahakMixin\Mapper\OrderMapper;
 use MahakMixin\Persistence\StateStore;
 use MahakMixin\Sync\ProductSyncService;
 use MahakMixin\Sync\MappedProductReconcileService;
@@ -15,7 +16,61 @@ final class SkippedTest extends RuntimeException {}
 
 $tests = [];
 $tests['reads a valid semantic application version'] = static function (): void {
-    assertSame('0.4.0', Version::current());
+    assertSame('0.5.0', Version::current());
+};
+$tests['maps a Mixin cash order to a Mahak sales invoice in rials'] = static function (): void {
+    $payload = (new OrderMapper(48824, 100, 1, 201, 1, 10))->toMahak([
+        'id' => 123,
+        'status' => 'paid',
+        'status_display' => 'پرداخت‌شده',
+        'payment_status' => 'paid',
+        'payment_status_display' => 'موفق',
+        'creation_date' => '2026-09-28T12:30:00+03:30',
+        'shipping_price' => 15_000,
+        'discount_amount' => 2_000,
+        'final_price' => 53_000,
+        'shipping_province' => 'تهران',
+        'shipping_city' => 'تهران',
+        'shipping_address' => 'خیابان نمونه',
+        'shipping_zip_code' => '1234567890',
+        'shipping_phone_number' => '09120000000',
+        'items' => [[
+            'id' => 456,
+            'product_id' => 971,
+            'product_name' => 'کالای نمونه',
+            'quantity' => 2,
+            'price' => 20_000,
+        ]],
+    ], ['971' => '11667880']);
+    $order = $payload['orders'][0];
+    $detail = $payload['orderDetails'][0];
+    assertSame(201, $order['orderType']);
+    assertSame(1, $order['settlementType']);
+    assertSame(150_000, $order['sendCost']);
+    assertSame(20_000, $order['discount']);
+    assertSame(1, $detail['storeId']);
+    assertSame(200_000, $detail['price']);
+    assertSame(2.0, $detail['count1']);
+    assertSame(11667880, $detail['productDetailId']);
+    $check = (new OrderMapper(48824, 100, 1, 201, 1, 10))->financialCheck([
+        'final_price' => 53_000,
+        'shipping_price' => 15_000,
+        'discount_amount' => 2_000,
+        'items' => [['quantity' => 2, 'price' => 20_000]],
+    ]);
+    assertSame(true, $check['balanced']);
+    assertSame(530_000, $check['source_final_rial']);
+};
+$tests['blocks an order item without a product mapping'] = static function (): void {
+    $mapper = new OrderMapper(48824, 100, 1, 201, 1, 10);
+    assertThrows(
+        static fn (): array => $mapper->toMahak([
+            'id' => 123,
+            'creation_date' => '2026-09-28T12:30:00+03:30',
+            'items' => [['id' => 456, 'product_id' => 999, 'quantity' => 1, 'price' => 100]],
+        ], []),
+        RuntimeException::class,
+    );
 };
 $tests['uses Mahak second sell price and converts rial to toman'] = static function (): void {
     $payload = (new ProductMapper(10))->toMixin(
@@ -28,6 +83,15 @@ $tests['uses Mahak second sell price and converts rial to toman'] = static funct
     assertSame('limited', $payload['stock_type']);
     assertSame(34, $payload['external_ids']['mahak_product_detail_id']);
     assertSame('mahak-mixin-bridge', $payload['external_ids']['source']);
+};
+$tests['keeps product 1681 on Mahak Price2 instead of Price1'] = static function (): void {
+    $payload = (new ProductMapper(10))->toMixinCatalog(
+        ['ProductId' => 10267346, 'ProductCode' => 1681, 'Name' => 'کاپیتانو خمیر دندان سفید کننده'],
+        ['ProductDetailId' => 11667880, 'ProductId' => 10267346, 'Price1' => 5_379_000, 'Price2' => 200],
+        ['ProductDetailId' => 11667880, 'Count1' => 26],
+    );
+    assertSame(20, $payload['price']);
+    assertSame(26, $payload['stock']);
 };
 $tests['falls back to first sell price when second sell price is zero and trims name'] = static function (): void {
     $payload = (new ProductMapper(10))->toMixin(
@@ -140,10 +204,14 @@ $tests['persists checkpoints mappings and snapshots'] = static function (): void
         $store->saveMapping('product', '11', '21');
         $store->saveSnapshot('mahak.products', '10', ['ProductId' => 10, 'Name' => 'Test']);
         $store->saveMetadata(MappedProductReconcileService::LAST_RUN_META_KEY, '123');
+        $payloadMetaKey = MappedProductReconcileService::payloadMetaKey('10');
+        $store->saveMetadata($payloadMetaKey, 'written-payload-hash');
         assertSame(42, $store->checkpoint('mahak.products'));
         assertSame('20', $store->mapping('product', '10'));
         assertSame(['10' => '20', '11' => '21'], $store->mappings('product'));
+        assertSame(['20' => '10', '21' => '11'], $store->reverseMappings('product'));
         assertSame('123', $store->metadata(MappedProductReconcileService::LAST_RUN_META_KEY));
+        assertSame('written-payload-hash', $store->metadata($payloadMetaKey));
         $store->deleteMapping('product', '10');
         assertSame(null, $store->mapping('product', '10'));
         $runId = $store->startRun('mahak_to_mixin', 'products');
@@ -155,19 +223,18 @@ $tests['persists checkpoints mappings and snapshots'] = static function (): void
         assertSame(0, $store->mappingCount('product'));
         assertSame([], $store->snapshots('mahak.products'));
         assertSame(null, $store->metadata(MappedProductReconcileService::LAST_RUN_META_KEY));
+        assertSame(null, $store->metadata($payloadMetaKey));
     } finally {
         @unlink($path);
     }
 };
 $tests['mapped reconciliation compares normalized payloads'] = static function (): void {
-    $service = (new ReflectionClass(MappedProductReconcileService::class))->newInstanceWithoutConstructor();
-    $method = new ReflectionMethod(MappedProductReconcileService::class, 'payloadHash');
-    $method->setAccessible(true);
-    $first = $method->invoke($service, ['price' => 100, 'stock' => 2]);
-    $same = $method->invoke($service, ['price' => 100, 'stock' => 2]);
-    $changed = $method->invoke($service, ['price' => 110, 'stock' => 2]);
+    $first = MappedProductReconcileService::payloadHash(['price' => 100, 'stock' => 2]);
+    $same = MappedProductReconcileService::payloadHash(['price' => 100, 'stock' => 2]);
+    $changed = MappedProductReconcileService::payloadHash(['price' => 110, 'stock' => 2]);
     assertSame($first, $same);
     assertSame(false, $first === $changed);
+    assertSame('mahak.product.payload_hash.10', MappedProductReconcileService::payloadMetaKey('10'));
 };
 $tests['creates a safe and recognizable Mixin test product'] = static function (): void {
     $payload = TestProductFactory::make('unit-test');
@@ -205,4 +272,18 @@ function assertSame(mixed $expected, mixed $actual): void
     if ($expected !== $actual) {
         throw new RuntimeException('Expected ' . var_export($expected, true) . ', got ' . var_export($actual, true));
     }
+}
+
+/** @param class-string<Throwable> $expectedClass */
+function assertThrows(callable $callback, string $expectedClass): void
+{
+    try {
+        $callback();
+    } catch (Throwable $exception) {
+        if ($exception instanceof $expectedClass) {
+            return;
+        }
+        throw new RuntimeException('Expected ' . $expectedClass . ', got ' . $exception::class);
+    }
+    throw new RuntimeException("Expected {$expectedClass} to be thrown");
 }

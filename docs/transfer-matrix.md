@@ -23,10 +23,10 @@
 |---|---|---|---|
 | Customer | Person | برنامه‌ریزی‌شده | PersonGroup، personType و جلوگیری از تکرار |
 | Address | PersonAddress | برنامه‌ریزی‌شده | نگاشت Person و قواعد آدرس |
-| Order | Order | برنامه‌ریزی‌شده | orderType، settlementType، storeId و تاریخ |
-| Order item | OrderDetail | برنامه‌ریزی‌شده | نگاشت product/variant به ProductDetail |
+| Order | Order | آماده تست تک‌سفارش | فاکتور فروش ۲۰۱، نقدی، انبار ۱، شخص موجود و تبدیل تومان به ریال |
+| Order item | OrderDetail | آماده تست تک‌سفارش | فقط نگاشت قطعی product به ProductDetail؛ قلم ناشناخته مسدود می‌شود |
 | Order payment | Payment/Receipt | برنامه‌ریزی‌شده | روش پرداخت، صندوق/بانک و وضعیت تسویه |
-| Order status | وضعیت/گردش سفارش | نیازمند قاعده | mapping وضعیت‌ها و جلوگیری از loop |
+| Order status | توضیحات فاکتور | آماده تست | همه وضعیت‌ها خوانده و متن status حفظ می‌شود؛ تبدیل به نوع سند مالی انجام نمی‌شود |
 
 ## موجودیت‌های قابل مدیریت در Mixin
 

@@ -24,7 +24,8 @@ MahakClient ──► ProductSyncService ──► ProductMapper ──► Mixin
 - `StateStore`: نگهداری `RowVersion` و نگاشت شناسه مبدأ/مقصد.
 - `ProductSyncService`: orchestration همگام‌سازی و جلوگیری از جلو رفتن checkpoint در dry-run.
 - `ProductSyncService` در حالت دائمی تغییرات بعد از baseline را می‌خواند، دسته fallback را اعمال می‌کند و نخستین تصویر معتبر را از snapshotهای Picture/PhotoGallery منتقل می‌کند.
-- `MappedProductReconcileService`: فقط کالاهای دارای mapping را از وضعیت جاری محک می‌خواند، payload را با snapshot موفق قبلی مقایسه و تغییر واقعی را روی همان شناسه Mixin اصلاح می‌کند.
+- `MappedProductReconcileService`: فقط کالاهای دارای mapping را از وضعیت جاری محک می‌خواند، payload را با fingerprint آخرین payload موفق نوشته‌شده در Mixin مقایسه و تغییر واقعی را روی همان شناسه اصلاح می‌کند.
+- `SingleOrderSyncService`: یک سفارش مشخص Mixin را پس از کنترل mapping اقلام و تراز مالی، با گارد مستقل به Order/OrderDetail محک می‌فرستد و mapping سفارش را برای idempotency ثبت می‌کند.
 
 ## مدل همگام‌سازی افزایشی
 
@@ -44,7 +45,7 @@ MahakClient ──► ProductSyncService ──► ProductMapper ──► Mixin
 
 رفتار واقعی بازارا نشان داد که بعضی ویرایش‌های قیمت و موجودی برای کالای موجود، `RowVersion` تازه‌ای در `GetAllData` افزایشی تولید نمی‌کنند. تکیه صرف بر checkpoint در این حالت به `received=0` منجر می‌شود.
 
-فرمان دائمی `sync:products` پس از اجرای مسیر افزایشی، در فاصله تنظیم‌شده (پیش‌فرض پنج دقیقه) `MappedProductReconcileService` را اجرا می‌کند. این سرویس فقط کلیدهای `entity_mappings` نوع `product` را بررسی می‌کند؛ بنابراین واردکردن ناخواسته کل کاتالوگ ممکن نیست. payload فعلی نام، قیمت، موجودی و مشخصات با payload حاصل از snapshot قبلی hash و مقایسه می‌شود. تغییرها با `PATCH` روی target موجود اعمال می‌شوند و تنها در صورت پاسخ 404 همان mapping بازسازی می‌شود. قفل مشترک مانع هم‌زمانی با sync یا purge است.
+فرمان دائمی `sync:products` پس از اجرای مسیر افزایشی، در فاصله تنظیم‌شده (پیش‌فرض پنج دقیقه) `MappedProductReconcileService` را اجرا می‌کند. این سرویس فقط کلیدهای `entity_mappings` نوع `product` را بررسی می‌کند؛ بنابراین واردکردن ناخواسته کل کاتالوگ ممکن نیست. payload فعلی نام، قیمت، موجودی و مشخصات با fingerprint آخرین payload موفق نوشته‌شده در مقصد مقایسه می‌شود. snapshotهای خام همچنان برای join رکوردهای محک نگه داشته می‌شوند، اما معیار تشخیص write موفق نیستند. تغییرها با `PATCH` روی target موجود اعمال می‌شوند و تنها در صورت پاسخ 404 همان mapping بازسازی می‌شود. قفل مشترک مانع هم‌زمانی با sync یا purge است.
 
 ## تصمیم variant
 

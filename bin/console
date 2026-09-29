@@ -22,8 +22,11 @@ try {
         'mahak:products:diagnose' => diagnoseMahakProductFields(AppFactory::mahak(), Config::int('MAHAK_VISITOR_ID')),
         'mahak:products:candidates' => listMahakProductCandidates(AppFactory::mahak(), Config::int('MAHAK_VISITOR_ID')),
         'mahak:images:diagnose' => diagnoseMahakImages(AppFactory::mahak(), Config::int('MAHAK_VISITOR_ID')),
+        'mahak:people:find' => findMahakPeople(AppFactory::mahak(), Config::int('MAHAK_VISITOR_ID'), $argv),
         'mixin:health' => AppFactory::mixin()->health(),
         'mixin:info' => AppFactory::mixin()->info(),
+        'mixin:orders:inspect' => inspectMixinOrders(AppFactory::mixin()),
+        'mixin:order:inspect' => inspectMixinOrder(AppFactory::mixin(), $argv),
         'mixin:categories:inspect' => AppFactory::mixin()->categories(['page' => 1, 'page_size' => 50]),
         'mixin:products:delete-all' => purgeAllMixinProducts($argv),
         'mixin:fallback-category:ensure' => ensureFallbackCategory(AppFactory::mixin()),
@@ -40,6 +43,8 @@ try {
         'sync:products:dry-run' => AppFactory::productSync()->run(true),
         'sync:products:reconcile' => AppFactory::mappedProductReconcile()->run(Config::bool('SYNC_DRY_RUN', true)),
         'sync:products:reconcile:dry-run' => AppFactory::mappedProductReconcile()->run(true),
+        'sync:order:preview' => previewOrder($argv),
+        'sync:order:apply' => applyOrder($argv),
         'sync:catalog:full:dry-run' => AppFactory::fullCatalogSync()->run(true),
         'sync:catalog:full' => runFullCatalog(),
         'sync:products:baseline' => AppFactory::fullCatalogSync()->baseline(),
@@ -51,8 +56,11 @@ try {
                 'php bin/console mahak:products:diagnose',
                 'php bin/console mahak:products:candidates',
                 'php bin/console mahak:images:diagnose',
+                'php bin/console mahak:people:find SEARCH',
                 'php bin/console mixin:health',
                 'php bin/console mixin:info',
+                'php bin/console mixin:orders:inspect',
+                'php bin/console mixin:order:inspect ORDER_ID',
                 'php bin/console mixin:categories:inspect',
                 'php bin/console mixin:products:delete-all DELETE-ALL-PRODUCTS',
                 'php bin/console mixin:fallback-category:ensure',
@@ -69,6 +77,8 @@ try {
                 'php bin/console sync:products',
                 'php bin/console sync:products:reconcile:dry-run',
                 'php bin/console sync:products:reconcile',
+                'php bin/console sync:order:preview ORDER_ID',
+                'php bin/console sync:order:apply ORDER_ID CONFIRM-MAHAK-INVOICE',
                 'php bin/console sync:catalog:full:dry-run',
                 'php bin/console sync:catalog:full',
                 'php bin/console sync:products:baseline',
@@ -115,6 +125,88 @@ function runProductSyncCycle(): array
 
     $result['reconcile'] = AppFactory::mappedProductReconcile()->run(false);
     return $result;
+}
+
+/** @return array<string,mixed> */
+function inspectMixinOrders(MixinClient $client): array
+{
+    return sanitizeDiagnostic($client->orders([
+        'page' => 1,
+        'page_size' => min(100, max(1, Config::int('SYNC_ORDER_INSPECT_PAGE_SIZE', 20))),
+    ]));
+}
+
+/** @return array<string,mixed> */
+function findMahakPeople(MahakClient $client, int $visitorId, array $argv): array
+{
+    $search = trim((string) ($argv[2] ?? ''));
+    if ($search === '') {
+        throw new InvalidArgumentException('A non-empty person name, mobile or phone SEARCH is required');
+    }
+    $response = $client->getAllData([
+        'currentVisitorId' => $visitorId,
+        'fromPersonVersion' => 0,
+        'pageSize' => 5000,
+    ]);
+    $data = ciValue($response, 'Data', []);
+    $objects = is_array($data) ? ciValue($data, 'Objects', []) : [];
+    $matches = [];
+    foreach ((array) (is_array($objects) ? ciValue($objects, 'People', []) : []) as $person) {
+        if (!is_array($person)) {
+            continue;
+        }
+        $haystack = implode(' ', [
+            (string) ciValue($person, 'FirstName', ''),
+            (string) ciValue($person, 'LastName', ''),
+            (string) ciValue($person, 'Organization', ''),
+            (string) ciValue($person, 'Mobile', ''),
+            (string) ciValue($person, 'Phone', ''),
+        ]);
+        if (!str_contains($haystack, $search) && stripos($haystack, $search) === false) {
+            continue;
+        }
+        $matches[] = [
+            'person_id' => ciValue($person, 'PersonId'),
+            'person_code' => ciValue($person, 'PersonCode'),
+            'first_name' => ciValue($person, 'FirstName'),
+            'last_name' => ciValue($person, 'LastName'),
+            'organization' => ciValue($person, 'Organization'),
+            'mobile' => ciValue($person, 'Mobile'),
+            'phone' => ciValue($person, 'Phone'),
+            'deleted' => ciValue($person, 'Deleted'),
+        ];
+        if (count($matches) >= 20) {
+            break;
+        }
+    }
+    return ['search' => $search, 'count' => count($matches), 'items' => $matches];
+}
+
+/** @return array<string,mixed> */
+function inspectMixinOrder(MixinClient $client, array $argv): array
+{
+    $orderId = (int) positiveIdArgument($argv[2] ?? null, 'ORDER_ID');
+    return sanitizeDiagnostic($client->order($orderId));
+}
+
+/** @return array<string,mixed> */
+function previewOrder(array $argv): array
+{
+    $orderId = (int) positiveIdArgument($argv[2] ?? null, 'ORDER_ID');
+    return AppFactory::singleOrderSync()->preview($orderId);
+}
+
+/** @return array<string,mixed> */
+function applyOrder(array $argv): array
+{
+    if (!Config::bool('SYNC_ALLOW_SINGLE_ORDER_WRITE', false)) {
+        throw new RuntimeException('Single-order writes are disabled. Set SYNC_ALLOW_SINGLE_ORDER_WRITE=true temporarily.');
+    }
+    if (($argv[3] ?? '') !== 'CONFIRM-MAHAK-INVOICE') {
+        throw new InvalidArgumentException('Exact confirmation argument CONFIRM-MAHAK-INVOICE is required');
+    }
+    $orderId = (int) positiveIdArgument($argv[2] ?? null, 'ORDER_ID');
+    return AppFactory::singleOrderSync()->apply($orderId);
 }
 
 function sanitizeDiagnostic(mixed $value, ?string $key = null): mixed

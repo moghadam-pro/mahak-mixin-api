@@ -218,6 +218,10 @@ final class FullCatalogSyncService
             throw new RuntimeException("Mixin product response has no valid id for Mahak detail {$sourceId}");
         }
         $this->state->saveMapping('product', $sourceId, (string) $savedId);
+        $this->state->saveMetadata(
+            MappedProductReconcileService::payloadMetaKey($sourceId),
+            MappedProductReconcileService::payloadHash($payload),
+        );
         return [(int) $savedId, $action];
     }
 
