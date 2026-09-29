@@ -7,6 +7,7 @@ require dirname(__DIR__) . '/bootstrap.php';
 
 use MahakMixin\AppFactory;
 use MahakMixin\Client\MahakClient;
+use MahakMixin\Client\MahakApiException;
 use MahakMixin\Client\MixinClient;
 use MahakMixin\Config;
 use MahakMixin\Http\HttpException;
@@ -95,6 +96,8 @@ try {
     ];
     if ($exception instanceof HttpException) {
         $error['status_code'] = $exception->statusCode;
+        $error['response'] = sanitizeDiagnostic($exception->responseBody);
+    } elseif ($exception instanceof MahakApiException) {
         $error['response'] = sanitizeDiagnostic($exception->responseBody);
     }
     fwrite(STDERR, json_encode($error, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) . PHP_EOL);

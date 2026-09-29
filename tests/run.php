@@ -16,7 +16,7 @@ final class SkippedTest extends RuntimeException {}
 
 $tests = [];
 $tests['reads a valid semantic application version'] = static function (): void {
-    assertSame('0.5.2', Version::current());
+    assertSame('0.5.3', Version::current());
 };
 $tests['maps a Mixin cash order to a Mahak sales invoice in rials'] = static function (): void {
     $payload = (new OrderMapper(48824, 100, 1, 201, 1, 10))->toMahak([

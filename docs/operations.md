@@ -52,6 +52,7 @@ php8.3 bin/console sync:products:reconcile
 | Cron با `received=0` اجرا می‌شود | پس از checkpoint تغییری با RowVersion جدید نرسیده است | بخش `reconcile` خروجی را بررسی کن؛ کالای نگاشت‌شده باید حداکثر در فاصله reconciliation اصلاح شود |
 | فاکتور preview نمی‌شود | یک کالای سفارش mapping ندارد یا PersonId تنظیم نشده | mapping محصولات و `MAHAK_ORDER_PERSON_ID` را بررسی کن |
 | `financial_check.balanced=false` | جمع اقلام/تخفیف/ارسال با مبلغ نهایی یکسان نیست | فاکتور را ثبت نکن؛ خروجی inspect را برای اصلاح قاعده نگاشت بررسی کن |
+| `SaveAllData` با `Result=false` | محک یک یا چند فیلد Order/OrderDetail را رد کرده است | خروجی ساختاریافته `response.Data.Objects` را بررسی کن و تا مشخص‌شدن موفقیت/شکست هر موجودیت فرمان apply را تکرار نکن |
 
 ## تست یک فاکتور سایت
 

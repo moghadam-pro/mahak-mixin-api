@@ -88,7 +88,7 @@ final class MahakClient
         }
         $result = $this->read($response, 'Result');
         if ($result === false) {
-            throw new RuntimeException($this->apiError($path, $response));
+            throw new MahakApiException($this->apiError($path, $response), $response);
         }
 
         return $response;
