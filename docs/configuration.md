@@ -45,6 +45,9 @@ MAHAK_ORDER_STORE_ID=1
 MAHAK_ORDER_SETTLEMENT_TYPE=1
 MAHAK_ORDER_TYPE=201
 MAHAK_ORDER_PERSON_ID=
+MAHAK_ORDER_CARRIER_TYPE=2
+MAHAK_ORDER_CARRIER_ID=
+MAHAK_ORDER_CARRYING_AS_EXPENSE=false
 SYNC_WRITE_DELAY_MS=150
 SYNC_PRICE_DIVISOR=10
 SYNC_TIMEOUT_SECONDS=30
@@ -83,6 +86,9 @@ API محک همیشه برای ویرایش قیمت یا موجودی از مس
 - `MAHAK_ORDER_SETTLEMENT_TYPE=1`: تسویه نقدی.
 - `MAHAK_ORDER_TYPE=201`: فاکتور فروش.
 - `MAHAK_ORDER_PERSON_ID`: شناسه مثبت یک شخص موجود در محک؛ تا پیاده‌سازی تشخیص/ساخت مشتری الزامی است.
+- `MAHAK_ORDER_CARRIER_TYPE=2`: حمل‌کننده صندوق برای سفارش پستی؛ مقدار `1` مخصوص راننده است.
+- `MAHAK_ORDER_CARRIER_ID`: `CashId` مثبت و موجود در محک که با `mahak:cashes:inspect` انتخاب می‌شود.
+- `MAHAK_ORDER_CARRYING_AS_EXPENSE=false`: کرایه حمل به‌صورت هزینه مستقل ثبت نمی‌شود.
 
 مسیر تست فقط یک سفارش مشخص را با تأیید صریح ثبت می‌کند، retry خودکار `SaveAllData` ندارد و در صورت نبود mapping کالا یا عدم تراز مبالغ متوقف می‌شود.
 

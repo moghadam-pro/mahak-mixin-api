@@ -60,6 +60,7 @@ php8.3 bin/console sync:products:reconcile
 php8.3 bin/console mixin:orders:inspect
 php8.3 bin/console mixin:order:inspect ORDER_ID
 php8.3 bin/console mahak:people:find CUSTOMER_PHONE_OR_NAME
+php8.3 bin/console mahak:cashes:inspect
 php8.3 bin/console sync:order:preview ORDER_ID
 ```
 

@@ -108,6 +108,9 @@ final class AppFactory
                 Config::int('MAHAK_ORDER_TYPE', 201),
                 Config::int('MAHAK_ORDER_SETTLEMENT_TYPE', 1),
                 Config::int('SYNC_ORDER_MONEY_MULTIPLIER', 10),
+                Config::int('MAHAK_ORDER_CARRIER_TYPE', 2),
+                Config::int('MAHAK_ORDER_CARRIER_ID'),
+                Config::bool('MAHAK_ORDER_CARRYING_AS_EXPENSE', false),
             ),
         );
     }

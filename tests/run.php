@@ -16,10 +16,10 @@ final class SkippedTest extends RuntimeException {}
 
 $tests = [];
 $tests['reads a valid semantic application version'] = static function (): void {
-    assertSame('0.5.3', Version::current());
+    assertSame('0.5.4', Version::current());
 };
 $tests['maps a Mixin cash order to a Mahak sales invoice in rials'] = static function (): void {
-    $payload = (new OrderMapper(48824, 100, 1, 201, 1, 10))->toMahak([
+    $payload = (new OrderMapper(48824, 100, 1, 201, 1, 10, 2, 50, false))->toMahak([
         'id' => 123,
         'status' => 'paid',
         'status_display' => 'پرداخت‌شده',
@@ -46,13 +46,16 @@ $tests['maps a Mixin cash order to a Mahak sales invoice in rials'] = static fun
     $detail = $payload['orderDetails'][0];
     assertSame(201, $order['orderType']);
     assertSame(1, $order['settlementType']);
+    assertSame(2, $order['carrierType']);
+    assertSame(50, $order['carrierID']);
+    assertSame(false, $order['carryingAsExpense']);
     assertSame(150_000, $order['sendCost']);
     assertSame(20_000, $order['discount']);
     assertSame(1, $detail['storeId']);
     assertSame(200_000, $detail['price']);
     assertSame(2.0, $detail['count1']);
     assertSame(11667880, $detail['productDetailId']);
-    $check = (new OrderMapper(48824, 100, 1, 201, 1, 10))->financialCheck([
+    $check = (new OrderMapper(48824, 100, 1, 201, 1, 10, 2, 50, false))->financialCheck([
         'final_price' => 53_000,
         'shipping_price' => 15_000,
         'discount_amount' => 2_000,
@@ -62,7 +65,7 @@ $tests['maps a Mixin cash order to a Mahak sales invoice in rials'] = static fun
     assertSame(530_000, $check['source_final_rial']);
 };
 $tests['blocks an order item without a product mapping'] = static function (): void {
-    $mapper = new OrderMapper(48824, 100, 1, 201, 1, 10);
+    $mapper = new OrderMapper(48824, 100, 1, 201, 1, 10, 2, 50, false);
     assertThrows(
         static fn (): array => $mapper->toMahak([
             'id' => 123,

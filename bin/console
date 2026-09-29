@@ -24,6 +24,7 @@ try {
         'mahak:products:candidates' => listMahakProductCandidates(AppFactory::mahak(), Config::int('MAHAK_VISITOR_ID')),
         'mahak:images:diagnose' => diagnoseMahakImages(AppFactory::mahak(), Config::int('MAHAK_VISITOR_ID')),
         'mahak:people:find' => findMahakPeople(AppFactory::mahak(), Config::int('MAHAK_VISITOR_ID'), $argv),
+        'mahak:cashes:inspect' => inspectMahakCashes(AppFactory::mahak(), Config::int('MAHAK_VISITOR_ID')),
         'mixin:health' => AppFactory::mixin()->health(),
         'mixin:info' => AppFactory::mixin()->info(),
         'mixin:orders:inspect' => inspectMixinOrders(AppFactory::mixin()),
@@ -58,6 +59,7 @@ try {
                 'php bin/console mahak:products:candidates',
                 'php bin/console mahak:images:diagnose',
                 'php bin/console mahak:people:find SEARCH',
+                'php bin/console mahak:cashes:inspect',
                 'php bin/console mixin:health',
                 'php bin/console mixin:info',
                 'php bin/console mixin:orders:inspect',
@@ -137,6 +139,34 @@ function inspectMixinOrders(MixinClient $client): array
         'page' => 1,
         'page_size' => min(100, max(1, Config::int('SYNC_ORDER_INSPECT_PAGE_SIZE', 20))),
     ]));
+}
+
+/** @return array<string,mixed> */
+function inspectMahakCashes(MahakClient $client, int $visitorId): array
+{
+    $response = $client->getAllData([
+        'currentVisitorId' => $visitorId,
+        'fromCashVersion' => 0,
+        'pageSize' => 5000,
+    ]);
+    $data = ciValue($response, 'Data', []);
+    $objects = is_array($data) ? ciValue($data, 'Objects', []) : [];
+    $rows = (array) (is_array($objects) ? ciValue($objects, 'Cashes', []) : []);
+    $items = [];
+    foreach ($rows as $cash) {
+        if (!is_array($cash)) {
+            continue;
+        }
+        $items[] = [
+            'cash_id' => ciValue($cash, 'CashId'),
+            'cash_code' => ciValue($cash, 'CashCode'),
+            'name' => ciValue($cash, 'Name'),
+            'description' => ciValue($cash, 'Description'),
+            'currency_code' => ciValue($cash, 'CurrCode'),
+            'deleted' => ciValue($cash, 'Deleted'),
+        ];
+    }
+    return ['received' => count($rows), 'count' => count($items), 'items' => $items];
 }
 
 /** @return array<string,mixed> */

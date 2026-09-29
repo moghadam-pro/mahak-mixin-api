@@ -16,11 +16,17 @@ final class OrderMapper
         private readonly int $orderType = 201,
         private readonly int $settlementType = 1,
         private readonly int $moneyMultiplier = 10,
+        private readonly int $carrierType = 2,
+        private readonly int $carrierId = 0,
+        private readonly bool $carryingAsExpense = false,
     ) {
-        foreach (['visitorId' => $visitorId, 'personId' => $personId, 'storeId' => $storeId] as $name => $value) {
+        foreach (['visitorId' => $visitorId, 'personId' => $personId, 'storeId' => $storeId, 'carrierId' => $carrierId] as $name => $value) {
             if ($value < 1) {
                 throw new InvalidArgumentException("{$name} must be a positive integer");
             }
+        }
+        if ($carrierType < 1) {
+            throw new InvalidArgumentException('carrierType must be a positive integer');
         }
         if ($moneyMultiplier < 1) {
             throw new InvalidArgumentException('moneyMultiplier must be at least 1');
@@ -98,6 +104,9 @@ final class OrderMapper
                 'immediate' => false,
                 'description' => $this->orderDescription($order),
                 'shippingAddress' => $this->shippingAddress($order),
+                'carrierType' => $this->carrierType,
+                'carrierID' => $this->carrierId,
+                'carryingAsExpense' => $this->carryingAsExpense,
                 'deleted' => false,
             ]],
             'orderDetails' => $details,
