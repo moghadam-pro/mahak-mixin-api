@@ -29,7 +29,7 @@ final class OrderMapper
 
     /**
      * @param array<string,mixed> $order
-     * @param array<string,string> $productMappings Mixin product id => Mahak ProductDetail id
+     * @param array<int|string,string> $productMappings Mixin product id => Mahak ProductDetail id
      * @return array{orders:list<array<string,mixed>>,orderDetails:list<array<string,mixed>>}
      */
     public function toMahak(array $order, array $productMappings): array

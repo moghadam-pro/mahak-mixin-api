@@ -77,12 +77,12 @@ final class StateStore
         return $result;
     }
 
-    /** @return array<string,string> target id => source id */
+    /** @return array<int|string,string> target id => source id */
     public function reverseMappings(string $entity): array
     {
         $result = [];
         foreach ($this->mappings($entity) as $sourceId => $targetId) {
-            $result[$targetId] = $sourceId;
+            $result[$targetId] = (string) $sourceId;
         }
         return $result;
     }
