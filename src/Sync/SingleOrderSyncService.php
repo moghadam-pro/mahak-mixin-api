@@ -71,7 +71,7 @@ final class SingleOrderSyncService
         }
 
         $saved = $this->mahak->saveAllData($payload);
-        $targetId = $this->findSavedOrderId($saved, $this->mapper->orderClientId($orderId));
+        $targetId = self::savedOrderId($saved, $this->mapper->orderClientId($orderId));
         $this->state->saveMapping('order', (string) $orderId, $targetId === null
             ? 'client:' . $this->mapper->orderClientId($orderId)
             : (string) $targetId);
@@ -90,11 +90,14 @@ final class SingleOrderSyncService
         return $data;
     }
 
-    private function findSavedOrderId(array $response, int $clientId): int|string|null
+    public static function savedOrderId(array $response, int $clientId): int|string|null
     {
         $data = $response['Data'] ?? $response['data'] ?? [];
         $objects = is_array($data) ? ($data['Objects'] ?? $data['objects'] ?? $data) : [];
-        $orders = is_array($objects) ? ($objects['Orders'] ?? $objects['orders'] ?? []) : [];
+        $orderResults = is_array($objects) ? ($objects['Orders'] ?? $objects['orders'] ?? []) : [];
+        $orders = is_array($orderResults)
+            ? ($orderResults['Results'] ?? $orderResults['results'] ?? $orderResults)
+            : [];
         if (!is_array($orders)) {
             return null;
         }
@@ -102,11 +105,12 @@ final class SingleOrderSyncService
             if (!is_array($order)) {
                 continue;
             }
-            $candidateClientId = $order['OrderClientId'] ?? $order['orderClientId'] ?? null;
+            $candidateClientId = $order['EntityClientId'] ?? $order['entityClientId']
+                ?? $order['OrderClientId'] ?? $order['orderClientId'] ?? null;
             if ((string) $candidateClientId !== (string) $clientId) {
                 continue;
             }
-            $id = $order['OrderId'] ?? $order['orderId'] ?? null;
+            $id = $order['EntityId'] ?? $order['entityId'] ?? $order['OrderId'] ?? $order['orderId'] ?? null;
             if (is_int($id) || is_string($id)) {
                 return $id;
             }

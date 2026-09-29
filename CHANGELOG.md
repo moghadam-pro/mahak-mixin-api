@@ -4,6 +4,10 @@
 
 ## [Unreleased]
 
+## [0.5.5] - 2026-09-29
+
+- اصلاح استخراج شناسه واقعی فاکتور از `Orders.Results[].EntityId` پاسخ `SaveAllData` و افزودن تست regression برای پاسخ واقعی سفارش ۱۷۳.
+
 ## [0.5.4] - 2026-09-29
 
 - افزودن فیلدهای اجباری حمل محک (`CarrierType`، `CarrierID` و `CarryingAsExpense`) به فاکتور و فرمان فقط‌خواندنی `mahak:cashes:inspect` برای انتخاب صندوق معتبر.

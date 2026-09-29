@@ -9,6 +9,7 @@ use MahakMixin\Mapper\OrderMapper;
 use MahakMixin\Persistence\StateStore;
 use MahakMixin\Sync\ProductSyncService;
 use MahakMixin\Sync\MappedProductReconcileService;
+use MahakMixin\Sync\SingleOrderSyncService;
 use MahakMixin\Support\TestProductFactory;
 use MahakMixin\Version;
 
@@ -16,7 +17,7 @@ final class SkippedTest extends RuntimeException {}
 
 $tests = [];
 $tests['reads a valid semantic application version'] = static function (): void {
-    assertSame('0.5.4', Version::current());
+    assertSame('0.5.5', Version::current());
 };
 $tests['maps a Mixin cash order to a Mahak sales invoice in rials'] = static function (): void {
     $payload = (new OrderMapper(48824, 100, 1, 201, 1, 10, 2, 50, false))->toMahak([
@@ -74,6 +75,17 @@ $tests['blocks an order item without a product mapping'] = static function (): v
         ], []),
         RuntimeException::class,
     );
+};
+$tests['extracts the Mahak order id from SaveAllData results'] = static function (): void {
+    $id = SingleOrderSyncService::savedOrderId([
+        'Result' => true,
+        'Data' => ['Objects' => ['Orders' => ['Results' => [[
+            'Result' => true,
+            'EntityId' => 301831562,
+            'EntityClientId' => 8000000000000173,
+        ]]]]],
+    ], 8000000000000173);
+    assertSame(301831562, $id);
 };
 $tests['uses Mahak second sell price and converts rial to toman'] = static function (): void {
     $payload = (new ProductMapper(10))->toMixin(
