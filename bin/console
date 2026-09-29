@@ -150,12 +150,16 @@ function findMahakPeople(MahakClient $client, int $visitorId, array $argv): arra
     ]);
     $data = ciValue($response, 'Data', []);
     $objects = is_array($data) ? ciValue($data, 'Objects', []) : [];
+    $people = (array) (is_array($objects) ? ciValue($objects, 'People', []) : []);
+    $exactCodeMatches = [];
     $matches = [];
-    foreach ((array) (is_array($objects) ? ciValue($objects, 'People', []) : []) as $person) {
+    foreach ($people as $person) {
         if (!is_array($person)) {
             continue;
         }
+        $personCode = trim((string) ciValue($person, 'PersonCode', ''));
         $haystack = implode(' ', [
+            $personCode,
             (string) ciValue($person, 'FirstName', ''),
             (string) ciValue($person, 'LastName', ''),
             (string) ciValue($person, 'Organization', ''),
@@ -165,9 +169,9 @@ function findMahakPeople(MahakClient $client, int $visitorId, array $argv): arra
         if (!str_contains($haystack, $search) && stripos($haystack, $search) === false) {
             continue;
         }
-        $matches[] = [
+        $result = [
             'person_id' => ciValue($person, 'PersonId'),
-            'person_code' => ciValue($person, 'PersonCode'),
+            'person_code' => $personCode,
             'first_name' => ciValue($person, 'FirstName'),
             'last_name' => ciValue($person, 'LastName'),
             'organization' => ciValue($person, 'Organization'),
@@ -175,11 +179,20 @@ function findMahakPeople(MahakClient $client, int $visitorId, array $argv): arra
             'phone' => ciValue($person, 'Phone'),
             'deleted' => ciValue($person, 'Deleted'),
         ];
-        if (count($matches) >= 20) {
-            break;
+        if ($personCode !== '' && $personCode === $search) {
+            $exactCodeMatches[] = $result;
+        } else {
+            $matches[] = $result;
         }
     }
-    return ['search' => $search, 'count' => count($matches), 'items' => $matches];
+    $matches = array_slice($exactCodeMatches !== [] ? $exactCodeMatches : $matches, 0, 20);
+    return [
+        'search' => $search,
+        'received' => count($people),
+        'match_type' => $exactCodeMatches !== [] ? 'exact_person_code' : 'text',
+        'count' => count($matches),
+        'items' => $matches,
+    ];
 }
 
 /** @return array<string,mixed> */

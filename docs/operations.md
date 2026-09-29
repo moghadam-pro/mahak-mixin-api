@@ -62,6 +62,8 @@ php8.3 bin/console mahak:people:find CUSTOMER_PHONE_OR_NAME
 php8.3 bin/console sync:order:preview ORDER_ID
 ```
 
+فرمان `mahak:people:find` کد مشتری محک (`PersonCode`) را نیز به‌صورت دقیق می‌پذیرد. فیلد `received` تعداد اشخاصی است که واقعاً از API دریافت شده‌اند؛ صرف افزودن مشتری به فهرست بازارا کافی نیست و ردیف باید با «ارسال گروهی مشتری» به سرور ارسال شود.
+
 پس از کنترل `financial_check` و payload، backup بگیرید، گارد را موقتاً روشن و فقط همان سفارش را ثبت کنید:
 
 ```bash
