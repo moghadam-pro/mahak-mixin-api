@@ -72,6 +72,9 @@ final class MappedProductReconcileService
             'unchanged' => 0,
             'updated' => 0,
             'recreated' => 0,
+            'price_changed' => 0,
+            'stock_changed' => 0,
+            'details_changed' => 0,
             'deferred' => 0,
             'missing_source' => 0,
             'skipped' => 0,
@@ -140,12 +143,16 @@ final class MappedProductReconcileService
                     if ($writtenHash === null || !hash_equals($writtenHash, $payloadHash)) {
                         $this->state->saveMetadata(self::payloadMetaKey($sourceId), $payloadHash);
                     }
+                    $this->state->saveMetadata(self::payloadDataMetaKey($sourceId), self::encodePayload($payload));
                     $this->persistCurrentSnapshots($sourceId, $productId, $product, $detail, $visitorProducts[$sourceId] ?? null);
                 }
                 continue;
             }
 
             $stats['changed']++;
+            $changedFields = is_array($targetProduct)
+                ? self::changedFields($targetProduct, $payload)
+                : ['target_missing'];
             if ($writes >= $this->maxWrites) {
                 $stats['deferred']++;
                 continue;
@@ -155,6 +162,7 @@ final class MappedProductReconcileService
                     'action' => 'update',
                     'source_id' => $sourceId,
                     'target_id' => $targetId,
+                    'changed_fields' => $changedFields,
                     'payload' => $payload,
                 ];
             }
@@ -180,8 +188,18 @@ final class MappedProductReconcileService
                     $action = 'recreated';
                 }
                 $stats[$action]++;
+                if (in_array('price', $changedFields, true)) {
+                    $stats['price_changed']++;
+                }
+                if (array_intersect(['stock', 'stock_type', 'available'], $changedFields) !== []) {
+                    $stats['stock_changed']++;
+                }
+                if (array_diff($changedFields, ['price', 'stock', 'stock_type', 'available']) !== []) {
+                    $stats['details_changed']++;
+                }
                 $writes++;
                 $this->state->saveMetadata(self::payloadMetaKey($sourceId), $payloadHash);
+                $this->state->saveMetadata(self::payloadDataMetaKey($sourceId), self::encodePayload($payload));
                 $this->persistCurrentSnapshots($sourceId, $productId, $product, $detail, $visitorProducts[$sourceId] ?? null);
                 $this->delay();
             } catch (\Throwable $exception) {
@@ -317,6 +335,17 @@ final class MappedProductReconcileService
         return 'mahak.product.payload_hash.' . $sourceId;
     }
 
+    public static function payloadDataMetaKey(string $sourceId): string
+    {
+        return 'mahak.product.payload_json.' . $sourceId;
+    }
+
+    /** @param array<string,mixed> $payload */
+    public static function encodePayload(array $payload): string
+    {
+        return json_encode($payload, JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+    }
+
     public static function normalizeSourceId(int|string $sourceId): string
     {
         return (string) $sourceId;
@@ -376,6 +405,48 @@ final class MappedProductReconcileService
             return false;
         }
         return true;
+    }
+
+    /** @return list<string> */
+    public static function changedFields(array $target, array $payload): array
+    {
+        $value = static function (array $data, string $key, mixed $default = null): mixed {
+            foreach ($data as $candidate => $candidateValue) {
+                if (strcasecmp((string) $candidate, $key) === 0) {
+                    return $candidateValue;
+                }
+            }
+            return $default;
+        };
+        $stockType = $value($target, 'stock_type', '');
+        $category = $value($target, 'main_category');
+        $actual = [
+            'name' => (string) $value($target, 'name', ''),
+            'price' => (float) $value($target, 'price', 0),
+            'available' => (bool) $value($target, 'available', false),
+            'product_identifier' => (string) $value($target, 'product_identifier', ''),
+            'stock' => (float) $value($target, 'stock_number', $value($target, 'stock', 0)),
+            'stock_type' => is_array($stockType) ? (string) $value($stockType, 'value', '') : (string) $stockType,
+            'main_category_id' => (string) (is_array($category)
+                ? $value($category, 'id', '')
+                : $value($target, 'main_category_id', '')),
+        ];
+        $expected = [
+            'name' => (string) ($payload['name'] ?? ''),
+            'price' => (float) ($payload['price'] ?? 0),
+            'available' => (bool) ($payload['available'] ?? false),
+            'product_identifier' => (string) ($payload['product_identifier'] ?? ''),
+            'stock' => (float) ($payload['stock'] ?? 0),
+            'stock_type' => (string) ($payload['stock_type'] ?? ''),
+            'main_category_id' => (string) ($payload['main_category_id'] ?? ''),
+        ];
+        $changed = [];
+        foreach ($expected as $field => $expectedValue) {
+            if ($actual[$field] !== $expectedValue) {
+                $changed[] = $field;
+            }
+        }
+        return $changed;
     }
 
     private function objects(array $response): array

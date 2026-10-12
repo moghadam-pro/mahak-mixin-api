@@ -125,6 +125,7 @@ final class StateStore
                 'key' => 'mahak.products.last_reconcile_at',
             ]);
             $this->pdo->exec("DELETE FROM sync_metadata WHERE key LIKE 'mahak.product.payload_hash.%'");
+            $this->pdo->exec("DELETE FROM sync_metadata WHERE key LIKE 'mahak.product.payload_json.%'");
             $this->pdo->exec("DELETE FROM sync_metadata WHERE key LIKE 'mahak.product.image_source_hash.%'");
             $this->pdo->commit();
         } catch (\Throwable $exception) {
@@ -171,6 +172,102 @@ final class StateStore
             unset($row['stats_json']);
         }
         return $rows;
+    }
+
+    /**
+     * Dashboard counters are derived only from completed, non-dry-run records.
+     * A counter is marked partial when older rows in the requested window do
+     * not contain that field (older Bridge releases did not record it).
+     *
+     * @return array<string,array<string,array{value:int,coverage:string}>>
+     */
+    public function dashboardMetrics(): array
+    {
+        $windows = ['day' => '-1 day', 'week' => '-7 days', 'month' => '-30 days'];
+        $definitions = [
+            'product_writes' => ['created', 'updated', 'recreated'],
+            'price_changes' => ['price_changed'],
+            'image_changes' => ['images_uploaded', 'images_replaced'],
+            'invoices' => ['created'],
+        ];
+        $result = [];
+        foreach ($windows as $window => $modifier) {
+            $statement = $this->pdo->prepare(
+                "SELECT entity, stats_json FROM sync_runs
+                 WHERE finished_at IS NOT NULL
+                   AND status IN ('success', 'partial')
+                   AND started_at >= datetime('now', :modifier)"
+            );
+            $statement->execute(['modifier' => $modifier]);
+            $rows = $statement->fetchAll();
+            foreach ($definitions as $metric => $keys) {
+                $value = 0;
+                $eligible = 0;
+                $covered = 0;
+                foreach ($rows as $row) {
+                    $stats = isset($row['stats_json']) ? json_decode((string) $row['stats_json'], true) : null;
+                    if (!is_array($stats) || (bool) ($stats['dry_run'] ?? false)) {
+                        continue;
+                    }
+                    $entity = (string) ($row['entity'] ?? '');
+                    $entities = match ($metric) {
+                        'invoices' => ['orders'],
+                        'image_changes' => ['products', 'full_catalog'],
+                        'price_changes' => ['products', 'full_catalog', 'mapped_product_reconcile'],
+                        default => ['products', 'full_catalog', 'mapped_product_reconcile'],
+                    };
+                    if (!in_array($entity, $entities, true)) {
+                        continue;
+                    }
+                    $eligible++;
+                    $rowCovered = false;
+                    foreach ($keys as $key) {
+                        if (array_key_exists($key, $stats)) {
+                            $rowCovered = true;
+                            $value += max(0, (int) $stats[$key]);
+                        }
+                    }
+                    if ($rowCovered) {
+                        if ($metric !== 'price_changes' || (int) ($stats['price_tracking_unknown'] ?? 0) === 0) {
+                            $covered++;
+                        }
+                    }
+                }
+                $result[$metric][$window] = [
+                    'value' => $value,
+                    'coverage' => $covered === 0 ? 'none' : ($covered === $eligible ? 'full' : 'partial'),
+                ];
+            }
+        }
+        return $result;
+    }
+
+    /** @return array<string,int> */
+    public function lifetimeWriteTotals(): array
+    {
+        $totals = ['mahak_to_mixin' => 0, 'mixin_to_mahak' => 0];
+        $statement = $this->pdo->query(
+            "SELECT direction, entity, stats_json FROM sync_runs
+             WHERE finished_at IS NOT NULL AND status IN ('success', 'partial')"
+        );
+        while ($row = $statement->fetch()) {
+            $stats = isset($row['stats_json']) ? json_decode((string) $row['stats_json'], true) : null;
+            if (!is_array($stats) || (bool) ($stats['dry_run'] ?? false)) {
+                continue;
+            }
+            $direction = (string) ($row['direction'] ?? '');
+            $entity = (string) ($row['entity'] ?? '');
+            if ($direction === 'mahak_to_mixin') {
+                $totals[$direction] += max(0, (int) ($stats['created'] ?? 0));
+                $totals[$direction] += max(0, (int) ($stats['updated'] ?? 0));
+                $totals[$direction] += max(0, (int) ($stats['recreated'] ?? 0));
+                $totals[$direction] += max(0, (int) ($stats['images_uploaded'] ?? 0));
+                $totals[$direction] += max(0, (int) ($stats['images_replaced'] ?? 0));
+            } elseif ($direction === 'mixin_to_mahak' && $entity === 'orders') {
+                $totals[$direction] += max(0, (int) ($stats['created'] ?? 0));
+            }
+        }
+        return $totals;
     }
 
     /** @return list<array<string,mixed>> */
@@ -254,5 +351,6 @@ final class StateStore
             value TEXT NOT NULL,
             updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
         )');
+        $this->pdo->exec('CREATE INDEX IF NOT EXISTS sync_runs_started_at ON sync_runs(started_at)');
     }
 }

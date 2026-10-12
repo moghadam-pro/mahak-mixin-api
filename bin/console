@@ -18,6 +18,7 @@ $command = $argv[1] ?? 'help';
 try {
     $result = match ($command) {
         '--version', '-V', 'version' => ['service' => 'mahak-mixin-bridge', 'version' => Version::current()],
+        'diagnostics:report' => \MahakMixin\Support\Diagnostics::report(),
         'mahak:login' => sanitizeLogin(AppFactory::mahak()->login()),
         'mahak:products:inspect' => inspectMahakProducts(AppFactory::mahak(), Config::int('MAHAK_VISITOR_ID')),
         'mahak:products:diagnose' => diagnoseMahakProductFields(AppFactory::mahak(), Config::int('MAHAK_VISITOR_ID')),
@@ -56,6 +57,7 @@ try {
         default => [
             'usage' => [
                 'php bin/console --version',
+                'php bin/console diagnostics:report',
                 'php bin/console mahak:login',
                 'php bin/console mahak:products:inspect',
                 'php bin/console mahak:products:diagnose',

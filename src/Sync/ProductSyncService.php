@@ -88,6 +88,10 @@ final class ProductSyncService
             'created' => 0,
             'updated' => 0,
             'recreated' => 0,
+            'price_changed' => 0,
+            'price_tracking_unknown' => 0,
+            'stock_changed' => 0,
+            'details_changed' => 0,
             'skipped' => 0,
             'images_uploaded' => 0,
             'images_replaced' => 0,
@@ -128,6 +132,12 @@ final class ProductSyncService
                 continue;
             }
             $targetId = $this->state->mapping('product', $sourceId);
+            $previousPayload = null;
+            $previousPayloadJson = $this->state->metadata(MappedProductReconcileService::payloadDataMetaKey($sourceId));
+            if (is_string($previousPayloadJson) && $previousPayloadJson !== '') {
+                $decodedPayload = json_decode($previousPayloadJson, true);
+                $previousPayload = is_array($decodedPayload) ? $decodedPayload : null;
+            }
 
             if ($dryRun) {
                 if (count($stats['preview']) < 10) {
@@ -160,6 +170,28 @@ final class ProductSyncService
                 MappedProductReconcileService::payloadMetaKey($sourceId),
                 MappedProductReconcileService::payloadHash($payload),
             );
+            $this->state->saveMetadata(
+                MappedProductReconcileService::payloadDataMetaKey($sourceId),
+                MappedProductReconcileService::encodePayload($payload),
+            );
+            if ($targetId !== null && is_array($previousPayload)) {
+                if ((float) ($previousPayload['price'] ?? 0) !== (float) ($payload['price'] ?? 0)) {
+                    $stats['price_changed']++;
+                }
+                if ((float) ($previousPayload['stock'] ?? 0) !== (float) ($payload['stock'] ?? 0)
+                    || (bool) ($previousPayload['available'] ?? false) !== (bool) ($payload['available'] ?? false)
+                    || (string) ($previousPayload['stock_type'] ?? '') !== (string) ($payload['stock_type'] ?? '')) {
+                    $stats['stock_changed']++;
+                }
+                foreach (['name', 'product_identifier', 'main_category_id'] as $field) {
+                    if (($previousPayload[$field] ?? null) !== ($payload[$field] ?? null)) {
+                        $stats['details_changed']++;
+                        break;
+                    }
+                }
+            } elseif ($targetId !== null) {
+                $stats['price_tracking_unknown']++;
+            }
             $stats[$action . 'd']++;
             $imageAction = $this->syncImageFromData(
                 (int) $savedId,

@@ -18,7 +18,7 @@ final class SkippedTest extends RuntimeException {}
 
 $tests = [];
 $tests['reads a valid semantic application version'] = static function (): void {
-    assertSame('0.6.1', Version::current());
+    assertSame('0.7.0', Version::current());
 };
 $tests['normalizes numeric SQLite mapping keys before reconciliation'] = static function (): void {
     assertSame('11667880', MappedProductReconcileService::normalizeSourceId(11667880));
@@ -311,6 +311,32 @@ $tests['does not mark ordinary products as Bridge tests'] = static function (): 
         'name' => 'محصول واقعی',
         'product_identifier' => '123',
     ]));
+};
+
+$tests['dashboard excludes dry runs and marks missing price history'] = static function (): void {
+    if (!in_array('sqlite', PDO::getAvailableDrivers(), true)) {
+        throw new SkippedTest('pdo_sqlite is not installed');
+    }
+    $store = new StateStore(':memory:');
+    $id = $store->startRun('mahak_to_mixin', 'products');
+    $store->finishRun($id, 'success', ['dry_run' => false, 'created' => 2, 'updated' => 3, 'images_uploaded' => 1]);
+    $id = $store->startRun('mahak_to_mixin', 'products');
+    $store->finishRun($id, 'success', ['dry_run' => true, 'created' => 999, 'price_changed' => 999]);
+    $id = $store->startRun('mahak_to_mixin', 'mapped_product_reconcile');
+    $store->finishRun($id, 'partial', ['dry_run' => false, 'updated' => 1, 'price_changed' => 1]);
+    $metrics = $store->dashboardMetrics();
+    assertSame(6, $metrics['product_writes']['day']['value']);
+    assertSame(1, $metrics['price_changes']['day']['value']);
+    assertSame('partial', $metrics['price_changes']['day']['coverage']);
+    assertSame('none', $metrics['invoices']['day']['coverage']);
+    assertSame(7, $store->lifetimeWriteTotals()['mahak_to_mixin']);
+};
+$tests['field-level reconciliation isolates price and stock differences'] = static function (): void {
+    $payload = ['name' => 'test', 'price' => 20, 'stock' => 4, 'available' => true, 'stock_type' => 'limited', 'product_identifier' => '10', 'main_category_id' => 28];
+    $target = $payload;
+    $target['price'] = 100;
+    $target['stock'] = 3;
+    assertSame(['price', 'stock'], MappedProductReconcileService::changedFields($target, $payload));
 };
 
 $failed = 0;
