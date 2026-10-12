@@ -10,7 +10,7 @@ use RuntimeException;
 
 final class OrderCustomerResolver
 {
-    public function __construct(private readonly MahakClient $mahak, private readonly StateStore $state, private readonly int $visitorId) {}
+    public function __construct(private readonly MahakClient $mahak, private readonly StateStore $state, private readonly int $visitorId, private readonly int $personGroupId = 0) {}
 
     public static function normalizePhone(string $phone): string
     {
@@ -86,6 +86,10 @@ final class OrderCustomerResolver
             $id = (int) array_key_first($matches);
             return $result + ['reference' => ['personId' => $id], 'create' => false];
         }
+        if ($this->personGroupId < 1) {
+            throw new RuntimeException('New Mahak customer requires MAHAK_ORDER_PERSON_GROUP_ID. Select an existing Mahak PersonGroup before applying the order.');
+        }
+        $result['person']['personGroupId'] = $this->personGroupId;
         return $result + ['reference' => ['personClientId' => $result['person']['personClientId']], 'create' => true];
     }
 

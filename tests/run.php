@@ -18,7 +18,7 @@ final class SkippedTest extends RuntimeException {}
 
 $tests = [];
 $tests['reads a valid semantic application version'] = static function (): void {
-    assertSame('0.8.0', Version::current());
+    assertSame('0.8.1', Version::current());
 };
 $tests['normalizes numeric SQLite mapping keys before reconciliation'] = static function (): void {
     assertSame('11667880', MappedProductReconcileService::normalizeSourceId(11667880));

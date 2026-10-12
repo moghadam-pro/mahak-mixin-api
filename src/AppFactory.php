@@ -114,7 +114,7 @@ final class AppFactory
                 Config::bool('MAHAK_ORDER_CARRYING_AS_EXPENSE', false),
             ),
             Config::bool('SYNC_ORDER_REAL_CUSTOMERS', true)
-                ? new \MahakMixin\Sync\OrderCustomerResolver(self::mahak(), self::state(), Config::int('MAHAK_VISITOR_ID'))
+                ? new \MahakMixin\Sync\OrderCustomerResolver(self::mahak(), self::state(), Config::int('MAHAK_VISITOR_ID'), Config::int('MAHAK_ORDER_PERSON_GROUP_ID', 0))
                 : null,
         );
     }
