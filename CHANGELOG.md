@@ -4,6 +4,11 @@
 
 ## [Unreleased]
 
+## [0.6.1] - 2026-10-12
+
+- اصلاح TypeError reconciliation روی سرور: PHP کلید عددی `source_id` برگشتی از SQLite را به `int` تبدیل می‌کند؛ اکنون شناسه پیش از resolve دسته و payload به string نرمال می‌شود.
+- افزودن regression test برای ProductDetailId عددی واقعی در mapping.
+
 ## [0.6.0] - 2026-10-12
 
 - اصلاح reconciliation محصولات با مقایسه وضعیت واقعی Mixin، نه فقط fingerprint محلی؛ اختلاف `Price2`، موجودی و مشخصات محصول اکنون حتی در صورت state محلی قدیمی PATCH می‌شود.

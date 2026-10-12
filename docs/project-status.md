@@ -24,7 +24,7 @@
 | Product image replace | پیاده‌سازی‌شده در `0.6.0` | تغییر Picture/PhotoGallery با fingerprint تشخیص داده و تصویر جدید پیش از حذف تصویر اصلی قبلی ثبت می‌شود |
 | Sync lock/history | پیاده‌سازی‌شده | flock غیرمسدودکننده و ثبت success/failed هر اجرا در SQLite |
 | HTTP retry | پیاده‌سازی‌شده | backoff محدود برای read/PATCH و درخواست‌های خواندنی محک؛ createها عمداً retry کور ندارند |
-| Automated tests | تأییدشده در توسعه | ۲۴ تست، صفر failure محلی؛ یک تست SQLite در محیط فاقد driver skip می‌شود و روی سرور دارای pdo_sqlite باید دوباره اجرا شود |
+| Automated tests | تأییدشده در توسعه | ۲۵ تست، صفر failure محلی؛ یک تست SQLite در محیط فاقد driver skip می‌شود و روی سرور دارای pdo_sqlite باید دوباره اجرا شود |
 | Product sync | عملیاتی | انتقال و بروزرسانی کالا و تصویر در محیط واقعی تأیید شده است؛ مسیر دائمی فقط کالاهای انتخاب‌شده/نگاشت‌شده را پردازش می‌کند |
 | Customer sync | برنامه‌ریزی‌شده | قواعد Person و duplicate detection باید نهایی شود |
 | Single order sync | تأییدشده | سفارش واقعی `173` به Order و OrderDetail محک منتقل و شناسه Order واقعی پاسخ ثبت شد |

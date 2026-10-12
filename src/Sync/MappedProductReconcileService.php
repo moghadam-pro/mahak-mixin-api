@@ -97,6 +97,8 @@ final class MappedProductReconcileService
         $writes = 0;
 
         foreach ($mappings as $sourceId => $targetId) {
+            // PHP converts numeric-string array keys returned by SQLite to int.
+            $sourceId = self::normalizeSourceId($sourceId);
             $detail = $details[$sourceId] ?? null;
             if (!is_array($detail)) {
                 $stats['missing_source']++;
@@ -313,6 +315,11 @@ final class MappedProductReconcileService
     public static function payloadMetaKey(string $sourceId): string
     {
         return 'mahak.product.payload_hash.' . $sourceId;
+    }
+
+    public static function normalizeSourceId(int|string $sourceId): string
+    {
+        return (string) $sourceId;
     }
 
     /**
