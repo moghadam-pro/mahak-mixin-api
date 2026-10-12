@@ -105,7 +105,7 @@ php8.3 tests/run.php
 پس از تأیید dry-run و فعال‌سازی آگاهانه نوشتن:
 
 ```cron
-*/10 * * * * cd /var/www/mahak-mixin-bridge && /usr/bin/php8.3 bin/console sync:products >> var/log/cron.log 2>&1
+* * * * * cd /var/www/mahak-mixin-bridge && /usr/bin/php8.3 bin/console sync:worker >> var/log/cron.log 2>&1
 ```
 
 فقط یک Cron برای sync تعریف کنید. Bridge فایل lock دارد، اما همچنان استفاده از یک Scheduler توصیه می‌شود.

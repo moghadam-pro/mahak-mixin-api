@@ -26,7 +26,8 @@ php bin/console mixin:info
 - worker یک webhook نیست و فرمان بازارا مستقیماً Bridge را فراخوانی نمی‌کند؛ Cron تغییرات را از API محک pull می‌کند.
 - کالای جدید یا ویرایشی که `RowVersion` تازه داشته باشد بعد از baseline در اجرای بعدی مسیر افزایشی پردازش می‌شود.
 - ارسال دوباره کالای قدیمی بدون تغییر ممکن است RowVersion تازه نسازد و در نتیجه `received=0` باقی بماند.
-- تغییر قیمت یا موجودی کالای ازقبل نگاشت‌شده ممکن است نیز RowVersion تازه نسازد؛ reconciliation پیش‌فرض هر پنج دقیقه وضعیت جاری آن را مقایسه و همان شناسه Mixin را اصلاح می‌کند.
+- تغییر قیمت یا موجودی کالای ازقبل نگاشت‌شده ممکن است RowVersion تازه نسازد؛ reconciliation پیش‌فرض هر پنج دقیقه وضعیت جاری محک را با خود محصول Mixin مقایسه و همان شناسه مقصد را اصلاح می‌کند.
+- تغییر Picture/PhotoGallery باعث ساخت تصویر جدید و سپس حذف تصویر اصلی قبلی می‌شود؛ fingerprint تصویر مانع upload دوباره فایل بدون تغییر است.
 - برای کالای قدیمیِ ارسال‌شده پیش از baseline، از `sync:product:preview` و سپس `sync:product:apply` با گارد موقت `SYNC_ALLOW_SINGLE_PRODUCT_WRITE=true` استفاده کن.
 - پس از پایان انتقال تک‌محصولی، گارد را دوباره `false` کن؛ Cron دائمی باید با `SYNC_DRY_RUN=false` باقی بماند.
 
@@ -73,6 +74,17 @@ php8.3 bin/console sync:order:apply ORDER_ID CONFIRM-MAHAK-INVOICE
 ```
 
 پس از بررسی فاکتور در نرم‌افزار محک، `SYNC_ALLOW_SINGLE_ORDER_WRITE=false` شود. اجرای مجدد سفارش mapping‌شده با `skip_existing` پاسخ می‌دهد.
+
+## فعال‌سازی worker سفارش
+
+پس از تأیید تنظیمات یک فاکتور واقعی، قبل از فعال‌سازی worker فقط یک‌بار baseline بگیرید:
+
+```bash
+php8.3 bin/console sync:orders:baseline
+php8.3 bin/console sync:orders:dry-run
+```
+
+سپس `SYNC_ORDER_SYNC_ENABLED=true` و `SYNC_DRY_RUN=false` را تنظیم کنید و Cron را با `sync:worker` اجرا کنید. baseline هیچ فاکتوری در محک ایجاد نمی‌کند. worker از قدیمی‌ترین سفارش جدید شروع می‌کند، روی نخستین خطا متوقف می‌شود و checkpoint را فقط پس از موفقیت یا تشخیص mapping موجود جلو می‌برد. برای retry عملیات مالی HTTP خودکار وجود ندارد.
 
 ## بازیابی
 

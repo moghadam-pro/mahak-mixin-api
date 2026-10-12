@@ -10,6 +10,7 @@ use MahakMixin\Persistence\StateStore;
 use MahakMixin\Sync\ProductSyncService;
 use MahakMixin\Sync\MappedProductReconcileService;
 use MahakMixin\Sync\SingleOrderSyncService;
+use MahakMixin\Sync\OrderSyncService;
 use MahakMixin\Support\TestProductFactory;
 use MahakMixin\Version;
 
@@ -17,7 +18,11 @@ final class SkippedTest extends RuntimeException {}
 
 $tests = [];
 $tests['reads a valid semantic application version'] = static function (): void {
-    assertSame('0.5.5', Version::current());
+    assertSame('0.6.0', Version::current());
+};
+$tests['extracts Mixin order rows for the incremental order worker'] = static function (): void {
+    $service = (new ReflectionClass(OrderSyncService::class))->newInstanceWithoutConstructor();
+    assertSame([['id' => 174]], $service->orderRows(['status' => 'success', 'data' => [['id' => 174]]]));
 };
 $tests['maps a Mixin cash order to a Mahak sales invoice in rials'] = static function (): void {
     $payload = (new OrderMapper(48824, 100, 1, 201, 1, 10, 2, 50, false))->toMahak([
@@ -107,6 +112,45 @@ $tests['keeps product 1681 on Mahak Price2 instead of Price1'] = static function
     );
     assertSame(20, $payload['price']);
     assertSame(26, $payload['stock']);
+};
+$tests['reconciliation detects a stale Mixin price even when local state may be current'] = static function (): void {
+    $payload = [
+        'name' => 'کالای تست', 'price' => 20, 'available' => true, 'stock' => 26,
+        'stock_type' => 'limited', 'product_identifier' => '11667880',
+        'weight' => 0, 'length' => 0, 'width' => 0, 'height' => 0,
+        'external_ids' => ['source' => 'mahak-mixin-bridge', 'mahak_product_detail_id' => 11667880],
+        'main_category_id' => 28,
+    ];
+    $target = $payload;
+    $target['stock_number'] = $target['stock'];
+    unset($target['stock']);
+    $target['stock_type'] = ['value' => 'limited', 'label' => 'محدود'];
+    $target['main_category'] = ['id' => 28, 'name' => 'بدون دسته‌بندی'];
+    unset($target['main_category_id']);
+    assertSame(true, MappedProductReconcileService::targetMatchesPayload($target, $payload));
+    $target['price'] = 537900;
+    assertSame(false, MappedProductReconcileService::targetMatchesPayload($target, $payload));
+};
+$tests['changes the image fingerprint when Mahak replaces a picture'] = static function (): void {
+    $first = ProductSyncService::imageSourceHash([
+        'picture_id' => 10, 'gallery_id' => 20, 'url' => '/old.jpg', 'file_size' => 100,
+    ]);
+    $second = ProductSyncService::imageSourceHash([
+        'picture_id' => 11, 'gallery_id' => 21, 'url' => '/new.jpg', 'file_size' => 120,
+    ]);
+    assertSame(false, hash_equals($first, $second));
+};
+$tests['marks a product affected when its Mahak picture changes'] = static function (): void {
+    $service = (new ReflectionClass(ProductSyncService::class))->newInstanceWithoutConstructor();
+    $method = new ReflectionMethod(ProductSyncService::class, 'imageAffectedProductIds');
+    $method->setAccessible(true);
+    $ids = $method->invoke(
+        $service,
+        [['PictureId' => 55]],
+        [],
+        [['PhotoGalleryId' => 70, 'PictureId' => 55, 'ItemCode' => 12]],
+    );
+    assertSame(['12' => true], $ids);
 };
 $tests['falls back to first sell price when second sell price is zero and trims name'] = static function (): void {
     $payload = (new ProductMapper(10))->toMixin(

@@ -69,7 +69,18 @@ final class ProductSyncService
         $visitorProducts = $this->index(array_merge($this->state->snapshots('mahak.visitor_products'), $changedVisitorProducts), 'productDetailId');
         $pictures = $this->index(array_merge($this->state->snapshots('mahak.pictures'), $changedPictures), 'pictureId');
         $photoGalleries = $this->index(array_merge($this->state->snapshots('mahak.photo_galleries'), $changedPhotoGalleries), 'photoGalleryId');
-        $affectedDetailIds = $this->affectedDetailIds($changedProducts, $changedDetails, $changedVisitorProducts, $details);
+        $imageAffectedProductIds = $this->imageAffectedProductIds(
+            $changedPictures,
+            $changedPhotoGalleries,
+            array_values($photoGalleries),
+        );
+        $affectedDetailIds = $this->affectedDetailIds(
+            $changedProducts,
+            $changedDetails,
+            $changedVisitorProducts,
+            $details,
+            $imageAffectedProductIds,
+        );
 
         $stats = [
             'dry_run' => $dryRun,
@@ -79,6 +90,7 @@ final class ProductSyncService
             'recreated' => 0,
             'skipped' => 0,
             'images_uploaded' => 0,
+            'images_replaced' => 0,
             'images_existing' => 0,
             'images_missing' => 0,
             'preview' => [],
@@ -151,9 +163,11 @@ final class ProductSyncService
             $stats[$action . 'd']++;
             $imageAction = $this->syncImageFromData(
                 (int) $savedId,
+                $sourceId,
                 $product,
                 array_values($photoGalleries),
                 $pictures,
+                isset($imageAffectedProductIds[(string) $productId]),
             );
             $stats['images_' . $imageAction]++;
         }
@@ -296,13 +310,16 @@ final class ProductSyncService
         $source = $this->findImageSource($sourceDetailId);
         $existing = $this->mixin->productImages(['product_id' => (int) $targetId, 'page_size' => 20]);
         $existingItems = $this->value($existing, 'data', []);
+        $sourceHash = self::imageSourceHash($source);
+        $writtenHash = $this->state->metadata(self::imageMetaKey($sourceDetailId));
+        $hasExisting = is_array($existingItems) && count($existingItems) > 0;
         return [
             'dry_run' => true,
             'source_id' => $sourceDetailId,
             'target_id' => (int) $targetId,
             'source_image' => $source,
             'existing_image_count' => is_array($existingItems) ? count($existingItems) : 0,
-            'action' => is_array($existingItems) && count($existingItems) > 0 ? 'skip_existing' : 'create',
+            'action' => !$hasExisting ? 'create' : ($writtenHash !== null && hash_equals($writtenHash, $sourceHash) ? 'skip_unchanged' : 'replace'),
         ];
     }
 
@@ -310,8 +327,13 @@ final class ProductSyncService
     public function applyImage(string $sourceDetailId): array
     {
         $preview = $this->previewImage($sourceDetailId);
-        if ($preview['action'] !== 'create') {
-            throw new RuntimeException('Refusing image upload: target product already has an image');
+        if ($preview['action'] === 'skip_unchanged') {
+            return [
+                'ok' => true,
+                'action' => 'skip_unchanged',
+                'source_id' => $sourceDetailId,
+                'target_id' => $preview['target_id'],
+            ];
         }
         $source = $preview['source_image'];
         if (!is_array($source) || !is_string($source['url'] ?? null)) {
@@ -326,6 +348,8 @@ final class ProductSyncService
         if ($mime === null) {
             throw new RuntimeException('Mahak image format is not JPEG, PNG, GIF, or WebP');
         }
+        $existing = $this->mixin->productImages(['product_id' => $preview['target_id'], 'page_size' => 20]);
+        $existingItems = $this->value($existing, 'data', []);
         $saved = $this->mixin->createProductImage([
             'product_id' => $preview['target_id'],
             'image_base64' => 'data:' . $mime . ';base64,' . base64_encode($binary),
@@ -333,8 +357,13 @@ final class ProductSyncService
             'default' => true,
             'order' => 0,
         ]);
+        $this->state->saveMetadata(self::imageMetaKey($sourceDetailId), self::imageSourceHash($source));
+        if (is_array($existingItems)) {
+            $this->deletePreviousDefaultImage($existingItems);
+        }
         return [
             'ok' => true,
+            'action' => $preview['action'],
             'source_id' => $sourceDetailId,
             'target_id' => $preview['target_id'],
             'source_picture_id' => $source['picture_id'],
@@ -395,9 +424,16 @@ final class ProductSyncService
      * @param list<array<string,mixed>> $changedDetails
      * @param list<array<string,mixed>> $changedVisitorProducts
      * @param array<string,array<string,mixed>> $allDetails
+     * @param array<string,bool> $imageAffectedProductIds
      * @return list<string>
      */
-    private function affectedDetailIds(array $changedProducts, array $changedDetails, array $changedVisitorProducts, array $allDetails): array
+    private function affectedDetailIds(
+        array $changedProducts,
+        array $changedDetails,
+        array $changedVisitorProducts,
+        array $allDetails,
+        array $imageAffectedProductIds = [],
+    ): array
     {
         $ids = [];
         $changedProductIds = [];
@@ -415,7 +451,7 @@ final class ProductSyncService
         }
         foreach ($allDetails as $detailId => $detail) {
             $productId = $this->value($detail, 'productId');
-            if ($productId !== null && isset($changedProductIds[(string) $productId])) {
+            if ($productId !== null && (isset($changedProductIds[(string) $productId]) || isset($imageAffectedProductIds[(string) $productId]))) {
                 $ids[(string) $detailId] = true;
             }
         }
@@ -472,18 +508,33 @@ final class ProductSyncService
      * @param array<string,mixed> $product
      * @param list<array<string,mixed>> $galleryRows
      * @param array<string,array<string,mixed>> $pictures
-     * @return 'uploaded'|'existing'|'missing'
+     * @return 'uploaded'|'replaced'|'existing'|'missing'
      */
-    private function syncImageFromData(int $targetId, array $product, array $galleryRows, array $pictures): string
+    private function syncImageFromData(
+        int $targetId,
+        string $sourceDetailId,
+        array $product,
+        array $galleryRows,
+        array $pictures,
+        bool $sourceImageChanged,
+    ): string
     {
         $source = $this->imageSourceForProduct($product, $galleryRows, $pictures);
         if ($source === null) {
             return 'missing';
         }
-        $existing = $this->mixin->productImages(['product_id' => $targetId, 'page_size' => 1]);
+        $sourceHash = self::imageSourceHash($source);
+        $writtenHash = $this->state->metadata(self::imageMetaKey($sourceDetailId));
+        $existing = $this->mixin->productImages(['product_id' => $targetId, 'page_size' => 20]);
         $existingRows = $this->value($existing, 'data', []);
         if (is_array($existingRows) && count($existingRows) > 0) {
-            return 'existing';
+            if ($writtenHash === null && !$sourceImageChanged) {
+                $this->state->saveMetadata(self::imageMetaKey($sourceDetailId), $sourceHash);
+                return 'existing';
+            }
+            if ($writtenHash !== null && hash_equals($writtenHash, $sourceHash)) {
+                return 'existing';
+            }
         }
         $binary = $this->mahak->downloadContent($source['url']);
         $length = strlen($binary);
@@ -501,14 +552,19 @@ final class ProductSyncService
             'default' => true,
             'order' => 0,
         ]);
-        return 'uploaded';
+        $this->state->saveMetadata(self::imageMetaKey($sourceDetailId), $sourceHash);
+        $replaced = is_array($existingRows) && count($existingRows) > 0;
+        if ($replaced) {
+            $this->deletePreviousDefaultImage($existingRows);
+        }
+        return $replaced ? 'replaced' : 'uploaded';
     }
 
     /**
      * @param array<string,mixed> $product
      * @param list<array<string,mixed>> $galleryRows
      * @param array<string,array<string,mixed>> $pictures
-     * @return array{url:string,title:string}|null
+     * @return array<string,mixed>|null
      */
     private function imageSourceForProduct(array $product, array $galleryRows, array $pictures): ?array
     {
@@ -525,8 +581,12 @@ final class ProductSyncService
             $url = $this->value($picture, 'url');
             if (is_string($url) && $url !== '') {
                 return [
+                    'picture_id' => (string) $this->value($picture, 'pictureId', ''),
+                    'gallery_id' => (string) $this->value($gallery, 'photoGalleryId', ''),
                     'url' => $url,
                     'title' => $this->normalizeText((string) $this->value($product, 'name', '')),
+                    'file_size' => $this->value($picture, 'fileSize'),
+                    'row_version' => $this->value($picture, 'rowVersion'),
                 ];
             }
         }
@@ -586,6 +646,82 @@ final class ProductSyncService
             ];
         }
         throw new RuntimeException("No Mahak picture was found for ProductDetail {$sourceDetailId}");
+    }
+
+    /**
+     * @param list<array<string,mixed>> $changedPictures
+     * @param list<array<string,mixed>> $changedGalleries
+     * @param list<array<string,mixed>> $allGalleries
+     * @return array<string,bool>
+     */
+    private function imageAffectedProductIds(array $changedPictures, array $changedGalleries, array $allGalleries): array
+    {
+        $pictureIds = [];
+        foreach ($changedPictures as $picture) {
+            $id = $this->value($picture, 'pictureId');
+            if ($id !== null) {
+                $pictureIds[(string) $id] = true;
+            }
+        }
+        $productIds = [];
+        foreach (array_merge($allGalleries, $changedGalleries) as $gallery) {
+            $productId = $this->value($gallery, 'itemCode');
+            $pictureId = $this->value($gallery, 'pictureId');
+            if ($productId !== null && ($this->rowIsInList($gallery, $changedGalleries) || isset($pictureIds[(string) $pictureId]))) {
+                $productIds[(string) $productId] = true;
+            }
+        }
+        return $productIds;
+    }
+
+    /** @param list<array<string,mixed>> $rows */
+    private function rowIsInList(array $needle, array $rows): bool
+    {
+        $id = (string) $this->value($needle, 'photoGalleryId', '');
+        foreach ($rows as $row) {
+            if ((string) $this->value($row, 'photoGalleryId', '') === $id) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /** @param list<array<string,mixed>> $existingRows */
+    private function deletePreviousDefaultImage(array $existingRows): void
+    {
+        $candidate = null;
+        foreach ($existingRows as $row) {
+            if (!is_array($row)) {
+                continue;
+            }
+            if ($candidate === null || (bool) $this->value($row, 'default', false)) {
+                $candidate = $row;
+            }
+            if ((bool) $this->value($row, 'default', false)) {
+                break;
+            }
+        }
+        $id = is_array($candidate) ? $this->value($candidate, 'id') : null;
+        if (filter_var($id, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]) !== false) {
+            $this->mixin->deleteProductImage((int) $id);
+        }
+    }
+
+    /** @param array<string,mixed> $source */
+    public static function imageSourceHash(array $source): string
+    {
+        return hash('sha256', json_encode([
+            'picture_id' => (string) ($source['picture_id'] ?? ''),
+            'gallery_id' => (string) ($source['gallery_id'] ?? ''),
+            'url' => (string) ($source['url'] ?? ''),
+            'file_size' => (string) ($source['file_size'] ?? ''),
+            'row_version' => (string) ($source['row_version'] ?? ''),
+        ], JSON_THROW_ON_ERROR | JSON_UNESCAPED_SLASHES));
+    }
+
+    public static function imageMetaKey(string $sourceDetailId): string
+    {
+        return 'mahak.product.image_source_hash.' . $sourceDetailId;
     }
 
     private function detectImageMime(string $binary): ?string

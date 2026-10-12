@@ -91,6 +91,9 @@ final class MappedProductReconcileService
         $products = $this->index($catalog['products'], 'productId');
         $details = $this->index($catalog['productDetails'], 'productDetailId');
         $visitorProducts = $this->index($catalog['visitorProducts'], 'productDetailId');
+        $targetProducts = $this->fetchTargetProducts();
+        $stats['target_pages_fetched'] = $targetProducts['pages'];
+        $targetProductsById = $targetProducts['items'];
         $writes = 0;
 
         foreach ($mappings as $sourceId => $targetId) {
@@ -128,9 +131,13 @@ final class MappedProductReconcileService
             $stats['compared']++;
             $payloadHash = self::payloadHash($payload);
             $writtenHash = $this->state->metadata(self::payloadMetaKey($sourceId));
-            if ($writtenHash !== null && hash_equals($writtenHash, $payloadHash)) {
+            $targetProduct = $targetProductsById[(string) $targetId] ?? null;
+            if (is_array($targetProduct) && self::targetMatchesPayload($targetProduct, $payload)) {
                 $stats['unchanged']++;
                 if (!$dryRun) {
+                    if ($writtenHash === null || !hash_equals($writtenHash, $payloadHash)) {
+                        $this->state->saveMetadata(self::payloadMetaKey($sourceId), $payloadHash);
+                    }
                     $this->persistCurrentSnapshots($sourceId, $productId, $product, $detail, $visitorProducts[$sourceId] ?? null);
                 }
                 continue;
@@ -185,6 +192,35 @@ final class MappedProductReconcileService
             $this->state->saveMetadata(self::LAST_RUN_META_KEY, (string) time());
         }
         return $stats;
+    }
+
+    /** @return array{pages:int,items:array<string,array<string,mixed>>} */
+    private function fetchTargetProducts(): array
+    {
+        $items = [];
+        for ($page = 1; $page <= $this->maxPages; $page++) {
+            $response = $this->mixin->products([
+                'page' => $page,
+                'page_size' => 1000,
+            ]);
+            $rows = $this->value($response, 'data', []);
+            if (!is_array($rows)) {
+                throw new RuntimeException('Mixin product list response has no data array');
+            }
+            foreach ($rows as $row) {
+                if (!is_array($row)) {
+                    continue;
+                }
+                $id = $this->value($row, 'id');
+                if ($id !== null) {
+                    $items[(string) $id] = $row;
+                }
+            }
+            if (count($rows) < 1000) {
+                return ['pages' => $page, 'items' => $items];
+            }
+        }
+        throw new RuntimeException("Mixin product reconciliation exceeded max pages {$this->maxPages}");
     }
 
     /** @return array<string,mixed> */
@@ -277,6 +313,62 @@ final class MappedProductReconcileService
     public static function payloadMetaKey(string $sourceId): string
     {
         return 'mahak.product.payload_hash.' . $sourceId;
+    }
+
+    /**
+     * Compares Bridge-owned fields exposed by the Mixin list endpoint. Fields
+     * absent from that compact schema (dimensions/external_ids) remain covered
+     * by the successful-write fingerprint and are intentionally ignored here.
+     *
+     * @param array<string,mixed> $target
+     * @param array<string,mixed> $payload
+     */
+    public static function targetMatchesPayload(array $target, array $payload): bool
+    {
+        $value = static function (array $data, string $key, mixed $default = null): mixed {
+            foreach ($data as $candidate => $candidateValue) {
+                if (strcasecmp((string) $candidate, $key) === 0) {
+                    return $candidateValue;
+                }
+            }
+            return $default;
+        };
+        $targetStockType = $value($target, 'stock_type');
+        if (is_array($targetStockType)) {
+            $targetStockType = $value($targetStockType, 'value');
+        }
+        $targetCategory = $value($target, 'main_category');
+        $targetCategoryId = is_array($targetCategory)
+            ? $value($targetCategory, 'id')
+            : $value($target, 'main_category_id');
+
+        $scalarFields = ['name', 'price', 'available', 'product_identifier'];
+        foreach ($scalarFields as $field) {
+            $expected = $payload[$field] ?? null;
+            $actual = $value($target, $field);
+            if ($field === 'price') {
+                if ((float) $actual !== (float) $expected) {
+                    return false;
+                }
+            } elseif ($field === 'available') {
+                if ((bool) $actual !== (bool) $expected) {
+                    return false;
+                }
+            } elseif ((string) $actual !== (string) $expected) {
+                return false;
+            }
+        }
+        $targetStock = $value($target, 'stock_number', $value($target, 'stock'));
+        if ((float) $targetStock !== (float) ($payload['stock'] ?? 0)) {
+            return false;
+        }
+        if ((string) $targetStockType !== (string) ($payload['stock_type'] ?? '')) {
+            return false;
+        }
+        if ((string) $targetCategoryId !== (string) ($payload['main_category_id'] ?? '')) {
+            return false;
+        }
+        return true;
     }
 
     private function objects(array $response): array

@@ -23,9 +23,10 @@ MahakClient ──► ProductSyncService ──► ProductMapper ──► Mixin
 - `ProductMapper`: تبدیل مدل‌های Product، ProductDetail و VisitorProduct محک به ProductCreate/Patch در Mixin.
 - `StateStore`: نگهداری `RowVersion` و نگاشت شناسه مبدأ/مقصد.
 - `ProductSyncService`: orchestration همگام‌سازی و جلوگیری از جلو رفتن checkpoint در dry-run.
-- `ProductSyncService` در حالت دائمی تغییرات بعد از baseline را می‌خواند، دسته fallback را اعمال می‌کند و نخستین تصویر معتبر را از snapshotهای Picture/PhotoGallery منتقل می‌کند.
-- `MappedProductReconcileService`: فقط کالاهای دارای mapping را از وضعیت جاری محک می‌خواند، payload را با fingerprint آخرین payload موفق نوشته‌شده در Mixin مقایسه و تغییر واقعی را روی همان شناسه اصلاح می‌کند.
+- `ProductSyncService` در حالت دائمی تغییرات بعد از baseline را می‌خواند، دسته fallback را اعمال می‌کند و تصویر معتبر Picture/PhotoGallery را ایجاد یا در صورت تغییر جایگزین می‌کند.
+- `MappedProductReconcileService`: فقط کالاهای دارای mapping را از وضعیت جاری محک می‌خواند، payload را با محصول واقعی مقصد مقایسه و drift قیمت/موجودی/مشخصات را روی همان شناسه اصلاح می‌کند.
 - `SingleOrderSyncService`: یک سفارش مشخص Mixin را پس از کنترل mapping اقلام و تراز مالی، با گارد مستقل به Order/OrderDetail محک می‌فرستد و mapping سفارش را برای idempotency ثبت می‌کند.
+- `OrderSyncService`: پس از baseline اجباری، سفارش‌های جدید Mixin را به‌ترتیب شناسه به `SingleOrderSyncService` می‌دهد، checkpoint را فقط پس از موفقیت جلو می‌برد و روی نخستین خطا متوقف می‌شود.
 
 ## مدل همگام‌سازی افزایشی
 
@@ -45,7 +46,15 @@ MahakClient ──► ProductSyncService ──► ProductMapper ──► Mixin
 
 رفتار واقعی بازارا نشان داد که بعضی ویرایش‌های قیمت و موجودی برای کالای موجود، `RowVersion` تازه‌ای در `GetAllData` افزایشی تولید نمی‌کنند. تکیه صرف بر checkpoint در این حالت به `received=0` منجر می‌شود.
 
-فرمان دائمی `sync:products` پس از اجرای مسیر افزایشی، در فاصله تنظیم‌شده (پیش‌فرض پنج دقیقه) `MappedProductReconcileService` را اجرا می‌کند. این سرویس فقط کلیدهای `entity_mappings` نوع `product` را بررسی می‌کند؛ بنابراین واردکردن ناخواسته کل کاتالوگ ممکن نیست. payload فعلی نام، قیمت، موجودی و مشخصات با fingerprint آخرین payload موفق نوشته‌شده در مقصد مقایسه می‌شود. snapshotهای خام همچنان برای join رکوردهای محک نگه داشته می‌شوند، اما معیار تشخیص write موفق نیستند. تغییرها با `PATCH` روی target موجود اعمال می‌شوند و تنها در صورت پاسخ 404 همان mapping بازسازی می‌شود. قفل مشترک مانع هم‌زمانی با sync یا purge است.
+فرمان دائمی `sync:worker` پس از اجرای مسیر افزایشی، در فاصله تنظیم‌شده (پیش‌فرض پنج دقیقه) `MappedProductReconcileService` را اجرا می‌کند. این سرویس فقط کلیدهای `entity_mappings` نوع `product` را بررسی می‌کند؛ بنابراین واردکردن ناخواسته کل کاتالوگ ممکن نیست. payload فعلی نام، قیمت، موجودی و مشخصات با داده واقعی محصول Mixin مقایسه می‌شود و cache محلی تنها نقش کمکی دارد. تغییرها با `PATCH` روی target موجود اعمال می‌شوند و تنها در صورت پاسخ 404 همان mapping بازسازی می‌شود. قفل مشترک مانع هم‌زمانی با sync یا purge است.
+
+### تصاویر قابل جایگزینی
+
+Picture و PhotoGallery نیز checkpoint و snapshot مستقل دارند. تغییر هرکدام Product مرتبط و همه ProductDetailهای آن را وارد batch می‌کند. fingerprint شامل شناسه تصویر/گالری، URL، اندازه و RowVersion است. هنگام تغییر، تصویر جدید ابتدا به‌عنوان default ساخته می‌شود و بعد تصویر default قبلی حذف می‌شود؛ بنابراین شکست upload تصویر سالم قبلی را از بین نمی‌برد.
+
+### سفارش‌های افزایشی
+
+`sync:orders:baseline` بالاترین شناسه فعلی Mixin را بدون نوشتن در Mahak ثبت می‌کند. پس از فعال‌کردن `SYNC_ORDER_SYNC_ENABLED`، همان Cron سفارش‌های با شناسه بالاتر را از قدیمی به جدید پردازش می‌کند. mapping سفارش idempotency را تأمین می‌کند و checkpoint در نخستین failure متوقف می‌شود. تبدیل مالی همچنان در `OrderMapper` و عملیات غیرقابل retry `SaveAllData` در `SingleOrderSyncService` باقی می‌ماند.
 
 ## تصمیم variant
 

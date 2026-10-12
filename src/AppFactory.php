@@ -14,6 +14,7 @@ use MahakMixin\Sync\ProductSyncService;
 use MahakMixin\Sync\FullCatalogSyncService;
 use MahakMixin\Sync\MappedProductReconcileService;
 use MahakMixin\Sync\SingleOrderSyncService;
+use MahakMixin\Sync\OrderSyncService;
 
 final class AppFactory
 {
@@ -112,6 +113,20 @@ final class AppFactory
                 Config::int('MAHAK_ORDER_CARRIER_ID'),
                 Config::bool('MAHAK_ORDER_CARRYING_AS_EXPENSE', false),
             ),
+        );
+    }
+
+    public static function orderSync(): OrderSyncService
+    {
+        return new OrderSyncService(
+            self::mixin(),
+            self::singleOrderSync(),
+            self::state(),
+            max(1, min(1000, Config::int('SYNC_ORDER_PAGE_SIZE', 100))),
+            max(1, Config::int('SYNC_ORDER_MAX_PAGES', 20)),
+            max(1, Config::int('SYNC_ORDER_MAX_WRITES', 20)),
+            max(0, Config::int('SYNC_WRITE_DELAY_MS', 150)),
+            Config::path('SYNC_ORDER_LOCK_FILE', 'var/order-sync.lock'),
         );
     }
 

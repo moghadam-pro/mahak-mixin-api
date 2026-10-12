@@ -125,6 +125,7 @@ final class StateStore
                 'key' => 'mahak.products.last_reconcile_at',
             ]);
             $this->pdo->exec("DELETE FROM sync_metadata WHERE key LIKE 'mahak.product.payload_hash.%'");
+            $this->pdo->exec("DELETE FROM sync_metadata WHERE key LIKE 'mahak.product.image_source_hash.%'");
             $this->pdo->commit();
         } catch (\Throwable $exception) {
             $this->pdo->rollBack();

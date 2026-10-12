@@ -4,6 +4,15 @@
 
 ## [Unreleased]
 
+## [0.6.0] - 2026-10-12
+
+- اصلاح reconciliation محصولات با مقایسه وضعیت واقعی Mixin، نه فقط fingerprint محلی؛ اختلاف `Price2`، موجودی و مشخصات محصول اکنون حتی در صورت state محلی قدیمی PATCH می‌شود.
+- افزودن fingerprint تصویر محک و جایگزینی امن تصویر اصلی Mixin به روش «ساخت تصویر جدید، سپس حذف تصویر اصلی قبلی» هنگام تغییر Picture/PhotoGallery.
+- افزودن worker افزایشی سفارش‌های Mixin به Mahak با baseline اجباری، checkpoint، lock مستقل، سقف نوشتن، ترتیب صعودی و توقف روی نخستین خطا.
+- ادغام اختیاری order worker با Cron موجود از طریق `SYNC_ORDER_SYNC_ENABLED` و افزودن فرمان‌های `sync:orders:baseline`، `sync:orders:dry-run` و `sync:orders`.
+- حفظ guard تک‌فاکتوری، کنترل تراز تومان/ریال، mapping جلوگیری از تکرار و عدم retry کور عملیات مالی.
+- ارتقای پوشش تست به ۲۴ سناریو؛ صفر failure محلی و یک skip وابسته به نبود `pdo_sqlite` در PHP لوکال.
+
 ## [0.5.5] - 2026-09-29
 
 - اصلاح استخراج شناسه واقعی فاکتور از `Orders.Results[].EntityId` پاسخ `SaveAllData` و افزودن تست regression برای پاسخ واقعی سفارش ۱۷۳.

@@ -41,12 +41,15 @@ try {
         'sync:product:image:preview' => previewOneProductImage($argv),
         'sync:product:image:apply' => applyOneProductImage($argv),
         'sync:product:image:rollback' => rollbackOneProductImage($argv),
-        'sync:products' => runProductSyncCycle(),
+        'sync:products', 'sync:worker' => runBridgeSyncCycle(),
         'sync:products:dry-run' => AppFactory::productSync()->run(true),
         'sync:products:reconcile' => AppFactory::mappedProductReconcile()->run(Config::bool('SYNC_DRY_RUN', true)),
         'sync:products:reconcile:dry-run' => AppFactory::mappedProductReconcile()->run(true),
         'sync:order:preview' => previewOrder($argv),
         'sync:order:apply' => applyOrder($argv),
+        'sync:orders:baseline' => AppFactory::orderSync()->baseline(),
+        'sync:orders:dry-run' => AppFactory::orderSync()->run(true),
+        'sync:orders' => runAutomaticOrderSync(),
         'sync:catalog:full:dry-run' => AppFactory::fullCatalogSync()->run(true),
         'sync:catalog:full' => runFullCatalog(),
         'sync:products:baseline' => AppFactory::fullCatalogSync()->baseline(),
@@ -78,10 +81,14 @@ try {
                 'php bin/console sync:product:image:rollback PRODUCT_DETAIL_ID IMAGE_ID',
                 'php bin/console sync:products:dry-run',
                 'php bin/console sync:products',
+                'php bin/console sync:worker',
                 'php bin/console sync:products:reconcile:dry-run',
                 'php bin/console sync:products:reconcile',
                 'php bin/console sync:order:preview ORDER_ID',
                 'php bin/console sync:order:apply ORDER_ID CONFIRM-MAHAK-INVOICE',
+                'php bin/console sync:orders:baseline',
+                'php bin/console sync:orders:dry-run',
+                'php bin/console sync:orders',
                 'php bin/console sync:catalog:full:dry-run',
                 'php bin/console sync:catalog:full',
                 'php bin/console sync:products:baseline',
@@ -107,29 +114,41 @@ try {
 }
 
 /** @return array<string,mixed> */
-function runProductSyncCycle(): array
+function runBridgeSyncCycle(): array
 {
     $dryRun = Config::bool('SYNC_DRY_RUN', true);
     $result = AppFactory::productSync()->run($dryRun);
-    if ($dryRun || !Config::bool('SYNC_RECONCILE_ENABLED', true)) {
-        return $result;
+    if (!$dryRun && Config::bool('SYNC_RECONCILE_ENABLED', true)) {
+        $interval = max(60, Config::int('SYNC_RECONCILE_INTERVAL_SECONDS', 300));
+        $lastRun = (int) (AppFactory::state()->metadata(
+            \MahakMixin\Sync\MappedProductReconcileService::LAST_RUN_META_KEY
+        ) ?? 0);
+        $age = time() - $lastRun;
+        if ($lastRun > 0 && $age < $interval) {
+            $result['reconcile'] = [
+                'status' => 'not_due',
+                'next_in_seconds' => $interval - $age,
+            ];
+        } else {
+            $result['reconcile'] = AppFactory::mappedProductReconcile()->run(false);
+        }
     }
-
-    $interval = max(60, Config::int('SYNC_RECONCILE_INTERVAL_SECONDS', 300));
-    $lastRun = (int) (AppFactory::state()->metadata(
-        \MahakMixin\Sync\MappedProductReconcileService::LAST_RUN_META_KEY
-    ) ?? 0);
-    $age = time() - $lastRun;
-    if ($lastRun > 0 && $age < $interval) {
-        $result['reconcile'] = [
-            'status' => 'not_due',
-            'next_in_seconds' => $interval - $age,
-        ];
-        return $result;
+    if (!$dryRun && Config::bool('SYNC_ORDER_SYNC_ENABLED', false)) {
+        $result['orders'] = AppFactory::orderSync()->run(false);
     }
-
-    $result['reconcile'] = AppFactory::mappedProductReconcile()->run(false);
     return $result;
+}
+
+/** @return array<string,mixed> */
+function runAutomaticOrderSync(): array
+{
+    if (!Config::bool('SYNC_ORDER_SYNC_ENABLED', false)) {
+        throw new RuntimeException('Automatic order sync is disabled. Set SYNC_ORDER_SYNC_ENABLED=true after taking an order baseline.');
+    }
+    if (Config::bool('SYNC_DRY_RUN', true)) {
+        throw new RuntimeException('Automatic order writes require SYNC_DRY_RUN=false');
+    }
+    return AppFactory::orderSync()->run(false);
 }
 
 /** @return array<string,mixed> */

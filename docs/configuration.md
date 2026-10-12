@@ -41,6 +41,11 @@ SYNC_RECONCILE_MAX_WRITES=50
 SYNC_ALLOW_SINGLE_ORDER_WRITE=false
 SYNC_ORDER_INSPECT_PAGE_SIZE=20
 SYNC_ORDER_MONEY_MULTIPLIER=10
+SYNC_ORDER_SYNC_ENABLED=false
+SYNC_ORDER_PAGE_SIZE=100
+SYNC_ORDER_MAX_PAGES=20
+SYNC_ORDER_MAX_WRITES=20
+SYNC_ORDER_LOCK_FILE=var/order-sync.lock
 MAHAK_ORDER_STORE_ID=1
 MAHAK_ORDER_SETTLEMENT_TYPE=1
 MAHAK_ORDER_TYPE=201
@@ -76,7 +81,7 @@ API محک همیشه برای ویرایش قیمت یا موجودی از مس
 - `SYNC_RECONCILE_PAGE_SIZE=5000` و `SYNC_RECONCILE_MAX_PAGES=100`: محدوده خواندن کاتالوگ جاری محک.
 - `SYNC_RECONCILE_MAX_WRITES=50`: سقف تغییرات نوشته‌شده در هر نوبت برای کنترل بار API.
 
-این مسیر فقط ProductDetailهایی را بررسی می‌کند که از قبل در SQLite به شناسه Mixin نگاشت شده‌اند. payload فعلی با fingerprint آخرین payload موفق نوشته‌شده در Mixin مقایسه و فقط تغییر واقعی `PATCH` می‌شود؛ بنابراین کالای انتخاب‌نشده ساخته نمی‌شود. snapshotهای خام محک برای join موجودیت‌ها هستند و جای وضعیت آخرین write مقصد را نمی‌گیرند.
+این مسیر فقط ProductDetailهایی را بررسی می‌کند که از قبل در SQLite به شناسه Mixin نگاشت شده‌اند. payload فعلی با وضعیت واقعی فهرست محصولات Mixin مقایسه و فقط اختلاف واقعی `PATCH` می‌شود؛ fingerprint محلی صرفاً cache کمکی است و مانع اصلاح drift مقصد نمی‌شود. بنابراین کالای انتخاب‌نشده ساخته نمی‌شود.
 
 ## تست کنترل‌شده فاکتور
 
@@ -91,6 +96,16 @@ API محک همیشه برای ویرایش قیمت یا موجودی از مس
 - `MAHAK_ORDER_CARRYING_AS_EXPENSE=false`: کرایه حمل به‌صورت هزینه مستقل ثبت نمی‌شود.
 
 مسیر تست فقط یک سفارش مشخص را با تأیید صریح ثبت می‌کند، retry خودکار `SaveAllData` ندارد و در صورت نبود mapping کالا یا عدم تراز مبالغ متوقف می‌شود.
+
+## worker افزایشی سفارش
+
+- `SYNC_ORDER_SYNC_ENABLED=false`: گارد مستقل worker؛ فقط پس از `sync:orders:baseline` و بررسی dry-run فعال شود.
+- `SYNC_ORDER_PAGE_SIZE`: تعداد سفارش‌های خوانده‌شده در هر صفحه Mixin.
+- `SYNC_ORDER_MAX_PAGES`: سقف ایمنی polling یک اجرا.
+- `SYNC_ORDER_MAX_WRITES`: سقف فاکتورهای نوشته‌شده در هر نوبت.
+- `SYNC_ORDER_LOCK_FILE`: lock مستقل سفارش برای جلوگیری از دو اجرای هم‌زمان.
+
+worker همه statusهای سفارش را می‌خواند، اما شخص مقصد فعلاً همان `MAHAK_ORDER_PERSON_ID` ثابت است و مشتری تازه ایجاد نمی‌کند. Receipt/Payment مستقل در نسخه فعلی ساخته نمی‌شود.
 
 ## انتخاب واحد قیمت
 
