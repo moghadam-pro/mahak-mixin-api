@@ -104,7 +104,7 @@ final class AppFactory
             self::state(),
             new OrderMapper(
                 Config::int('MAHAK_VISITOR_ID'),
-                Config::int('MAHAK_ORDER_PERSON_ID'),
+                Config::int('MAHAK_ORDER_PERSON_ID', 0),
                 Config::int('MAHAK_ORDER_STORE_ID', 1),
                 Config::int('MAHAK_ORDER_TYPE', 201),
                 Config::int('MAHAK_ORDER_SETTLEMENT_TYPE', 1),
@@ -113,6 +113,9 @@ final class AppFactory
                 Config::int('MAHAK_ORDER_CARRIER_ID'),
                 Config::bool('MAHAK_ORDER_CARRYING_AS_EXPENSE', false),
             ),
+            Config::bool('SYNC_ORDER_REAL_CUSTOMERS', true)
+                ? new \MahakMixin\Sync\OrderCustomerResolver(self::mahak(), self::state(), Config::int('MAHAK_VISITOR_ID'))
+                : null,
         );
     }
 

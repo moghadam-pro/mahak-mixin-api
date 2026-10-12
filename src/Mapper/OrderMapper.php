@@ -20,7 +20,7 @@ final class OrderMapper
         private readonly int $carrierId = 0,
         private readonly bool $carryingAsExpense = false,
     ) {
-        foreach (['visitorId' => $visitorId, 'personId' => $personId, 'storeId' => $storeId, 'carrierId' => $carrierId] as $name => $value) {
+        foreach (['visitorId' => $visitorId, 'storeId' => $storeId, 'carrierId' => $carrierId] as $name => $value) {
             if ($value < 1) {
                 throw new InvalidArgumentException("{$name} must be a positive integer");
             }
@@ -38,8 +38,12 @@ final class OrderMapper
      * @param array<int|string,string> $productMappings Mixin product id => Mahak ProductDetail id
      * @return array{orders:list<array<string,mixed>>,orderDetails:list<array<string,mixed>>}
      */
-    public function toMahak(array $order, array $productMappings): array
+    public function toMahak(array $order, array $productMappings, ?array $customerReference = null): array
     {
+        $customerReference ??= ['personId' => $this->personId];
+        if ((int) ($customerReference['personId'] ?? $customerReference['personClientId'] ?? 0) < 1) {
+            throw new RuntimeException('A valid Mahak customer reference is required');
+        }
         $orderId = $this->positiveInt($this->value($order, 'id'), 'Mixin order id');
         $orderClientId = $this->clientId('order', $orderId);
         $items = $this->value($order, 'items', []);
@@ -91,7 +95,7 @@ final class OrderMapper
         return [
             'orders' => [[
                 'orderClientId' => $orderClientId,
-                'personId' => $this->personId,
+                ...$customerReference,
                 'visitorId' => $this->visitorId,
                 'orderType' => $this->orderType,
                 'orderDate' => $creationDate,

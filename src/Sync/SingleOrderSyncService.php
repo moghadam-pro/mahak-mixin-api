@@ -17,6 +17,7 @@ final class SingleOrderSyncService
         private readonly MahakClient $mahak,
         private readonly StateStore $state,
         private readonly OrderMapper $mapper,
+        private readonly ?OrderCustomerResolver $customers = null,
     ) {
     }
 
@@ -51,7 +52,15 @@ final class SingleOrderSyncService
 
         $response = $this->mixin->order($orderId);
         $order = $this->unwrapData($response);
-        $payload = $this->mapper->toMahak($order, $this->state->reverseMappings('product'));
+        $customer = $this->customers?->resolve($order);
+        $payload = $this->mapper->toMahak($order, $this->state->reverseMappings('product'), $customer['reference'] ?? null);
+        if (($customer['create'] ?? false) === true) {
+            $payload['people'] = [$customer['person']];
+            $payload['visitorPeople'] = [[
+                'personClientId' => $customer['person']['personClientId'],
+                'visitorId' => $payload['orders'][0]['visitorId'], 'deleted' => false,
+            ]];
+        }
         $financialCheck = $this->mapper->financialCheck($order);
         $result = [
             'ok' => true,
@@ -76,6 +85,19 @@ final class SingleOrderSyncService
             ? 'client:' . $this->mapper->orderClientId($orderId)
             : (string) $targetId);
         $result['response'] = $saved;
+        if ($customer !== null) {
+            $personId = $customer['reference']['personId'] ?? null;
+            $data = OrderCustomerResolver::value($saved, 'Data', []);
+            $objects = OrderCustomerResolver::value($data, 'Objects', []);
+            $people = OrderCustomerResolver::value(OrderCustomerResolver::value($objects, 'People', []), 'Results', []);
+            foreach ((array) $people as $personResult) {
+                if ((string) OrderCustomerResolver::value($personResult, 'EntityClientId') === (string) $customer['person']['personClientId']
+                    && OrderCustomerResolver::value($personResult, 'Result') === true) {
+                    $personId = OrderCustomerResolver::value($personResult, 'EntityId');
+                }
+            }
+            if ((int) $personId > 0) $this->state->saveMapping('customer', $customer['key'], (string) $personId);
+        }
         $result['mahak_order_id'] = $targetId;
         return $result;
     }

@@ -18,7 +18,7 @@ final class SkippedTest extends RuntimeException {}
 
 $tests = [];
 $tests['reads a valid semantic application version'] = static function (): void {
-    assertSame('0.7.1', Version::current());
+    assertSame('0.8.0', Version::current());
 };
 $tests['normalizes numeric SQLite mapping keys before reconciliation'] = static function (): void {
     assertSame('11667880', MappedProductReconcileService::normalizeSourceId(11667880));
@@ -337,6 +337,17 @@ $tests['field-level reconciliation isolates price and stock differences'] = stat
     $target['price'] = 100;
     $target['stock'] = 3;
     assertSame(['price', 'stock'], MappedProductReconcileService::changedFields($target, $payload));
+};
+
+$tests['customer mapping normalizes phones and preserves contact and address fields'] = static function (): void {
+    $a = \MahakMixin\Sync\OrderCustomerResolver::person(['customer_id'=>12,'customer_name'=>'Test Buyer','customer_phone'=>'+98 912 000 0000','customer_email'=>'test@example.com','shipping_address'=>'test address','shipping_zip_code'=>'1234567890']);
+    $b = \MahakMixin\Sync\OrderCustomerResolver::person(['customer_id'=>12,'customer_name'=>'Test Buyer','customer_phone'=>'09120000000']);
+    assertSame($a['key'], $b['key']);
+    assertSame('09120000000', $a['person']['mobile']);
+    assertSame('test@example.com', $a['person']['email']);
+    assertSame('1234567890', $a['person']['postalCode']);
+    assertSame('Buyer', $a['person']['lastName']);
+    assertSame(false, isset($a['person']['password']));
 };
 
 $failed = 0;
