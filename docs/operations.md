@@ -95,4 +95,6 @@ php8.3 bin/console sync:orders:dry-run
 
 ## پایش
 
+انتقال خودکار سفارش ۲۱۸ در نسخه ۰.۸.۱ تأیید شده است؛ [شواهد تست](order-validation.md). تنظیمات لازم: SYNC_ORDER_REAL_CUSTOMERS=true، گروه مشتری موجود در MAHAK_ORDER_PERSON_GROUP_ID، orderType=201، انبار ۱ و ضریب تبدیل ۱۰. بعد از ثبت API، دریافت در نرم‌افزار محک با «ارسال و دریافت اطلاعات» بازارا انجام می‌شود. تبدیل سند دریافتی به فاکتور نهایی مرحلهٔ اپراتور است.
+
 Scheduler باید exit code غیرصفر را alert کند. در لاگ production اطلاعات payload مشتری یا credential را ذخیره نکن. معیارهای مفید: زمان اجرا، تعداد received/created/updated/skipped و آخرین زمان موفقیت.

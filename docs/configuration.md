@@ -90,7 +90,9 @@ API محک همیشه برای ویرایش قیمت یا موجودی از مس
 - `MAHAK_ORDER_STORE_ID=1`: شناسه انبار هر ردیف.
 - `MAHAK_ORDER_SETTLEMENT_TYPE=1`: تسویه نقدی.
 - `MAHAK_ORDER_TYPE=201`: فاکتور فروش.
-- `MAHAK_ORDER_PERSON_ID`: شناسه مثبت یک شخص موجود در محک؛ تا پیاده‌سازی تشخیص/ساخت مشتری الزامی است.
+- `SYNC_ORDER_REAL_CUSTOMERS=true`: یافتن یا ایجاد مشتری واقعی سفارش؛ در این حالت MAHAK_ORDER_PERSON_ID الزامی نیست.
+- `MAHAK_ORDER_PERSON_GROUP_ID`: شناسه داخلی گروه موجود محک برای مشتری جدید؛ نبود آن preview را متوقف می‌کند.
+- `MAHAK_ORDER_PERSON_ID`: فقط در حالت مشتری ثابت (SYNC_ORDER_REAL_CUSTOMERS=false) الزامی است.
 - `MAHAK_ORDER_CARRIER_TYPE=2`: حمل‌کننده صندوق برای سفارش پستی؛ مقدار `1` مخصوص راننده است.
 - `MAHAK_ORDER_CARRIER_ID`: `CashId` مثبت و موجود در محک که با `mahak:cashes:inspect` انتخاب می‌شود.
 - `MAHAK_ORDER_CARRYING_AS_EXPENSE=false`: کرایه حمل به‌صورت هزینه مستقل ثبت نمی‌شود.
