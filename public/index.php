@@ -18,17 +18,11 @@ try {
     if ($method === 'GET' && str_starts_with($path, '/assets/')) {
         serveAsset($path);
     }
-    if (in_array($path, ['/login', '/logout', '/dashboard', '/dashboard/refresh-status'], true)) {
+    if (in_array($path, ['/dashboard', '/dashboard/refresh-status'], true)) {
         dashboardSession();
     }
-    if ($method === 'GET' && $path === '/login') {
-        dashboardLoginPage();
-    }
-    if ($method === 'POST' && $path === '/login') {
-        dashboardLogin();
-    }
-    if ($method === 'POST' && $path === '/logout') {
-        dashboardLogout();
+    if (in_array($path, ['/login', '/logout'], true)) {
+        jsonResponse(404, ['status' => 'error', 'message' => 'Not found']);
     }
     if ($method === 'GET' && $path === '/dashboard') {
         dashboardPage();
@@ -111,59 +105,6 @@ function dashboardSession(): void
     session_set_cookie_params(['httponly' => true, 'secure' => (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off'), 'samesite' => 'Strict', 'path' => '/']);
     session_start();
     $_SESSION['csrf'] ??= bin2hex(random_bytes(24));
-}
-
-function dashboardLoginPage(?string $error = null): never
-{
-    if (!empty($_SESSION['dashboard_authenticated'])) {
-        redirect('/dashboard');
-    }
-    $message = $error === null ? '' : '<p class="login-error">[AUTH_FAILED] ' . escapeHtml($error) . '</p>';
-    $csrf = escapeHtml((string) $_SESSION['csrf']);
-    $version = escapeHtml(Version::current());
-    htmlResponse(200, dashboardLayout('Login', <<<HTML
-      <main class="login-shell"><form method="post" action="/login" class="login-box">
-        <div class="login-title">mahak-mixin-bridge <span>v{$version}</span></div>
-        <p class="muted">$ auth --scope=monitor</p>{$message}
-        <input type="hidden" name="csrf" value="{$csrf}">
-        <label>USERNAME<input name="username" autocomplete="username" required autofocus></label>
-        <label>PASSWORD<input type="password" name="password" autocomplete="current-password" required></label>
-        <button type="submit">[ ENTER ]</button>
-      </form></main>
-      HTML));
-}
-
-function dashboardLogin(): never
-{
-    verifyCsrf();
-    $expectedUser = Config::string('DASHBOARD_USERNAME', '');
-    $passwordHash = Config::string('DASHBOARD_PASSWORD_HASH', '');
-    if ($expectedUser === '' || $passwordHash === '') {
-        htmlResponse(503, dashboardLayout('Not configured', '<main class="fatal">[FATAL] dashboard credentials are not configured</main>'));
-    }
-    if (!hash_equals($expectedUser, trim((string) ($_POST['username'] ?? ''))) || !password_verify((string) ($_POST['password'] ?? ''), $passwordHash)) {
-        usleep(500000);
-        dashboardLoginPage('invalid username or password');
-    }
-    session_regenerate_id(true);
-    $_SESSION['dashboard_authenticated'] = true;
-    $_SESSION['csrf'] = bin2hex(random_bytes(24));
-    redirect('/dashboard');
-}
-
-function dashboardLogout(): never
-{
-    verifyCsrf();
-    $_SESSION = [];
-    session_destroy();
-    redirect('/login');
-}
-
-function dashboardRequireLogin(): void
-{
-    if (empty($_SESSION['dashboard_authenticated'])) {
-        redirect('/login');
-    }
 }
 
 function dashboardRefreshStatus(): never
@@ -264,7 +205,7 @@ function dashboardPage(): never
     $failureCount = count(array_filter($runs, static fn (array $run): bool => in_array(strtolower((string) ($run['status'] ?? '')), ['failed', 'error'], true)));
 
     htmlResponse(200, dashboardLayout('Monitor', <<<HTML
-      <header class="topbar"><div><strong>mahak-mixin-bridge</strong><span>v{$version}</span></div><form method="post" action="/logout"><input type="hidden" name="csrf" value="{$csrf}"><button type="submit" title="Logout" aria-label="Logout">[x]</button></form></header>
+      <header class="topbar"><div><strong>mahak-mixin-bridge</strong><span>v{$version}</span></div></header>
       <main class="dashboard">
         <section class="section overview">
           <div class="section-head"><div><span class="prompt">~/monitor</span><h1>OVERVIEW</h1></div><form method="post" action="/dashboard/refresh-status"><input type="hidden" name="csrf" value="{$csrf}"><button class="refresh" type="submit">[ recheck APIs ]</button></form></div>
